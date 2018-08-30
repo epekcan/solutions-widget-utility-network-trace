@@ -11,7 +11,7 @@ Pre Req:
 How to use:
 * Create a map with the UN map service.
 * Download ArcGIS Web AppBuilder Dev Edition
-* Download this widget and add it to <location of WAB dev edition download>/client/stemap3dp/widgets
+* Download this widget and add it to `<location of WAB dev edition download>/client/stemapp3d/widgets`
 * Register WAB dev ed to your organization
 * Create and app, select the map you created.
 * Add and configure the UNTrace widget.
