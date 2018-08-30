@@ -1,0 +1,233 @@
+/* COMMON */
+.jimu-widget-untrace {
+  width: 100%;
+  height: 100%;
+}
+
+.jimu-widget-untrace .shadow {
+  -webkit-box-shadow: 1px 1px 3px 0px rgba(0, 0, 0, 0.3);
+  -moz-box-shadow: 1px 1px 3px 0px rgba(0, 0, 0, 0.3);
+  box-shadow: 1px 1px 3px 0px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  height: 100%;
+}
+
+.jimu-widget-untrace .tr {
+  height: 24px;
+}
+
+.jimu-widget-untrace .td {
+  height: 24px;
+}
+
+.jimu-widget-untrace input {
+  width: 300px;
+  height: 24px;
+}
+
+.jimu-widget-untrace select {
+  width: 300px;
+  height: 24px;
+}
+
+.button_nonactive {
+  width: 300px;
+  height: 28px;
+  background-color: #0d88c8;
+  color: #ffffff;
+  border: 1px solid #ffffff;
+}
+
+.button_active {
+  width: 300px;
+  height: 28px;
+  background-color: #aaaaaa;
+  color: #000000;
+  border: 1px solid #ffffff;  
+}
+
+/* ESRI */
+
+.jimu-widget-untrace .esri-ui-top-left {
+  left: 330px;
+}
+
+.jimu-widget-untrace #mapDiv {
+  position: absolute; 
+  padding: 0;
+  margin: 0;
+  height: 100%;
+  width: 100%;
+}
+
+
+.jimu-widget-untrace #panelView {
+  position: absolute; 
+  padding: 0;
+  margin: 0;
+}
+
+/* TOP */
+
+.jimu-widget-untrace #panelTop {
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  width: 100%;
+  height: 90%;
+  color: #ffffff;
+  background-color: rgba(0, 0, 0, 0.9);
+}
+
+.jimu-widget-untrace #title {
+  position: absolute;
+  width: 100%;
+  height: 90px;
+  padding: 10px;
+  line-height: 70px;
+  font-size: 16px;
+  letter-spacing: 4px;
+  text-align: center;
+  background-color: #0d88c8;
+  box-sizing: border-box;
+  display: block;
+}
+
+.jimu-widget-untrace #options {
+  position: absolute;
+  top: 90px;
+  width: 100%;
+  height: 30px;
+  line-height: 30px;
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: #0d88c8;
+}
+
+.jimu-widget-untrace #optTools {
+  position: absolute;
+  width: 50%;
+  height: 100%;
+  padding-left: 10px;
+  box-sizing: border-box;
+  cursor: pointer;
+  display: none;
+}
+
+.jimu-widget-untrace #optSettings {
+  position: absolute;
+  left: 50%;
+  width: 50%;
+  height: 100%;
+  text-align: right;
+  padding-right: 10px;
+  box-sizing: border-box;
+  cursor: pointer;
+  display: block;
+}
+
+.jimu-widget-untrace #status {
+  position: absolute;
+  bottom: 0px;
+  width: 100%;
+  height: 25px;
+  line-height: 25px;
+  text-align: center;
+  color: #0d88c8;
+}
+
+.jimu-widget-untrace #content {
+  position: absolute;
+  top: 110px;
+  bottom: 30px;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.jimu-widget-untrace #settings {
+  display: 'none';
+  width: 100%;
+  overflow: visible;
+}
+
+.jimu-widget-untrace #tools {
+  display: 'block';
+  width: 100%;
+  overflow: visible;
+}
+
+.jimu-widget-untrace .inner {
+  width: 100%;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.jimu-widget-untrace .rowLabel {
+  width: 100%;
+  height: 20px;
+  line-height: 20px;
+  margin-top: 10px;
+  font-size: 10px;
+  letter-spacing: 3px;
+  box-sizing: border-box;
+}
+
+.jimu-widget-untrace .row30 {
+  width: 100%;
+  height: 30px;
+  line-height: 30px;
+  box-sizing: border-box;
+}
+
+.jimu-widget-untrace .rowBtn {
+  width: 100%;
+  height: 30px;
+  line-height: 30px;
+  margin-top: 5px;
+  box-sizing: border-box;
+}
+
+.jimu-widget-untrace .rowChk {
+  width: 100%;
+  height: 30px;
+  line-height: 20px;
+  margin-top: 0px;
+  margin-bottom: 10px;
+  font-size: 10px;
+  letter-spacing: 3px;
+  box-sizing: border-box;
+  vertical-align: top;
+}
+
+.jimu-widget-untrace .btnX {
+  width: 24px;
+  height: 24px;
+  border-radius: 11px;
+  border: 1px solid #ffffff;
+  font-size: 9px;
+  background-color: #ff0000;
+}
+
+.jimu-widget-untrace tr {
+  vertical-align: middle;
+}
+
+.jimu-widget-untrace td {
+  vertical-align: middle;
+  font-size: 10px;
+}
+
+.jimu-widget-untrace .col120 {
+  width: 140px;
+}
+
+.jimu-widget-untrace .mini {
+  width: 120px;
+}
+
+.jimu-widget-untrace .block-remove {
+  text-align: right;
+}
+

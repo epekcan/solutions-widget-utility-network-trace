@@ -1,0 +1,143 @@
+.jimu-widget-untrace-setting input{
+  margin-left: 10px;
+}
+
+.UNConfigBlock {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+  padding-bottom: 10px;
+  position: absolute;
+  left: 0px;
+  top: 0px;
+}
+
+.userTraceBlock {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 35%;
+  padding-bottom: 10px;
+  position: absolute;
+  left: 0px;
+  top: 50px;
+}
+
+.traceTypeBlock { 
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 63%;
+  padding-bottom: 10px;
+  position: absolute;
+  right: 0px;
+  top: 50px;  
+}
+
+.traceConfigBlock { 
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 98%;
+  border: 1px solid black;
+  padding-bottom: 10px;
+}
+
+.traceConfigBlock-inner {
+  padding-left: 5px;
+  overflow-y: auto;
+}
+
+.traceConfigBlock-advance {
+  padding-top: 10px;
+  width: 100%;  
+}
+
+.traceTypes {
+  padding-bottom: 10px;
+}
+
+.startFeatureGroup {
+  padding-left: 5px;
+  display: block;
+  width: 100%;
+  height: 125px;
+  display: none;
+  padding-bottom: 25px;
+}
+
+.startFeatureHolder {
+  width: 95%;
+  height: 95%;  
+  padding-left: 5px;
+  overflow-x: hidden;
+  overflow-y: auto;  
+  border: 1px solid #c1c1c1;
+}
+
+.barrierFeatureGroup {
+  padding-left: 5px;
+  display: block;
+  width: 100%;
+  height: 125px;
+  display: none;
+  padding-bottom: 25px;
+}
+
+.barrierFeatureHolder {
+  width: 95%;
+  height: 95%;  
+  padding-left: 5px;
+  overflow-x: hidden;
+  overflow-y: auto;  
+  border: 1px solid #c1c1c1;
+}
+
+.includeParametersHolder {
+  width: 95%;
+  height: 95%;  
+  padding-left: 5px;
+  overflow-x: hidden;
+  overflow-y: auto;  
+  border: 1px solid #c1c1c1;  
+}
+
+.barriersGroup {
+  padding-top: 25px;
+}
+
+.dynamicconditionBarriers {
+  padding-top: 5px;
+  padding-bottom: 15px;
+}
+
+.dynamicfilterBarriers {
+  padding-top: 3px;
+  padding-bottom: 15px;
+}
+
+.dynamicoutputConditions {
+  padding-top: 3px;
+  padding-bottom: 15px;
+}
+
+.spacer {
+  width: 95%;
+  height: 1px;
+  border-bottom: 1px solid black;
+  padding-bottom: 15px;
+  padding-top: 5px;
+}
+
+.addConditionBarriers {
+  font-weight: bold;
+}
+
+.addFilterBarriers {
+  font-weight: bold;
+}
+
+.addOutputCondition {
+  font-weight: bold;
+}
