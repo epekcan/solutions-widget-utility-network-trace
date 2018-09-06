@@ -93,6 +93,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
 
     getConfig: function(){
       //WAB will get config object through this method
+      this.traceConfigParameter.storeTempConfig();
       this.config.service = this.cmbItems.value;
       this.config.featureServiceItem = this.cmbItems.options[this.cmbItems.selectedIndex].id;
       this.config.domainNetwork = this.cmbDomainNetworks.value;
@@ -236,6 +237,20 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
       this.userDefinedTraces.placeAt(this.dynamicUserTraces);
       this.userDefinedTraces.startup();
 
+      this.own(on(this.userDefinedTraces, "row-select", lang.hitch(this, function(tr) {
+        var defaultVal = null;
+        var existTraceCheck = this.tempTraceConfigs["userTraces"];
+        for (var key in existTraceCheck) {
+          if (key === tr.userDefinedName.value) {
+            var obj = {};
+            obj[key] = existTraceCheck[key];            
+            defaultVal = obj;
+          }
+        } 
+        this._createTraceTypeTable({"predefined":defaultVal});        
+        this._restoreTraceTypeRows({"tr":tr, "predefined":defaultVal});
+      })));
+
       var existTraceCheck = this.tempTraceConfigs["userTraces"];
       var newFlag = true;
       for (var key in existTraceCheck) {
@@ -250,27 +265,14 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
         this.addRowUserDefined({"predefined":null});  
       }
 
-      this.own(on(this.userDefinedTraces, "row-select", lang.hitch(this, function(tr) {
-        var defaultVal = null;
-        var existTraceCheck = this.tempTraceConfigs["userTraces"];
-        for (var key in existTraceCheck) {
-          if (key === tr.userDefinedName.value) {
-            var obj = {};
-            obj[key] = existTraceCheck[key];            
-            defaultVal = obj;
-          }
-        }         
-        this._restoreTraceTypeRows({"tr":tr, "predefined":defaultVal});
-      })));
 
     },
 
     addRowUserDefined: function(param) {
       var addRowResult = this.userDefinedTraces.addRow({});
       this._addUserTextbox({"tr":addRowResult.tr, "predefined":param.predefined});
-    
       this.userDefinedTraces.selectRow(addRowResult.tr); 
-      this._createTraceTypeTable({"predefined":param.predefined});     
+           
       return addRowResult;
     },
 
@@ -296,6 +298,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
     },
 
     _createTraceTypeTable: function(param) {
+      console.log(param);
       if(this.traceTypesTable !== null) {
         domConstruct.empty(this.traceTypesTableHolder);
         this.traceTypesTable = null;

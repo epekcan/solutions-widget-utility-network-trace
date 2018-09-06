@@ -74,6 +74,10 @@ function (declare,
     postCreate: function () {
       this.inherited(arguments);
 
+    },
+
+    startup: function () {
+
       if(this.existingValues !== null) {
         this._createStartList({"value": this.existingValues.useAsStart});
         this._createBarrierList({"value": this.existingValues.useAsBarrier});
@@ -110,9 +114,6 @@ function (declare,
       }
 
       this.storeTempConfig();
-    },
-
-    startup: function () {
 
       this.own(on(this.addConditionBarriers, "click", lang.hitch(this, function() {     
         this.addRowTraverse(this.conditionBarriersTable, this.existingValues);
@@ -145,7 +146,6 @@ function (declare,
     },
 
     _createStartList: function(param) {
-      console.log(param);
       if(typeof(param.value) !== "undefined") {
         if(param.value === 'userDefined' || param.value === "") {
           this.startLocationCheckboxList = [];
