@@ -493,7 +493,7 @@ function(declare,
     btnTraceConnectedClick: async function(param) {
         return new Promise( (resolve, reject) => {
             this.updateStatus("Tracing...");
-            if(param.traceInfo.useAsStart === "previousTrace" || param.traceInfo.useAsStart === "existingResults") {
+            if(param.traceInfo.useAsStart !== "userDefined" || param.traceInfo.useAsBarrier !== "userDefined") {
                 this.updateLocationsFromResults({"traceInfo":param.traceInfo, "featuresJson":this.tempRecordSet});
             } else {
                 if(this.traceLocationsParam.length <= 0) {
@@ -501,17 +501,8 @@ function(declare,
                 }
             } 
             
-            let connectedConfiguration = lang.clone(this.config.emptyTraceConfiguration);
-            /*
-            connectedConfiguration.includeContainers = this.config.connectedTraceConfiguration.includeContainers;
-            connectedConfiguration.domainNetworkName = this.config.connectedTraceConfiguration.domainNetworkName;
-            connectedConfiguration.tierName = this.config.connectedTraceConfiguration.tierName;
-            connectedConfiguration.conditionBarriers = this.config.connectedTraceConfiguration.conditionBarriers;
-            connectedConfiguration.filterBarriers = this.config.connectedTraceConfiguration.filterBarriers;
-            connectedConfiguration.outputConditions = this.config.connectedTraceConfiguration.outputConditions;
-
-            console.log(connectedConfiguration);
-            */
+            let connectedConfiguration = this.replaceSpecificTraceConfig(param);
+            
             //only attempt to trace when there is at leats one starting point
             if (!this.traceLocationsParam.length) {
                 this.updateStatus("No starting points were found.");
@@ -540,7 +531,7 @@ function(declare,
     btnTraceUpstreamClick: async function(param) {
         return new Promise( (resolve, reject) => {
             this.updateStatus("Tracing...");
-            if(param.traceInfo.useAsStart === "previousTrace" || param.traceInfo.useAsStart === "existingResults") {
+            if(param.traceInfo.useAsStart !== "userDefined" || param.traceInfo.useAsBarrier !== "userDefined") {
                 this.updateLocationsFromResults({"traceInfo":param.traceInfo, "featuresJson":this.tempRecordSet});
             } else {
                 if(this.traceLocationsParam.length <= 0) {
@@ -548,15 +539,7 @@ function(declare,
                 }
             }            
     
-            let upstreamConfiguration = lang.clone(this.config.emptyTraceConfiguration);
-            
-            //upstreamConfiguration.includeContainers = this.config.upstreamTraceConfiguration.includeContainers;
-            upstreamConfiguration.domainNetworkName = this.config.domainNetwork;
-            upstreamConfiguration.tierName = this.config.tier;
-            //upstreamConfiguration.conditionBarriers = this.config.upstreamTraceConfiguration.conditionBarriers;
-            //upstreamConfiguration.filterBarriers = this.config.upstreamTraceConfiguration.filterBarriers;
-            //upstreamConfiguration.outputConditions = this.config.upstreamTraceConfiguration.outputConditions;
-            
+            let upstreamConfiguration = this.replaceSpecificTraceConfig(param);           
     
             //only attempt to trace when there is at leats one starting point
             if (!this.traceLocationsParam.length) {
@@ -568,10 +551,7 @@ function(declare,
                 if(this.traceCounter === (this.traceMax - 1)) {
                   this.drawTraceResults(this.un, traceResults);
                 }
-                //if(param.traceInfo.resultAsStart || param.traceInfo.resultAsStart) {
                 this.tempRecordSet = traceResults;
-                   // this.updateLocationsFromResults({"traceInfo":param.traceInfo, "featuresJson":traceResults});
-                //}
               })
             .then(a => { 
                 this.updateStatus("Done");
@@ -585,6 +565,20 @@ function(declare,
         });
     },
 
+    replaceSpecificTraceConfig: function(param) {
+        let configuration = lang.clone(this.config.emptyTraceConfiguration);            
+        configuration.includeContainers = param.traceInfo.traceConfig.includeContainers;
+        configuration.includeContent = param.traceInfo.traceConfig.includeStructLineContent;
+        configuration.includeStructures = param.traceInfo.traceConfig.includeStructures;
+        configuration.includeBarriers = param.traceInfo.traceConfig.includeBarriers;
+        configuration.validateConsistency = param.traceInfo.traceConfig.validateConsistency;
+        configuration.domainNetworkName = this.config.domainNetwork;
+        configuration.tierName = this.config.tier;
+        configuration.conditionBarriers = param.traceInfo.traceConfig.conditionBarriers;
+        configuration.filterBarriers = this.config.connectedTraceConfiguration.filterBarriers;
+        configuration.outputConditions = this.config.connectedTraceConfiguration.outputConditions;
+        return configuration;
+    },
 
     cmbItemsChange: function(params) {
       let itemId = params.target.options[params.target.selectedIndex].id;
@@ -776,10 +770,12 @@ function(declare,
             }
         }
         if(newStartArr.length > 0) {
-            let filteredArr = array.filter(this.traceLocationsParam, function(item){
-                return item.traceLocationType !== "startingPoint";
-            });
-            this.traceLocationsParam = filteredArr;
+            if(param.traceInfo.useAsStart !== "addToExistingResults") {
+                let filteredArr = array.filter(this.traceLocationsParam, function(item){
+                    return item.traceLocationType !== "startingPoint";
+                });
+                this.traceLocationsParam = filteredArr;
+            }
             this.traceLocationsParam = this.traceLocationsParam.concat(newStartArr);  
         } 
         if(newBarrArr.length > 0) {

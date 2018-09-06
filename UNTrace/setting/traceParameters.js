@@ -25,6 +25,7 @@ define(['dojo/_base/declare',
   "dojo/dom-construct",
   "dojo/dom-attr",
   "dojo/dom-style",
+  "dojo/dom-class",
   "dojo/query",
   "dojo/_base/lang",
   "dojo/_base/array",
@@ -44,7 +45,7 @@ function (declare,
   BaseWidgetSetting,
   template,
   Evented,
-  registry, on, dom, domConstruct, domAttr, domStyle, query, lang, array, agsPortal, PrivilegeUtil, UtilityNetwork, PortalHelper, tokenUtils, 
+  registry, on, dom, domConstruct, domAttr, domStyle, domClass, query, lang, array, agsPortal, PrivilegeUtil, UtilityNetwork, PortalHelper, tokenUtils, 
   SimpleTable, popup, Textbox, Select, RadioButton, CheckBox
 ) {
   return declare([BaseWidgetSetting, _WidgetsInTemplateMixin, Evented], {
@@ -53,9 +54,9 @@ function (declare,
     un: null,
     cmbDomainNetworks: null,
     domainValueListHelper: [],
-    tempTraceConfigs: null,
-    barriersList: [],
     conditionBarriersTable: null,
+    filterBarriersTable: null,
+    outputConditionsTable: null,
     row: null,
     startLocationCheckboxList: [],
     barriersLocationCheckboxList: [],
@@ -73,73 +74,120 @@ function (declare,
     postCreate: function () {
       this.inherited(arguments);
 
-      this.barriersList = [
-        "conditionBarriers",
-        "filterBarriers",
-        "outputConditions"
-      ];
-
-      this.startup();
-    },
-
-    startup: function () {
       if(this.existingValues !== null) {
         this._createStartList({"value": this.existingValues.useAsStart});
         this._createBarrierList({"value": this.existingValues.useAsBarrier});
+        this._resetInclusionTypes();
+        if(typeof(this.existingValues.traceConfig) !== "undefined") {
+          this._restoreIncludesCheckboxesState({"traceConfig": this.existingValues.traceConfig});
+        }
       } else {
         this._createStartList({"value": ""});
-        this._createBarrierList({"value": ""});  
+        this._createBarrierList({"value": ""});
+        this._resetInclusionTypes();  
       } 
 
-      this._createTraverseTable(this.conditionBarriersTable, this.conditionBarriersHolder);
+      this._createTraverseFilterTable("condition");
+      this._createTraverseFilterTable("filter");
+      this._createTraverseFilterTable("output");      
+
+      if(typeof(this.existingValues.traceConfig) !== "undefined") {
+        if(typeof(this.existingValues.traceConfig.conditionBarriers) !== "undefined") {
+          array.forEach(this.existingValues.traceConfig.conditionBarriers, lang.hitch(this, function(cb){
+            this.addRowTraverse(this.conditionBarriersTable, cb);
+          }));
+        }
+        if(typeof(this.existingValues.traceConfig.filterBarriers) !== "undefined") {
+          array.forEach(this.existingValues.traceConfig.filterBarriers, lang.hitch(this, function(fb){
+            this.addRowTraverse(this.filterBarriersTable, fb);
+          }));
+        }
+        if(typeof(this.existingValues.traceConfig.outputConditions) !== "undefined") {
+          array.forEach(this.existingValues.traceConfig.outputConditions, lang.hitch(this, function(oc){
+            this.addRowTraverse(this.outputConditionsTable, oc);
+          }));
+        }                
+      }
+
+      this.storeTempConfig();
+    },
+
+    startup: function () {
 
       this.own(on(this.addConditionBarriers, "click", lang.hitch(this, function() {     
-        this.addRowTraverse(this.conditionBarriersTable, this.tempTraceConfigs);
+        this.addRowTraverse(this.conditionBarriersTable, this.existingValues);
       })));
+
+      this.own(on(this.addFilterBarriers, "click", lang.hitch(this, function() {     
+        this.addRowTraverse(this.filterBarriersTable, this.existingValues);
+      })));
+
+      this.own(on(this.addOutputCondition, "click", lang.hitch(this, function() {     
+        this.addRowTraverse(this.outputConditionsTable, this.existingValues);
+      })));
+
+      this.own(on(this.chkContainers, "change", lang.hitch(this, function() {     
+        this.storeTempConfig();
+      })));
+      this.own(on(this.chkStructLineContent, "change", lang.hitch(this, function() {     
+        this.storeTempConfig();
+      })));
+      this.own(on(this.chkStructures, "change", lang.hitch(this, function() {     
+        this.storeTempConfig();
+      })));
+      this.own(on(this.chkBarrierFeatures, "change", lang.hitch(this, function() {     
+        this.storeTempConfig();
+      })));
+      this.own(on(this.chkValidateConsistency, "change", lang.hitch(this, function() {     
+        this.storeTempConfig();
+      })));                        
 
     },
 
     _createStartList: function(param) {
-      console.log(param.value);
+      console.log(param);
       if(typeof(param.value) !== "undefined") {
-        if(query(".startFeatureGroup").length > 0) {
-          if(param.value === 'userDefined' || param.value === "") {
-            this.startLocationCheckboxList = [];
-            domConstruct.empty(this.startFeatureHolder);
-            domStyle.set(query(".startFeatureGroup")[0], "display", "none");  
-          } else {
-            domStyle.set(query(".startFeatureGroup")[0], "display", "block");
-            this._createAGATList({"node":this.startFeatureHolder, "type": "start", "predefined":this.existingValues});
-          }
+        if(param.value === 'userDefined' || param.value === "") {
+          this.startLocationCheckboxList = [];
+          domConstruct.empty(this.startFeatureHolder);
+          query(".startFeatureGroup").style("display", "none");
+          //domStyle.set(query(".startFeatureGroup")[0], "display", "none");  
+        } else {
+          domConstruct.empty(this.startFeatureHolder);
+          //domStyle.set(query(".startFeatureGroup")[0], "display", "block");
+          query(".startFeatureGroup").style("display", "block");
+          this._createAGATList({"node":this.startFeatureHolder, "type": "start", "predefined":this.existingValues});
         }
       } else {
         if(query(".startFeatureGroup").length > 0) {
-          domStyle.set(query(".startFeatureGroup")[0], "display", "none");  
+          query(".startFeatureGroup").style("display", "none");
+          //domStyle.set(query(".startFeatureGroup")[0], "display", "none");  
         }  
       }
     },
 
     _createBarrierList: function(param) {
       if(typeof(param.value) !== "undefined") {
-        if(query(".barrierFeatureGroup").length > 0) {
           if(param.value === 'userDefined' || param.value === "") {
             this.barriersLocationCheckboxList = [];
             domConstruct.empty(this.barrierFeatureHolder);
-            domStyle.set(query(".barrierFeatureGroup")[0], "display", "none");  
+            query(".barrierFeatureGroup").style("display", "none");
+            //domStyle.set(query(".barrierFeatureGroup")[0], "display", "none");  
           } else {
-            domStyle.set(query(".barrierFeatureGroup")[0], "display", "block");
+            domConstruct.empty(this.barrierFeatureHolder);
+            query(".barrierFeatureGroup").style("display", "block");
+            //domStyle.set(query(".barrierFeatureGroup")[0], "display", "block");
             this._createAGATList({"node":this.barrierFeatureHolder, "type": "barrier", "predefined":this.existingValues});
           }
-        }
       } else {
         if(query(".barrierFeatureGroup").length > 0) {
-          domStyle.set(query(".barrierFeatureGroup")[0], "display", "none");
+          query(".barrierFeatureGroup").style("display", "none");
+          //domStyle.set(query(".barrierFeatureGroup")[0], "display", "none");
         }
       }
     },
 
     _createAGATList: function(param) {
-      console.log(this.existingValues);
       if(param.type === "start") {
         this.startLocationCheckboxList = [];
       } else {
@@ -206,10 +254,28 @@ function (declare,
 
     },
 
-    _createTraverseTable: function(table, node) {
-      if(this.conditionBarriersTable !== null) {
-        domConstruct.empty(this.conditionBarriersHolder);
-        this.conditionBarriersTable = null;
+    _createTraverseFilterTable: function(type) {
+      switch(type) {
+        case "condition":
+          if(this.conditionBarriersTable !== null) {
+            domConstruct.empty(this.conditionBarriersHolder);
+            this.conditionBarriersTable = null;
+          }
+          break;
+        case "filter":
+          if(this.filterBarriersTable !== null) {
+            domConstruct.empty(this.filterBarriersHolder);
+            this.filterBarriersTable = null;
+          }
+          break;
+        case "output":
+          if(this.outputConditionsTable !== null) {
+            domConstruct.empty(this.outputConditionsHolder);
+            this.outputConditionsTable = null;
+          }
+          break; 
+        default:
+          break;         
       }
       var fields = [{
         name: 'name',
@@ -248,11 +314,26 @@ function (declare,
         fields: fields,
         selectable: true
       };
-      this.conditionBarriersTable = new SimpleTable(args);
-      this.conditionBarriersTable.placeAt(this.conditionBarriersHolder);
-      this.conditionBarriersTable.startup();
-      //this.addRowTraverse(param);
 
+      switch(type) {
+        case "condition":
+          this.conditionBarriersTable = new SimpleTable(args);
+          this.conditionBarriersTable.placeAt(this.conditionBarriersHolder);
+          this.conditionBarriersTable.startup();
+          break;
+        case "filter":
+          this.filterBarriersTable = new SimpleTable(args);
+          this.filterBarriersTable.placeAt(this.filterBarriersHolder);
+          this.filterBarriersTable.startup();
+          break;
+        case "output":
+          this.outputConditionsTable = new SimpleTable(args);
+          this.outputConditionsTable.placeAt(this.outputConditionsHolder);
+          this.outputConditionsTable.startup();
+          break; 
+        default:
+          break;         
+      }
       return true;
     },
 
@@ -382,7 +463,7 @@ function (declare,
       });
       flag = "";
       if(typeof(param.predefinedValues.combineUsingOr) !== 'undefined') {
-        if(param.predefinedValues.combineUsingOr === true) {             
+        if(param.predefinedValues.combineUsingOr === true) {            
           flag = "Or";
         } else {
           flag = "And";
@@ -390,17 +471,16 @@ function (declare,
       }
       if(flag !== "") {
         selectionBox.set("value",flag);  
-      }      
+      }     
       selectionBox.startup();
       param.tr.combine = selectionBox;
     },
 
     contextSensitiveList: function(param) {
-      console.log(param);
       var td = query('.simple-table-cell', param.tr)[3];    
       domConstruct.empty(td);
       var flag = "";
-      if(param.type.value === "specificValue") {
+      if(param.type === "specificValue") {
         if(param.name.domainName !== "") {
           if(param.name.domainName === "Category") {
             var categorySelection = new Select().placeAt(td); 
@@ -416,7 +496,7 @@ function (declare,
                }             
                categorySelection.addOption(selOption);
             });
-            this.own(on(categorySelection, "change", lang.hitch(this, this.storeTempTraverseSettings)));
+            this.own(on(categorySelection, "change", lang.hitch(this, this.storeTempConfig)));
             if(flag !== "") {
               categorySelection.set("value",flag);
             }
@@ -438,7 +518,7 @@ function (declare,
                 }));
               }
             })); 
-            this.own(on(fbValueSelection, "change", lang.hitch(this, this.storeTempTraverseSettings))); 
+            this.own(on(fbValueSelection, "change", lang.hitch(this, this.storeTempConfig))); 
             if(flag !== "") {
               fbValueSelection.set("value", flag);  
             }
@@ -449,7 +529,7 @@ function (declare,
           if(typeof(param.currValues.value) !== 'undefined') {
             textbox.set("value", param.currValues.value);  
           }           
-          this.own(on(textbox, "blur", lang.hitch(this, this.storeTempTraverseSettings)));
+          this.own(on(textbox, "blur", lang.hitch(this, this.storeTempConfig)));
         }
       } else {
         var domainSelection = new Select().placeAt(td); 
@@ -469,24 +549,22 @@ function (declare,
         if(flag !== "") {
           domainSelection.set("value",flag);  
         }        
-        this.own(on(domainSelection, "change", lang.hitch(this, this.storeTempTraverseSettings)));
+        this.own(on(domainSelection, "change", lang.hitch(this, this.storeTempConfig)));
       }
-      this.storeTempTraverseSettings();
+      this.storeTempConfig();
     },
 
-
-    restoreIncludesCheckboxesState: function(param) {
-      if(typeof(this.tempTraceConfigs[param]) !== 'undefined') {
-        var traceTypeNode = this.tempTraceConfigs[param];
-        if(traceTypeNode.includeContainers) {this.chkContainers.checked = true;}
-        if(traceTypeNode.includeContent) {this.chkStructLineContent.checked = true;}
-        if(traceTypeNode.includeStructures) {this.chkStructures.checked = true;}
-        if(traceTypeNode.includeBarriers) {this.chkBarrierFeatures.checked = true;}
-        if(traceTypeNode.validateConsistency) {this.chkValidateConsistency.checked = true;}
+    _restoreIncludesCheckboxesState: function(param) {
+      if(typeof(param) !== 'undefined') {
+        if(param.traceConfig.includeContainers) {this.chkContainers.checked = true;}
+        if(param.traceConfig.includeStructLineContent) {this.chkStructLineContent.checked = true;}
+        if(param.traceConfig.includeStructures) {this.chkStructures.checked = true;}
+        if(param.traceConfig.includeBarriers) {this.chkBarrierFeatures.checked = true;}
+        if(param.traceConfig.validateConsistency) {this.chkValidateConsistency.checked = true;}
       }
     },
 
-    resetInclusionTypes: function() {
+    _resetInclusionTypes: function() {
       this.chkContainers.checked = false;
       this.chkStructLineContent.checked = false;
       this.chkStructures.checked = false;
@@ -495,6 +573,8 @@ function (declare,
     },
 
     storeTempConfig: function() {
+      var tempSetting = {};
+      //Starts and barriers
       var layerAsStart = [];
       var layerAsBarrier = [];
       if(this.startLocationCheckboxList.length > 0) {
@@ -509,6 +589,7 @@ function (declare,
           }  
         }));
       }
+      tempSetting["startLocationLayers"] = layerAsStart;
       if(this.barriersLocationCheckboxList.length > 0) {
         array.forEach(this.barriersLocationCheckboxList, lang.hitch(this, function(barrierChk) {
           if(barrierChk.get("checked")) {
@@ -521,41 +602,49 @@ function (declare,
           }  
         }));
       }
+      tempSetting["barriersLayers"] = layerAsBarrier;
 
-      this.emit("config-change", {
-        "startLocationLayers":layerAsStart, 
-        "barriersLayers":layerAsBarrier}
-      );
-      
-      /*
-      var userRowData = this.userDefinedTraces.getSelectedRow();
-      var rows = this.traceTypesTable.getRows();
-     
-      var userGroupName = {"traces":[]};
+      //includes and checkboxes
+      tempSetting["includeContainers"] = this.chkContainers.checked;
+      tempSetting["includeStructLineContent"] = this.chkStructLineContent.checked;
+      tempSetting["includeStructures"] = this.chkStructures.checked;
+      tempSetting["includeBarriers"] = this.chkBarrierFeatures.checked;
+      tempSetting["validateConsistency"] = this.chkValidateConsistency.checked;
 
-      array.forEach(rows, lang.hitch(this, function(tr) {
-        var useFeature = null;
-        var rowData = this.traceTypesTable.getRowData(tr);  
-        if(rowData.resultAsStart || rowData.resultAsBarrier) {
-          var splitAGAT = tr.filterFeature.value.split(":");
-          useFeature = {
-            "assetGroupCode": splitAGAT[0],
-            "assetTypeCode": splitAGAT[1],
-            "layerid": tr.filterFeature.layerId
-          };
-        }     
-        var obj = {
-          "type": tr.traceType.value,
-          "resultAsStart": rowData.resultAsStart,
-          "resultAsBarrier": rowData.resultAsBarrier,
-          "layerToUseAs": useFeature,
-          "traceID": rowData.rowID
-        };
-        userGroupName["traces"].push(obj);
+      //get Condition and filter tables
+      var processList = [
+        {"table": this.conditionBarriersTable, "node":"conditionBarriers"},
+        {"table": this.filterBarriersTable, "node":"filterBarriers"},
+        {"table": this.outputConditionsTable, "node":"outputConditions"}
+      ];
+      array.forEach(processList, lang.hitch(this, function(item) {
+        var objArray = [];
+        var rows = item.table.getRows();
+        if(rows.length > 0) {
+          array.forEach(rows, lang.hitch(this, function(row) {
+            var valueInput = "";
+            if(typeof(row.value) !== "undefined") {
+              valueInput = row.value.value;
+            } else {
+              var rowData = item.table.getRowData(row);
+              valueInput = rowData.value;  
+            }
+            objArray.push({
+              "name": row.name.options[row.name.value].textContent,
+              "type": "networkAttribute",
+              "operator": row.operator.value,
+              "value": valueInput,
+              "combineUsingOr": (typeof(row.combine) !== "undefined") ? row.combine.value : false,
+              "isSpecificValue": (row.type.value === "specificValue") ? true : false,
+            });
+          }));
+          tempSetting[item.node] = objArray;
+        } 
       }));
-      this.tempTraceConfigs.userTraces[userRowData.userDefinedName.value] = userGroupName;
-      return userGroupName;
-      */
+     
+      //emit that config change so it can saved
+      this.emit("config-change", tempSetting);
+    
     },
 
 
@@ -621,9 +710,9 @@ function (declare,
 
     createCombineUsingList: function() {
       var combineList = [
-        {display: "", value: ""},
-        {display: "And", value: "And"},
-        {display: "Or", value: "Or"}
+        {display: "", value: false},
+        {display: "And", value: false},
+        {display: "Or", value: true}
       ];
       return combineList;
     },

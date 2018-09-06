@@ -60,7 +60,14 @@
 
 .startFeatureGroup {
   padding-left: 5px;
+  width: 100%;
+  height: 125px;
   display: block;
+  padding-bottom: 25px;
+}
+
+.startFeatureGroup-hidden {
+  padding-left: 5px;
   width: 100%;
   height: 125px;
   display: none;
@@ -78,10 +85,9 @@
 
 .barrierFeatureGroup {
   padding-left: 5px;
-  display: block;
   width: 100%;
   height: 125px;
-  display: none;
+  display: block;
   padding-bottom: 25px;
 }
 

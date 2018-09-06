@@ -251,7 +251,6 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
       }
 
       this.own(on(this.userDefinedTraces, "row-select", lang.hitch(this, function(tr) {
-        console.log(this.tempTraceConfigs);
         var defaultVal = null;
         var existTraceCheck = this.tempTraceConfigs["userTraces"];
         for (var key in existTraceCheck) {
@@ -269,9 +268,9 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
     addRowUserDefined: function(param) {
       var addRowResult = this.userDefinedTraces.addRow({});
       this._addUserTextbox({"tr":addRowResult.tr, "predefined":param.predefined});
-      this.userDefinedTraces.selectRow(addRowResult.tr);
-
-      this._createTraceTypeTable({"predefined":param.predefined});
+    
+      this.userDefinedTraces.selectRow(addRowResult.tr); 
+      this._createTraceTypeTable({"predefined":param.predefined});     
       return addRowResult;
     },
 
@@ -350,10 +349,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
             }));
           }              
         }
-        console.log(existingData);
         this.launchTraceParameters({"tr":tr, "predefined":existingData});
-        //this.storeTempConfig();
-        //this.traceConfigParameter.storeTempConfig();
       })));
 
       if(param.predefined !== null) {
@@ -391,7 +387,6 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
       this._addTraceTypeSelection({"tr":addRowResult.tr, "predefined":param.predefined});
       this._addTraceStartSelection({"tr":addRowResult.tr, "predefined":param.predefined});
       this._addTraceBarrierSelection({"tr":addRowResult.tr, "predefined":param.predefined});
-      //this._addAGSelection({"tr":addRowResult.tr, "predefined":param.predefined});
       this.traceTypesTable.selectRow(addRowResult.tr);
       return addRowResult;
     },
@@ -416,7 +411,6 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
       }
 
       this.own(on(selectionBox, "change", lang.hitch(this, function(val) {
-        //this.storeTempConfig();
         this.traceConfigParameter.storeTempConfig();
       })));
 
@@ -441,7 +435,6 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
         if(this.traceConfigParameter !== null) {
           this.traceConfigParameter._createStartList({"value":val}); 
         }
-        //this.storeTempConfig();
         this.traceConfigParameter.storeTempConfig();
       })));
     },
@@ -466,40 +459,6 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
         if(this.traceConfigParameter !== null) {
           this.traceConfigParameter._createBarrierList({"value":val}); 
         }        
-        //this.storeTempConfig();
-        this.traceConfigParameter.storeTempConfig();
-      })));
-
-    },
-
-    _addAGSelection: function(param) {
-      var td = query('.simple-table-cell', param.tr)[3];
-      var assetGroupList = this.un.getAGByDevice(this.cmbDomainNetworks.value);
-      var optionList = [{ "label": "Choose a Feature", "value": "", "layerId": "", "assetType": "" }];
-      array.forEach(assetGroupList[0].assetGroup, lang.hitch(this, function(ag) {
-        array.forEach(ag.assetTypes, lang.hitch(this, function(at) {
-          optionList.push(
-            { "label": ag.assetGroupName + " - " + at.assetTypeName, "value": ag.assetGroupCode + ":" + at.assetTypeCode, "layerId": assetGroupList[0].layerId, "assetType": at.assetTypeCode }  
-          );
-        }));
-      }));
-      var selectionBox = new Select({
-        options: optionList
-      });
-      selectionBox.placeAt(td);
-      selectionBox.startup();
-      param.tr.filterFeature = selectionBox;
-
-      if(param.predefined !== null) {
-        if(param.predefined.layerToUseAs !== null) {
-        var concatVal = param.predefined.layerToUseAs.assetGroupCode + ":" + param.predefined.layerToUseAs.assetTypeCode;
-        selectionBox.set("value", concatVal); 
-        param.tr.filterFeature.value = concatVal;
-        }
-      }
-
-      this.own(on(selectionBox, "change", lang.hitch(this, function(val) {
-        //this.storeTempConfig();
         this.traceConfigParameter.storeTempConfig();
       })));
 
@@ -528,7 +487,6 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
       var selectedRowMatch = this.traceTypesTable.getSelectedRowData();
 
       array.forEach(rows, lang.hitch(this, function(tr) {
-        var useFeature = null;
         var rowData = this.traceTypesTable.getRowData(tr);  
 
         var obj = {
@@ -564,25 +522,6 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
       this.own(on(this.traceConfigParameter, "config-change", lang.hitch(this,function(results){
         this.storeTempConfig({"traceConfig": results});
       })));
-
-      /*
-      var popup = new Popup({
-        width: 830,
-        height: 560,
-        content: traceParams,
-        titleLabel: "Trace Configurations",
-        buttons: [{
-          label: "Ok",
-          onClick: lang.hitch(this, function () {
-            popup.close();
-            popup = null;
-          })
-        }, {
-          label: "Cancel",
-          classNames: ['jimu-btn-vacation']
-        }]        
-      });
-      */
 
     },
 
