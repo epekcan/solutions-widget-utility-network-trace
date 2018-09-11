@@ -72,11 +72,16 @@ function (declare,
     },
 
     postCreate: function () {
+      this.un;
       this.inherited(arguments);
 
     },
 
     startup: function () {
+
+      this._createTraverseFilterTable("condition");
+      this._createTraverseFilterTable("filter");
+      this._createTraverseFilterTable("output");
 
       if(this.existingValues !== null) {
         this._createStartList({"value": this.existingValues.useAsStart});
@@ -85,33 +90,28 @@ function (declare,
         if(typeof(this.existingValues.traceConfig) !== "undefined") {
           this._restoreIncludesCheckboxesState({"traceConfig": this.existingValues.traceConfig});
         }
+        if(typeof(this.existingValues.traceConfig) !== "undefined") {
+          if(typeof(this.existingValues.traceConfig.conditionBarriers) !== "undefined") {
+            array.forEach(this.existingValues.traceConfig.conditionBarriers, lang.hitch(this, function(cb){
+              this.addRowTraverse(this.conditionBarriersTable, cb);
+            }));
+          }
+          if(typeof(this.existingValues.traceConfig.filterBarriers) !== "undefined") {
+            array.forEach(this.existingValues.traceConfig.filterBarriers, lang.hitch(this, function(fb){
+              this.addRowTraverse(this.filterBarriersTable, fb);
+            }));
+          }
+          if(typeof(this.existingValues.traceConfig.outputConditions) !== "undefined") {
+            array.forEach(this.existingValues.traceConfig.outputConditions, lang.hitch(this, function(oc){
+              this.addRowTraverse(this.outputConditionsTable, oc);
+            }));
+          }                
+        }        
       } else {
         this._createStartList({"value": ""});
         this._createBarrierList({"value": ""});
         this._resetInclusionTypes();  
-      } 
-
-      this._createTraverseFilterTable("condition");
-      this._createTraverseFilterTable("filter");
-      this._createTraverseFilterTable("output");      
-
-      if(typeof(this.existingValues.traceConfig) !== "undefined") {
-        if(typeof(this.existingValues.traceConfig.conditionBarriers) !== "undefined") {
-          array.forEach(this.existingValues.traceConfig.conditionBarriers, lang.hitch(this, function(cb){
-            this.addRowTraverse(this.conditionBarriersTable, cb);
-          }));
-        }
-        if(typeof(this.existingValues.traceConfig.filterBarriers) !== "undefined") {
-          array.forEach(this.existingValues.traceConfig.filterBarriers, lang.hitch(this, function(fb){
-            this.addRowTraverse(this.filterBarriersTable, fb);
-          }));
-        }
-        if(typeof(this.existingValues.traceConfig.outputConditions) !== "undefined") {
-          array.forEach(this.existingValues.traceConfig.outputConditions, lang.hitch(this, function(oc){
-            this.addRowTraverse(this.outputConditionsTable, oc);
-          }));
-        }                
-      }
+      }       
 
       this.storeTempConfig();
 
@@ -200,25 +200,29 @@ function (declare,
           var flag = false;
           if(param.type === "start") {
             if(typeof(param.predefined) !== "undefined") {
-              if(typeof(param.predefined.traceConfig) !== "undefined") {
-                if((param.predefined.traceConfig.startLocationLayers).length > 0) {
-                  array.forEach(param.predefined.traceConfig.startLocationLayers, lang.hitch(this, function(item) {
-                    if(ag.assetGroupCode === parseInt(item.assetGroupCode) && at.assetTypeCode === parseInt(item.assetTypeCode)) {
-                      flag = true;  
-                    }
-                  }));  
+              if (param.predefined !== null) {
+                if(typeof(param.predefined.traceConfig) !== "undefined") {
+                  if((param.predefined.traceConfig.startLocationLayers).length > 0) {
+                    array.forEach(param.predefined.traceConfig.startLocationLayers, lang.hitch(this, function(item) {
+                      if(ag.assetGroupCode === parseInt(item.assetGroupCode) && at.assetTypeCode === parseInt(item.assetTypeCode)) {
+                        flag = true;  
+                      }
+                    }));  
+                  }
                 }
               }
             }            
           } else {
             if(typeof(param.predefined) !== "undefined") {
-              if(typeof(param.predefined.traceConfig) !== "undefined") {
-                if((param.predefined.traceConfig.barriersLayers).length > 0) {
-                  array.forEach(param.predefined.traceConfig.barriersLayers, lang.hitch(this, function(item) {
-                    if(ag.assetGroupCode === parseInt(item.assetGroupCode) && at.assetTypeCode === parseInt(item.assetTypeCode)) {
-                      flag = true;  
-                    }
-                  }));  
+              if (param.predefined !== null) {
+                if(typeof(param.predefined.traceConfig) !== "undefined") {
+                  if((param.predefined.traceConfig.barriersLayers).length > 0) {
+                    array.forEach(param.predefined.traceConfig.barriersLayers, lang.hitch(this, function(item) {
+                      if(ag.assetGroupCode === parseInt(item.assetGroupCode) && at.assetTypeCode === parseInt(item.assetTypeCode)) {
+                        flag = true;  
+                      }
+                    }));  
+                  }
                 }
               }
             }
@@ -354,16 +358,18 @@ function (declare,
       var outlier = {"name": "Category", "domainName": "Category"};
       netAtt.push(outlier);
       array.forEach(netAtt, function(NAObj, i) {
-         var selOption = document.createElement("option");
-         selOption.textContent = NAObj.name; 
-         selOption.value = i;
-         selOption.domainName = NAObj.domainName;
-         if(typeof(param.predefinedValues.name) !== 'undefined') {
-           if(NAObj.name === param.predefinedValues.name) {             
-            flag = i;
-           }  
-         }
-         selectionBox.addOption(selOption);      
+        var selOption = document.createElement("option");
+        selOption.textContent = NAObj.name; 
+        selOption.value = i;
+        selOption.domainName = NAObj.domainName;
+        if(param.predefinedValues !== null) {
+          if(typeof(param.predefinedValues.name) !== 'undefined') {
+            if(NAObj.name === param.predefinedValues.name) {             
+              flag = i;
+            }  
+          }
+        }
+        selectionBox.addOption(selOption);      
       });
       if(flag !== "") {
         selectionBox.set("value",flag);
@@ -390,15 +396,17 @@ function (declare,
       var selectionBox = new Select().placeAt(td);  
       var opList = this.createOperatorList();
       array.forEach(opList, function(op) {
-         var selOption = document.createElement("option");
-         selOption.textContent = op.display; 
-         selOption.value = op.value;  
-         if(typeof(param.predefinedValues.operator) !== 'undefined') {
-          if(op.value === param.predefinedValues.operator) {             
-           flag = op.value;
-          }  
-         }             
-         selectionBox.addOption(selOption);
+        var selOption = document.createElement("option");
+        selOption.textContent = op.display; 
+        selOption.value = op.value;
+        if(param.predefinedValues !== null) {  
+          if(typeof(param.predefinedValues.operator) !== 'undefined') {
+            if(op.value === param.predefinedValues.operator) {             
+              flag = op.value;
+            }  
+          }
+        }             
+        selectionBox.addOption(selOption);
       });
       if(flag !== "") {
         selectionBox.set("value",flag); 
@@ -413,23 +421,27 @@ function (declare,
       var selectionBox = new Select().placeAt(td);  
       var typeList = this.createTypeList(); 
       array.forEach(typeList, function(type) {
-         var selOption = document.createElement("option");
-         selOption.textContent = type.display; 
-         selOption.value = type.value;  
-         if(typeof(param.predefinedValues.type) !== 'undefined') {
-          if(type.value === param.predefinedValues.type) {            
-           flag = type.value;
-          }  
-         }             
+        var selOption = document.createElement("option");
+        selOption.textContent = type.display; 
+        selOption.value = type.value; 
+        if(param.predefinedValues !== null) { 
+          if(typeof(param.predefinedValues.type) !== 'undefined') {
+            if(type.value === param.predefinedValues.type) {            
+              flag = type.value;
+            }  
+          }
+        }             
          selectionBox.addOption(selOption);
       });
       //we store networkAttribute as the value, but if isSpecificValue is true, swith it to specificValue.
       //that is how it works in Pro
-      if(typeof(param.predefinedValues.type) !== 'undefined') {
-        if(param.predefinedValues.type === "networkAttribute" && param.predefinedValues.isSpecificValue === true) {
-          flag = "specificValue";
-          param.predefinedValues.type = "specificValue";
-        }  
+      if(param.predefinedValues !== null) {
+        if(typeof(param.predefinedValues.type) !== 'undefined') {
+          if(param.predefinedValues.type === "networkAttribute" && param.predefinedValues.isSpecificValue === true) {
+            flag = "specificValue";
+            param.predefinedValues.type = "specificValue";
+          }  
+        }
       }     
       if(flag !== "") {
         selectionBox.set("value",flag);
@@ -462,12 +474,14 @@ function (declare,
          selectionBox.addOption(selOption);
       });
       flag = "";
-      if(typeof(param.predefinedValues.combineUsingOr) !== 'undefined') {
-        if(param.predefinedValues.combineUsingOr === true) {            
-          flag = "Or";
-        } else {
-          flag = "And";
-        }  
+      if(param.predefinedValues !== null) {
+        if(typeof(param.predefinedValues.combineUsingOr) !== 'undefined') {
+          if(param.predefinedValues.combineUsingOr === true) {            
+            flag = "Or";
+          } else {
+            flag = "And";
+          }  
+        }
       }
       if(flag !== "") {
         selectionBox.set("value",flag);  
@@ -486,15 +500,17 @@ function (declare,
             var categorySelection = new Select().placeAt(td); 
             var catList = this.categoryList(); 
             array.forEach(catList, function(cat) {
-               var selOption = document.createElement("option");
-               selOption.textContent = cat.name; 
-               selOption.value = cat.name;  
-               if(typeof(param.currValues.value) !== 'undefined') {
-                if(cat.name === param.currValues.value) {             
-                 flag = cat.name;
-                }  
-               }             
-               categorySelection.addOption(selOption);
+              var selOption = document.createElement("option");
+              selOption.textContent = cat.name; 
+              selOption.value = cat.name; 
+              if(param.currValues !== null) { 
+                if(typeof(param.currValues.value) !== 'undefined') {
+                  if(cat.name === param.currValues.value) {             
+                    flag = cat.name;
+                  }  
+                }
+              }             
+              categorySelection.addOption(selOption);
             });
             this.own(on(categorySelection, "change", lang.hitch(this, this.storeTempConfig)));
             if(flag !== "") {
@@ -509,10 +525,12 @@ function (declare,
                   var selOption = document.createElement("option");
                   selOption.textContent = cv.name; 
                   selOption.value = cv.code; 
-                  if(typeof(param.currValues.value) !== 'undefined') {                 
-                    if((cv.code).toString() === (param.currValues.value).toString()) {            
-                    flag = cv.code;
-                    }  
+                  if(param.currValues !== null) {
+                    if(typeof(param.currValues.value) !== 'undefined') {                 
+                      if((cv.code).toString() === (param.currValues.value).toString()) {            
+                      flag = cv.code;
+                      }  
+                    }
                   }                
                   fbValueSelection.addOption(selOption);               
                 }));
@@ -526,25 +544,29 @@ function (declare,
           }           
         } else {
           var textbox = new Textbox().placeAt(td);
-          if(typeof(param.currValues.value) !== 'undefined') {
-            textbox.set("value", param.currValues.value);  
-          }           
+          if(param.currValues !== null) {
+            if(typeof(param.currValues.value) !== 'undefined') {
+              textbox.set("value", param.currValues.value);  
+            } 
+          }          
           this.own(on(textbox, "blur", lang.hitch(this, this.storeTempConfig)));
         }
       } else {
         var domainSelection = new Select().placeAt(td); 
         var netAtt = this.networkAttributeList();
         array.forEach(netAtt, function(NAObj, i) {
-           var selOption = document.createElement("option");
-           selOption.textContent = NAObj.name; 
-           selOption.value = i;
-           selOption.domainName = NAObj.domainName;
-           if(typeof(param.currValues.value) !== 'undefined') {
-            if(NAObj.name === param.currValues.value) {             
-             flag = i;
-            }  
-           }           
-           domainSelection.addOption(selOption);      
+          var selOption = document.createElement("option");
+          selOption.textContent = NAObj.name; 
+          selOption.value = i;
+          selOption.domainName = NAObj.domainName;
+          if(param.currValues !== null) {
+            if(typeof(param.currValues.value) !== 'undefined') {
+              if(NAObj.name === param.currValues.value) {             
+              flag = i;
+              }  
+            }
+          }           
+          domainSelection.addOption(selOption);      
         });
         if(flag !== "") {
           domainSelection.set("value",flag);  

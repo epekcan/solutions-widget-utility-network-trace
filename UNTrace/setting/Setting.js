@@ -93,6 +93,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
 
     getConfig: function(){
       //WAB will get config object through this method
+      delete this.config.userTraces[""];
       this.traceConfigParameter.storeTempConfig();
       this.config.service = this.cmbItems.value;
       this.config.featureServiceItem = this.cmbItems.options[this.cmbItems.selectedIndex].id;
@@ -484,30 +485,51 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
 
     storeTempConfig: function(param) {
       var userRowData = this.userDefinedTraces.getSelectedRow();
-      var rows = this.traceTypesTable.getRows();
+      var row = this.traceTypesTable.getSelectedRow();
      
       var userGroupName = {"traces":[]};
       var selectedRowMatch = this.traceTypesTable.getSelectedRowData();
-
-      array.forEach(rows, lang.hitch(this, function(tr) {
-        var rowData = this.traceTypesTable.getRowData(tr);  
-
-        var obj = {
-          "type": tr.traceType.value,
-          "traceID": rowData.rowID,
-          "useAsStart": tr.useAsStart.value,
-          "useAsBarrier": tr.useAsBarrier.value
-        };        
-
-        if(selectedRowMatch.rowID === rowData.rowID) {
+      var match = false;
+      if((this.tempTraceConfigs.userTraces).hasOwnProperty(userRowData.userDefinedName.value)) {
+        array.forEach(this.tempTraceConfigs.userTraces[userRowData.userDefinedName.value].traces, lang.hitch(this, function(trace) {
+          //var rowData = this.traceTypesTable.getRowData(tr);  
+          if(selectedRowMatch.rowID === trace.traceID) {
+              trace["type"] = row.traceType.value;
+              trace["traceID"] = selectedRowMatch.rowID;
+              trace["useAsStart"] = row.useAsStart.value;
+              trace["useAsBarrier"] = row.useAsBarrier.value;       
+              if(typeof(param) !== "undefined") {
+                trace["traceConfig"] = param.traceConfig;
+              }
+              match = true;
+          }        
+        }));
+        if(!match) {
+          var obj = {
+            "type": row.traceType.value,
+            "traceID": selectedRowMatch.rowID,
+            "useAsStart": row.useAsStart.value,
+            "useAsBarrier": row.useAsBarrier.value
+          };       
           if(typeof(param) !== "undefined") {
             obj["traceConfig"] = param.traceConfig;
           }
+          this.tempTraceConfigs.userTraces[userRowData.userDefinedName.value].traces.push(obj);             
+        }        
+      } else {
+        var obj = {
+          "type": row.traceType.value,
+          "traceID": selectedRowMatch.rowID,
+          "useAsStart": row.useAsStart.value,
+          "useAsBarrier": row.useAsBarrier.value
+        };       
+        if(typeof(param) !== "undefined") {
+          obj["traceConfig"] = param.traceConfig;
         }
-        
-        userGroupName["traces"].push(obj);
-      }));
-      this.tempTraceConfigs.userTraces[userRowData.userDefinedName.value] = userGroupName;
+        this.tempTraceConfigs.userTraces[userRowData.userDefinedName.value] = {"traces":[]};
+        this.tempTraceConfigs.userTraces[userRowData.userDefinedName.value].traces.push(obj);  
+      }
+      console.log(this.tempTraceConfigs);
       return userGroupName;
     },
   
@@ -528,6 +550,14 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
 
     },
 
+    //Delete from temp if table row deleted
+    deleteTempConfig: function(param) {
+
+      
+      array.forEach(this.tempTraceConfigs.userTraces[userRowData.userDefinedName.value].traces, lang.hitch(this, function(trace) {
+
+      }));
+    },
 
     //Reset functions
     deleteConfigurationTable: function(table, holder) {
