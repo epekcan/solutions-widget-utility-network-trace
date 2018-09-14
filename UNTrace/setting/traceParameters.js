@@ -45,7 +45,7 @@ function (declare,
   BaseWidgetSetting,
   template,
   Evented,
-  registry, on, dom, domConstruct, domAttr, domStyle, domClass, query, lang, array, agsPortal, PrivilegeUtil, UtilityNetwork, PortalHelper, tokenUtils, 
+  registry, on, dom, domConstruct, domAttr, domStyle, domClass, query, lang, array, agsPortal, PrivilegeUtil, UtilityNetwork, PortalHelper, tokenUtils,
   SimpleTable, popup, Textbox, Select, RadioButton, CheckBox
 ) {
   return declare([BaseWidgetSetting, _WidgetsInTemplateMixin, Evented], {
@@ -74,7 +74,6 @@ function (declare,
     postCreate: function () {
       this.un;
       this.inherited(arguments);
-
     },
 
     startup: function () {
@@ -105,43 +104,43 @@ function (declare,
             array.forEach(this.existingValues.traceConfig.outputConditions, lang.hitch(this, function(oc){
               this.addRowTraverse(this.outputConditionsTable, oc);
             }));
-          }                
-        }        
+          }
+        }
       } else {
         this._createStartList({"value": ""});
         this._createBarrierList({"value": ""});
-        this._resetInclusionTypes();  
-      }       
+        this._resetInclusionTypes();
+      }
 
       this.storeTempConfig();
 
-      this.own(on(this.addConditionBarriers, "click", lang.hitch(this, function() {     
+      this.own(on(this.addConditionBarriers, "click", lang.hitch(this, function() {
         this.addRowTraverse(this.conditionBarriersTable, this.existingValues);
       })));
 
-      this.own(on(this.addFilterBarriers, "click", lang.hitch(this, function() {     
+      this.own(on(this.addFilterBarriers, "click", lang.hitch(this, function() {
         this.addRowTraverse(this.filterBarriersTable, this.existingValues);
       })));
 
-      this.own(on(this.addOutputCondition, "click", lang.hitch(this, function() {     
+      this.own(on(this.addOutputCondition, "click", lang.hitch(this, function() {
         this.addRowTraverse(this.outputConditionsTable, this.existingValues);
       })));
 
-      this.own(on(this.chkContainers, "change", lang.hitch(this, function() {     
+      this.own(on(this.chkContainers, "change", lang.hitch(this, function() {
         this.storeTempConfig();
       })));
-      this.own(on(this.chkStructLineContent, "change", lang.hitch(this, function() {     
+      this.own(on(this.chkStructLineContent, "change", lang.hitch(this, function() {
         this.storeTempConfig();
       })));
-      this.own(on(this.chkStructures, "change", lang.hitch(this, function() {     
+      this.own(on(this.chkStructures, "change", lang.hitch(this, function() {
         this.storeTempConfig();
       })));
-      this.own(on(this.chkBarrierFeatures, "change", lang.hitch(this, function() {     
+      this.own(on(this.chkBarrierFeatures, "change", lang.hitch(this, function() {
         this.storeTempConfig();
       })));
-      this.own(on(this.chkValidateConsistency, "change", lang.hitch(this, function() {     
+      this.own(on(this.chkValidateConsistency, "change", lang.hitch(this, function() {
         this.storeTempConfig();
-      })));                        
+      })));
 
     },
 
@@ -151,7 +150,7 @@ function (declare,
           this.startLocationCheckboxList = [];
           domConstruct.empty(this.startFeatureHolder);
           query(".startFeatureGroup").style("display", "none");
-          //domStyle.set(query(".startFeatureGroup")[0], "display", "none");  
+          //domStyle.set(query(".startFeatureGroup")[0], "display", "none");
         } else {
           domConstruct.empty(this.startFeatureHolder);
           //domStyle.set(query(".startFeatureGroup")[0], "display", "block");
@@ -161,8 +160,8 @@ function (declare,
       } else {
         if(query(".startFeatureGroup").length > 0) {
           query(".startFeatureGroup").style("display", "none");
-          //domStyle.set(query(".startFeatureGroup")[0], "display", "none");  
-        }  
+          //domStyle.set(query(".startFeatureGroup")[0], "display", "none");
+        }
       }
     },
 
@@ -172,7 +171,7 @@ function (declare,
             this.barriersLocationCheckboxList = [];
             domConstruct.empty(this.barrierFeatureHolder);
             query(".barrierFeatureGroup").style("display", "none");
-            //domStyle.set(query(".barrierFeatureGroup")[0], "display", "none");  
+            //domStyle.set(query(".barrierFeatureGroup")[0], "display", "none");
           } else {
             domConstruct.empty(this.barrierFeatureHolder);
             query(".barrierFeatureGroup").style("display", "block");
@@ -188,10 +187,11 @@ function (declare,
     },
 
     _createAGATList: function(param) {
+      console.log(param);
       if(param.type === "start") {
         this.startLocationCheckboxList = [];
       } else {
-        this.barriersLocationCheckboxList = [];  
+        this.barriersLocationCheckboxList = [];
       }
       var assetGroupList = this.un.getAGByDevice(this.cmbDomainNetworks.value);
       array.forEach(assetGroupList[0].assetGroup, lang.hitch(this, function(ag) {
@@ -205,13 +205,13 @@ function (declare,
                   if((param.predefined.traceConfig.startLocationLayers).length > 0) {
                     array.forEach(param.predefined.traceConfig.startLocationLayers, lang.hitch(this, function(item) {
                       if(ag.assetGroupCode === parseInt(item.assetGroupCode) && at.assetTypeCode === parseInt(item.assetTypeCode)) {
-                        flag = true;  
+                        flag = true;
                       }
-                    }));  
+                    }));
                   }
                 }
               }
-            }            
+            }
           } else {
             if(typeof(param.predefined) !== "undefined") {
               if (param.predefined !== null) {
@@ -219,9 +219,9 @@ function (declare,
                   if((param.predefined.traceConfig.barriersLayers).length > 0) {
                     array.forEach(param.predefined.traceConfig.barriersLayers, lang.hitch(this, function(item) {
                       if(ag.assetGroupCode === parseInt(item.assetGroupCode) && at.assetTypeCode === parseInt(item.assetTypeCode)) {
-                        flag = true;  
+                        flag = true;
                       }
-                    }));  
+                    }));
                   }
                 }
               }
@@ -277,9 +277,9 @@ function (declare,
             domConstruct.empty(this.outputConditionsHolder);
             this.outputConditionsTable = null;
           }
-          break; 
+          break;
         default:
-          break;         
+          break;
       }
       var fields = [{
         name: 'name',
@@ -334,9 +334,9 @@ function (declare,
           this.outputConditionsTable = new SimpleTable(args);
           this.outputConditionsTable.placeAt(this.outputConditionsHolder);
           this.outputConditionsTable.startup();
-          break; 
+          break;
         default:
-          break;         
+          break;
       }
       return true;
     },
@@ -351,7 +351,7 @@ function (declare,
     },
 
     _addTraverseNameSelection: function(param) {
-      var flag = "";      
+      var flag = "";
       var td = query('.simple-table-cell', param.tr)[0];
       var selectionBox = new Select().placeAt(td);
       var netAtt = this.networkAttributeList();
@@ -359,21 +359,21 @@ function (declare,
       netAtt.push(outlier);
       array.forEach(netAtt, function(NAObj, i) {
         var selOption = document.createElement("option");
-        selOption.textContent = NAObj.name; 
+        selOption.textContent = NAObj.name;
         selOption.value = i;
         selOption.domainName = NAObj.domainName;
         if(param.predefinedValues !== null) {
           if(typeof(param.predefinedValues.name) !== 'undefined') {
-            if(NAObj.name === param.predefinedValues.name) {             
+            if(NAObj.name === param.predefinedValues.name) {
               flag = i;
-            }  
+            }
           }
         }
-        selectionBox.addOption(selOption);      
+        selectionBox.addOption(selOption);
       });
       if(flag !== "") {
         selectionBox.set("value",flag);
-      }        
+      }
       selectionBox.startup();
       param.tr.name = selectionBox;
 
@@ -383,54 +383,54 @@ function (declare,
           if(ops.value === param.tr.type.value) {
             currType = ops;
           }
-        });         
-        this.contextSensitiveList({"tr":param.tr, "name":selectionBox.options[val], "type":currType, "currValues":param.predefinedValues });
-      })); 
+        });
+        this.contextSensitiveList({"tr":param.tr, "name":selectionBox.options[val], "type":currType.value, "currValues":param.predefinedValues });
+      }));
 
       return true;
     },
 
     _addTraverseOperatorSelection: function(param) {
-      var flag = "";      
+      var flag = "";
       var td = query('.simple-table-cell', param.tr)[1];
-      var selectionBox = new Select().placeAt(td);  
+      var selectionBox = new Select().placeAt(td);
       var opList = this.createOperatorList();
       array.forEach(opList, function(op) {
         var selOption = document.createElement("option");
-        selOption.textContent = op.display; 
+        selOption.textContent = op.display;
         selOption.value = op.value;
-        if(param.predefinedValues !== null) {  
+        if(param.predefinedValues !== null) {
           if(typeof(param.predefinedValues.operator) !== 'undefined') {
-            if(op.value === param.predefinedValues.operator) {             
+            if(op.value === param.predefinedValues.operator) {
               flag = op.value;
-            }  
+            }
           }
-        }             
+        }
         selectionBox.addOption(selOption);
       });
       if(flag !== "") {
-        selectionBox.set("value",flag); 
-      }       
+        selectionBox.set("value",flag);
+      }
       selectionBox.startup();
       param.tr.operator = selectionBox;
     },
 
     _addTraverseTypeSelection: function(param) {
-      var flag = "";      
+      var flag = "";
       var td = query('.simple-table-cell', param.tr)[2];
-      var selectionBox = new Select().placeAt(td);  
-      var typeList = this.createTypeList(); 
+      var selectionBox = new Select().placeAt(td);
+      var typeList = this.createTypeList();
       array.forEach(typeList, function(type) {
         var selOption = document.createElement("option");
-        selOption.textContent = type.display; 
-        selOption.value = type.value; 
-        if(param.predefinedValues !== null) { 
+        selOption.textContent = type.display;
+        selOption.value = type.value;
+        if(param.predefinedValues !== null) {
           if(typeof(param.predefinedValues.type) !== 'undefined') {
-            if(type.value === param.predefinedValues.type) {            
+            if(type.value === param.predefinedValues.type) {
               flag = type.value;
-            }  
+            }
           }
-        }             
+        }
          selectionBox.addOption(selOption);
       });
       //we store networkAttribute as the value, but if isSpecificValue is true, swith it to specificValue.
@@ -440,16 +440,22 @@ function (declare,
           if(param.predefinedValues.type === "networkAttribute" && param.predefinedValues.isSpecificValue === true) {
             flag = "specificValue";
             param.predefinedValues.type = "specificValue";
-          }  
+          }
         }
-      }     
+      }
       if(flag !== "") {
         selectionBox.set("value",flag);
-      }      
+      }
       selectionBox.startup();
       param.tr.type = selectionBox;
 
-      this.contextSensitiveList({"tr":param.tr, "name":param.tr.name.options[0], "type":param.tr.type.options[0], "currValues":param.predefinedValues });
+      var currDomain = "";
+      array.forEach(param.tr.name.options, function(ops) {
+        if(ops.value === param.tr.name.value) {
+          currDomain = ops;
+        }
+      });
+      this.contextSensitiveList({"tr":param.tr, "name":currDomain, "type":param.tr.type.value, "currValues":param.predefinedValues });
 
       on(selectionBox, "change", lang.hitch(this, function(val) {
         var currDomain = "";
@@ -457,59 +463,59 @@ function (declare,
           if(ops.value === param.tr.name.value) {
             currDomain = ops;
           }
-        });         
+        });
         this.contextSensitiveList({"tr":param.tr, "name":currDomain, "type":selectionBox.value, "currValues":param.predefinedValues });
-      }));      
+      }));
     },
 
     _addTraverseCombineSelection: function(param) {
-      var flag = "";      
+      var flag = "";
       var td = query('.simple-table-cell', param.tr)[4];
-      var selectionBox = new Select().placeAt(td);  
+      var selectionBox = new Select().placeAt(td);
       var combineList = this.createCombineUsingList();
       array.forEach(combineList, function(combineItem) {
          var selOption = document.createElement("option");
-         selOption.textContent = combineItem.display; 
-         selOption.value = combineItem.value;                
+         selOption.textContent = combineItem.display;
+         selOption.value = combineItem.value;
          selectionBox.addOption(selOption);
       });
       flag = "";
       if(param.predefinedValues !== null) {
         if(typeof(param.predefinedValues.combineUsingOr) !== 'undefined') {
-          if(param.predefinedValues.combineUsingOr === true) {            
+          if(param.predefinedValues.combineUsingOr === true) {
             flag = "Or";
           } else {
             flag = "And";
-          }  
+          }
         }
       }
       if(flag !== "") {
-        selectionBox.set("value",flag);  
-      }     
+        selectionBox.set("value",flag);
+      }
       selectionBox.startup();
       param.tr.combine = selectionBox;
     },
 
     contextSensitiveList: function(param) {
-      var td = query('.simple-table-cell', param.tr)[3];    
+      var td = query('.simple-table-cell', param.tr)[3];
       domConstruct.empty(td);
       var flag = "";
       if(param.type === "specificValue") {
         if(param.name.domainName !== "") {
           if(param.name.domainName === "Category") {
-            var categorySelection = new Select().placeAt(td); 
-            var catList = this.categoryList(); 
+            var categorySelection = new Select().placeAt(td);
+            var catList = this.categoryList();
             array.forEach(catList, function(cat) {
               var selOption = document.createElement("option");
-              selOption.textContent = cat.name; 
-              selOption.value = cat.name; 
-              if(param.currValues !== null) { 
+              selOption.textContent = cat.name;
+              selOption.value = cat.name;
+              if(param.currValues !== null) {
                 if(typeof(param.currValues.value) !== 'undefined') {
-                  if(cat.name === param.currValues.value) {             
+                  if(cat.name === param.currValues.value) {
                     flag = cat.name;
-                  }  
+                  }
                 }
-              }             
+              }
               categorySelection.addOption(selOption);
             });
             this.own(on(categorySelection, "change", lang.hitch(this, this.storeTempConfig)));
@@ -523,54 +529,54 @@ function (declare,
               if (value.domainName === param.name.domainName) {
                 array.forEach(value.codedValues, lang.hitch(this, function(cv) {
                   var selOption = document.createElement("option");
-                  selOption.textContent = cv.name; 
-                  selOption.value = cv.code; 
+                  selOption.textContent = cv.name;
+                  selOption.value = cv.code;
                   if(param.currValues !== null) {
-                    if(typeof(param.currValues.value) !== 'undefined') {                 
-                      if((cv.code).toString() === (param.currValues.value).toString()) {            
+                    if(typeof(param.currValues.value) !== 'undefined') {
+                      if((cv.code).toString() === (param.currValues.value).toString()) {
                       flag = cv.code;
-                      }  
+                      }
                     }
-                  }                
-                  fbValueSelection.addOption(selOption);               
+                  }
+                  fbValueSelection.addOption(selOption);
                 }));
               }
-            })); 
-            this.own(on(fbValueSelection, "change", lang.hitch(this, this.storeTempConfig))); 
+            }));
+            this.own(on(fbValueSelection, "change", lang.hitch(this, this.storeTempConfig)));
             if(flag !== "") {
-              fbValueSelection.set("value", flag);  
+              fbValueSelection.set("value", flag);
             }
             param.tr.value = fbValueSelection;
-          }           
+          }
         } else {
           var textbox = new Textbox().placeAt(td);
           if(param.currValues !== null) {
             if(typeof(param.currValues.value) !== 'undefined') {
-              textbox.set("value", param.currValues.value);  
-            } 
-          }          
+              textbox.set("value", param.currValues.value);
+            }
+          }
           this.own(on(textbox, "blur", lang.hitch(this, this.storeTempConfig)));
         }
       } else {
-        var domainSelection = new Select().placeAt(td); 
+        var domainSelection = new Select().placeAt(td);
         var netAtt = this.networkAttributeList();
         array.forEach(netAtt, function(NAObj, i) {
           var selOption = document.createElement("option");
-          selOption.textContent = NAObj.name; 
+          selOption.textContent = NAObj.name;
           selOption.value = i;
           selOption.domainName = NAObj.domainName;
           if(param.currValues !== null) {
             if(typeof(param.currValues.value) !== 'undefined') {
-              if(NAObj.name === param.currValues.value) {             
+              if(NAObj.name === param.currValues.value) {
               flag = i;
-              }  
+              }
             }
-          }           
-          domainSelection.addOption(selOption);      
+          }
+          domainSelection.addOption(selOption);
         });
         if(flag !== "") {
-          domainSelection.set("value",flag);  
-        }        
+          domainSelection.set("value",flag);
+        }
         this.own(on(domainSelection, "change", lang.hitch(this, this.storeTempConfig)));
       }
       this.storeTempConfig();
@@ -602,13 +608,13 @@ function (declare,
       if(this.startLocationCheckboxList.length > 0) {
         array.forEach(this.startLocationCheckboxList, lang.hitch(this, function(startChk) {
           if(startChk.get("checked")) {
-            var splitAGAT = (startChk.get("value")).split(":");            
+            var splitAGAT = (startChk.get("value")).split(":");
             layerAsStart.push({
               "assetGroupCode": splitAGAT[0],
               "assetTypeCode": splitAGAT[1],
               "layerId": startChk.get("layerId")
             });
-          }  
+          }
         }));
       }
       tempSetting["startLocationLayers"] = layerAsStart;
@@ -621,7 +627,7 @@ function (declare,
               "assetTypeCode": splitAGAT[1],
               "layerId": barrierChk.get("layerId")
             });
-          }  
+          }
         }));
       }
       tempSetting["barriersLayers"] = layerAsBarrier;
@@ -649,7 +655,7 @@ function (declare,
               valueInput = row.value.value;
             } else {
               var rowData = item.table.getRowData(row);
-              valueInput = rowData.value;  
+              valueInput = rowData.value;
             }
             objArray.push({
               "name": row.name.options[row.name.value].textContent,
@@ -660,26 +666,26 @@ function (declare,
               "isSpecificValue": (row.type.value === "specificValue") ? true : false,
             });
           }));
-          tempSetting[item.node] = objArray;
-        } 
+        }
+        tempSetting[item.node] = objArray;
       }));
-     
+
       //emit that config change so it can saved
       this.emit("config-change", tempSetting);
-    
+
     },
 
 
 
     //support functions
     categoryList: function() {
-      var categories = this.un.dataElement.categories;      
+      var categories = this.un.dataElement.categories;
       return categories;
     },
 
     networkAttributeList: function() {
-      var na = this.un.dataElement.networkAttributes; 
-      return na;  
+      var na = this.un.dataElement.networkAttributes;
+      return na;
     },
 
     pullDomainValueList: async function() {
@@ -697,7 +703,7 @@ function (declare,
                 }
               }
               if(!dupeFlag) {
-                this.domainValueListHelper.push(fieldObj.domain); 
+                this.domainValueListHelper.push(fieldObj.domain);
               }
             }
           }));

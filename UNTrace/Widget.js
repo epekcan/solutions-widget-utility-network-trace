@@ -2,7 +2,7 @@ define([
   'dojo/_base/declare',
   'dijit/_WidgetBase',
   'dijit/_TemplatedMixin',
-  'dojo/text!./Widget.html',  
+  'dojo/text!./Widget.html',
   'dojo/dom',
   'dojo/on',
   'dojo/_base/lang',
@@ -20,7 +20,7 @@ define([
   "esri/WebMap",
   "esri/identity/IdentityManager",
   "esri/widgets/LayerList",
-  "esri/layers/MapImageLayer",  
+  "esri/layers/MapImageLayer",
   "esri/layers/GraphicsLayer",
   "esri/Graphic",
   "esri/tasks/ImageServiceIdentifyTask",
@@ -88,27 +88,27 @@ function(declare,
     un: null,
     gl: null,
     activeTraceLocation: null,
-    traceLocations: null,  
+    traceLocations: null,
     handleStartPoints: null,
-    handleBarriers: null, 
+    handleBarriers: null,
     mouseHandler: null,
     traceCounter: 0,
     traceMax: 0,
     token: null,
     traceLocationsParam: [],
     tempRecordSet: null,
-    //config: JSON.parse(Configuration),   
+    //config: JSON.parse(Configuration),
 
     postCreate: function() {
-      this.inherited(arguments);      
+      this.inherited(arguments);
       console.log('postCreate');
-        this.mapView = this.sceneView;  
+      this.mapView = this.sceneView;
 
-        this.portal = Portal;
-        this.un = UtilityNetwork;
-        this.token = this.generateToken();
+      this.portal = Portal;
+      this.un = UtilityNetwork;
+      this.token = this.generateToken();
 
-        this.createCustomTraceButtons();
+      this.createCustomTraceButtons();
     },
 
     startup: function() {
@@ -117,20 +117,16 @@ function(declare,
       this.connect();
 
       this.own(on(this.optTools, "click", lang.hitch(this, function() {
-        this.switchPanels("tools");  
+        this.switchPanels("tools");
       })));
 
       this.own(on(this.optSettings, "click", lang.hitch(this, function() {
-        this.switchPanels("settings");  
+        this.switchPanels("settings");
       })));
 
       this.own(on(this.btnStartingPoint, "click", lang.hitch(this, this.btnStartingPointClick)));
 
       this.own(on(this.btnBarriers, "click", lang.hitch(this, this.btnBarriersClick)));
-
-      //this.own(on(this.btnTraceConnected, "click", lang.hitch(this, this.btnTraceConnectedClick)));
-
-      //this.own(on(this.btnTraceUpstream, "click", lang.hitch(this, this.btnTraceUpstreamClick)));
 
       //this.own(on(this.btnFindIslands, "click", lang.hitch(this, this.IslandTrace)));
 
@@ -145,12 +141,12 @@ function(declare,
             while (traceLocations.firstChild) traceLocations.removeChild(traceLocations.firstChild);
         }
         domAttr.set(this.btnStartingPoint, "class", "button_nonactive");
-        domAttr.set(this.btnBarriers, "class", "button_nonactive");        
+        domAttr.set(this.btnBarriers, "class", "button_nonactive");
         this.mapView.graphics = [];
         this.gl.graphics = [];
         this.updateStatus("");
-      }))); 
-      
+      })));
+
       this.own(on(this.btnConnect, "click", lang.hitch(this, function(e) {
         this.connect();
       })));
@@ -164,14 +160,14 @@ function(declare,
             for (var key in this.config.userTraces) {
                 let container = domConstruct.create("div",{'class':'rowBtn'},this.customTracesHolder);
                 let userTrace = domConstruct.create("div",{'class':'button_nonactive', 'innerHTML': key, 'count':this.config.userTraces[key].traces.length},container);
-                
+
                 this.own(on(userTrace, "click", lang.hitch(this, function() {
                     this.traceCounter = 0;
-                    this.traceMax = parseInt(domAttr.get(userTrace,'count'));  
-                    this.traceLocationsParam = [];                 
+                    this.traceMax = parseInt(domAttr.get(userTrace,'count'));
+                    this.traceLocationsParam = [];
                     this.determineTracesToRun({'groupName':domAttr.get(userTrace,'innerHTML')});
                 })));
-            }            
+            }
         //}
     },
 
@@ -179,7 +175,7 @@ function(declare,
     connect: function() {
         //let portalUrl = "http://arcgisutilitysolutionsdemo.esri.com/portal";
         //let username = "admin";
-        //let password = "esri.agp";    
+        //let password = "esri.agp";
       //clear the list of services.
       while (this.cmbItems.firstChild) this.cmbItems.removeChild(this.cmbItems.firstChild);
       this.portal = Portal;
@@ -222,7 +218,7 @@ function(declare,
 
     getTraceLocationsParam: function() {
       let traceLocationsParam = [];
-      traceLocations.childNodes.forEach(li => {        
+      traceLocations.childNodes.forEach(li => {
           let startLocation = {};
           startLocation.globalId = li.globalId;
           startLocation.layerId = li.layerId;
@@ -244,11 +240,11 @@ function(declare,
 
         let color = this.activeTraceLocation === this.config.TRACELOCATION_START ? this.config.TRACING_STARTPOINT_COLOR : this.config.TRACING_BARRIER_COLOR;
 
-        this.un.traceControls.forEach(tc => {  
-                       
+        this.un.traceControls.forEach(tc => {
+
         const fl = new FeatureLayer({
             url: this.un.featureServiceUrl + "/" + tc
-        });        
+        });
 
         const query = new Query();
         query.outSpatialReference = { wkid: 102100 };
@@ -314,7 +310,7 @@ function(declare,
                     rowTraceLocation.assetTypeCode = this.getVal(g.attributes, "assettype");
                     columnElement.textContent = " (" + at.assetGroupName + "/" + at.assetTypeName + ") "
                     // columntraceLocationType.textContent = activeTraceLocation;
-                    //if termianls supported show it 
+                    //if termianls supported show it
                     if (at.isTerminalConfigurationSupported == true) {
                         let terminalList = document.createElement("select");
                         terminalList.className = "mini";
@@ -344,7 +340,7 @@ function(declare,
             }
 
         }));
- 
+
 
         //this.mapServiceHandler({"mapServiceURL":this.mapView.map.itemInfo.itemData.operationalLayers});
         /*
@@ -406,7 +402,7 @@ function(declare,
                     rowTraceLocation.assetTypeCode = this.getVal(g.graphic.attributes, "assettype");
                     columnElement.textContent = " (" + at.assetGroupName + "/" + at.assetTypeName + ") "
                     // columntraceLocationType.textContent = activeTraceLocation;
-                    //if termianls supported show it 
+                    //if termianls supported show it
                     if (at.isTerminalConfigurationSupported == true) {
                         let terminalList = document.createElement("select");
                         terminalList.className = "mini";
@@ -443,7 +439,7 @@ function(declare,
 
     btnBarriersClick: function(params) {
         domAttr.set(this.btnStartingPoint, "class", "button_nonactive");
-        domAttr.set(this.btnBarriers, "class", "button_active");        
+        domAttr.set(this.btnBarriers, "class", "button_active");
       if (this.activeTraceLocation == undefined) {
         this.mouseHandler = this.mapView.on("click", lang.hitch(this,this.mapClick));
       }
@@ -463,110 +459,71 @@ function(declare,
         for (var key in this.config.userTraces) {
             if(key === param.groupName) {
                 var arrTraces = this.config.userTraces[key].traces;
-                if(arrTraces[this.traceCounter].type === 'connected') {
-                    this.btnTraceConnectedClick({'traceInfo':arrTraces[this.traceCounter]}).then(lang.hitch(this, function() {
-                        console.log("run" + this.traceCounter);
-                        this.traceCounter++;
-                        if(this.traceCounter < this.traceMax) {
-                            this.determineTracesToRun(param);
-                        }
-                    }))     
-                } 
-                if(arrTraces[this.traceCounter].type === 'upstream') {
-                    this.btnTraceUpstreamClick({'traceInfo':arrTraces[this.traceCounter]}).then(lang.hitch(this, function() {
-                        console.log("run" + this.traceCounter);
-                        this.traceCounter++;
-                        if(this.traceCounter < this.traceMax) {
-                            this.determineTracesToRun(param);
-                        }
-                    }))     
-                }
-                                                      
-            }    
+                this._traceToRun({'traceInfo':arrTraces[this.traceCounter]}).then(lang.hitch(this, function() {
+                  console.log("run" + this.traceCounter);
+                  this.traceCounter++;
+                  if(this.traceCounter < this.traceMax) {
+                      this.determineTracesToRun(param);
+                  }
+              }));
+            }
         }
     },
 
+    _traceToRun: async function(param) {
+      return new Promise( (resolve, reject) => {
+          this.updateStatus("Tracing...");
+          if(param.traceInfo.useAsStart !== "userDefined" || param.traceInfo.useAsBarrier !== "userDefined") {
+              this.updateLocationsFromResults({"traceInfo":param.traceInfo, "featuresJson":this.tempRecordSet});
+          } else {
+              if(this.traceLocationsParam.length <= 0) {
+                  this.traceLocationsParam = this.getTraceLocationsParam();
+              }
+          }
 
+          let configuration = this.replaceSpecificTraceConfig(param);
 
+          //only attempt to trace when there is at leats one starting point
+          if (!this.traceLocationsParam.length) {
+              this.updateStatus("No starting points were found.");
+              return;
+          }
+          //var traceObj = this.un;
+          switch(param.traceInfo.type) {
+            case 'connected':
+              var traceObj = this.un.connectedTrace(this.traceLocationsParam, configuration);
+              break;
+            case 'upstream':
+              var traceObj = this.un.upstreamTrace(this.traceLocationsParam, this.config.domainNetwork, this.config.tier, "", configuration);
+              break;
+            case 'downstream':
+              var traceObj = this.un.downstream(this.traceLocationsParam, this.config.domainNetwork, this.config.tier, "", configuration);
+              break;
+            default:
+              var traceObj = this.un.connectedTrace(this.traceLocationsParam, configuration);
+              break;
+          }
 
-
-    btnTraceConnectedClick: async function(param) {
-        return new Promise( (resolve, reject) => {
-            this.updateStatus("Tracing...");
-            if(param.traceInfo.useAsStart !== "userDefined" || param.traceInfo.useAsBarrier !== "userDefined") {
-                this.updateLocationsFromResults({"traceInfo":param.traceInfo, "featuresJson":this.tempRecordSet});
-            } else {
-                if(this.traceLocationsParam.length <= 0) {
-                    this.traceLocationsParam = this.getTraceLocationsParam();
-                }
-            } 
-            
-            let connectedConfiguration = this.replaceSpecificTraceConfig(param);
-            
-            //only attempt to trace when there is at leats one starting point
-            if (!this.traceLocationsParam.length) {
-                this.updateStatus("No starting points were found.");
-                return;
-            }
-            this.un.connectedTrace(this.traceLocationsParam, connectedConfiguration)
-                .then(traceResults => {    
-                    if(this.traceCounter === (this.traceMax - 1)) {
-                      this.drawTraceResults(this.un, traceResults);
-                    }
-                    this.tempRecordSet = traceResults;
-                    //this.updateLocationsFromResults({"traceInfo":param.traceInfo, "featuresJson":traceResults});
-                  })
-                .then(a => { 
-                    this.updateStatus("Done");
-                    resolve(true);
+          traceObj.then(traceResults => {
+                  if(this.traceCounter === (this.traceMax - 1)) {
+                    this.drawTraceResults(this.un, traceResults);
+                  }
+                  this.tempRecordSet = traceResults;
                 })
-                .catch(er => {
-                    this.updateStatus(er);
-                    reject(true);
-                });
-
-        });
-    },
-
-    btnTraceUpstreamClick: async function(param) {
-        return new Promise( (resolve, reject) => {
-            this.updateStatus("Tracing...");
-            if(param.traceInfo.useAsStart !== "userDefined" || param.traceInfo.useAsBarrier !== "userDefined") {
-                this.updateLocationsFromResults({"traceInfo":param.traceInfo, "featuresJson":this.tempRecordSet});
-            } else {
-                if(this.traceLocationsParam.length <= 0) {
-                    this.traceLocationsParam = this.getTraceLocationsParam();
-                }
-            }            
-    
-            let upstreamConfiguration = this.replaceSpecificTraceConfig(param);           
-    
-            //only attempt to trace when there is at leats one starting point
-            if (!this.traceLocationsParam.length) {
-            this.updateStatus("No starting points were found.");
-            return;
-            }
-            this.un.upstreamTrace(this.traceLocationsParam, this.config.domainNetwork, this.config.tier, "", upstreamConfiguration)
-            .then(traceResults => {
-                if(this.traceCounter === (this.traceMax - 1)) {
-                  this.drawTraceResults(this.un, traceResults);
-                }
-                this.tempRecordSet = traceResults;
+              .then(a => {
+                  this.updateStatus("Done");
+                  resolve(true);
               })
-            .then(a => { 
-                this.updateStatus("Done");
-                resolve(true);
-            })
-            .catch(er => {
-                this.updateStatus(er);
-                reject(true);
-            });
+              .catch(er => {
+                  this.updateStatus(er);
+                  reject(true);
+              });
 
-        });
-    },
+      });
+  },
 
     replaceSpecificTraceConfig: function(param) {
-        let configuration = lang.clone(this.config.emptyTraceConfiguration);            
+        let configuration = lang.clone(this.config.emptyTraceConfiguration);
         configuration.includeContainers = param.traceInfo.traceConfig.includeContainers;
         configuration.includeContent = param.traceInfo.traceConfig.includeStructLineContent;
         configuration.includeStructures = param.traceInfo.traceConfig.includeStructures;
@@ -575,8 +532,8 @@ function(declare,
         configuration.domainNetworkName = this.config.domainNetwork;
         configuration.tierName = this.config.tier;
         configuration.conditionBarriers = param.traceInfo.traceConfig.conditionBarriers;
-        configuration.filterBarriers = this.config.connectedTraceConfiguration.filterBarriers;
-        configuration.outputConditions = this.config.connectedTraceConfiguration.outputConditions;
+        configuration.filterBarriers = param.traceInfo.traceConfig.filterBarriers;
+        configuration.outputConditions = param.traceInfo.traceConfig.outputConditions;
         return configuration;
     },
 
@@ -684,7 +641,7 @@ function(declare,
           })
           this.cmbSubnetworks.selectedIndex = -1;
       }));
-    },    
+    },
 
     cmbSubnetworksChange: function(params) {
       this.mapView.graphics = []
@@ -728,12 +685,12 @@ function(declare,
                 continue; //if the element is disabled skip it
             }
             let layerObj = this.un.getLayerIdfromSourceId(f.networkSourceId);
-            if (layerObj === undefined) continue; 
-            let layerId = layerObj.layerId; 
+            if (layerObj === undefined) continue;
+            let layerId = layerObj.layerId;
             if(param.traceInfo.useAsStart !== "userDefined") {
                 for (let s of param.traceInfo.traceConfig.startLocationLayers) {
                     if(s.layerId === layerId) {
-                        if(parseInt(s.assetGroupCode) === parseInt(f.assetGroupCode) && 
+                        if(parseInt(s.assetGroupCode) === parseInt(f.assetGroupCode) &&
                         parseInt(s.assetTypeCode) === parseInt(f.assetTypeCode)
                         ) {
                             let newObj = {
@@ -752,7 +709,7 @@ function(declare,
             if(param.traceInfo.useAsBarrier !== "userDefined") {
                 for (let s of param.traceInfo.traceConfig.barriersLayers) {
                     if(s.layerId === layerId) {
-                        if(parseInt(s.assetGroupCode) === parseInt(f.assetGroupCode) && 
+                        if(parseInt(s.assetGroupCode) === parseInt(f.assetGroupCode) &&
                         parseInt(s.assetTypeCode) === parseInt(f.assetTypeCode)
                         ) {
                             let newObj = {
@@ -766,7 +723,7 @@ function(declare,
                             newBarrArr.push(newObj);
                         }
                     }
-                }                
+                }
             }
         }
         if(newStartArr.length > 0) {
@@ -776,8 +733,8 @@ function(declare,
                 });
                 this.traceLocationsParam = filteredArr;
             }
-            this.traceLocationsParam = this.traceLocationsParam.concat(newStartArr);  
-        } 
+            this.traceLocationsParam = this.traceLocationsParam.concat(newStartArr);
+        }
         if(newBarrArr.length > 0) {
             if(param.traceInfo.useAsBarrier !== "addToExistingResults") {
                 let filteredArr = array.filter(this.traceLocationsParam, function(item){
@@ -785,8 +742,8 @@ function(declare,
                 });
                 this.traceLocationsParam = filteredArr;
             }
-            this.traceLocationsParam = this.traceLocationsParam.concat(newBarrArr);  
-        }             
+            this.traceLocationsParam = this.traceLocationsParam.concat(newBarrArr);
+        }
     },
 
     buildTraceResults: function(featuresJson) {
@@ -849,7 +806,7 @@ function(declare,
         let islands = 0;
         let total = 0;
         let startTime = new Date();
-        //for each layer that is device/line/junction in each domain network, query and find disconnected features. 
+        //for each layer that is device/line/junction in each domain network, query and find disconnected features.
         let layers = [];
         let deviceLayers = this.un.getDeviceLayers();
         let junctionLayers = this.un.getJunctionLayers();
@@ -910,7 +867,7 @@ function(declare,
         UpstreamConfiguration.conditionBarriers = this.config.upstreamTraceConfiguration.conditionBarriers;
         UpstreamConfiguration.filterBarriers = this.config.upstreamTraceConfiguration.filterBarriers;
         UpstreamConfiguration.outputConditions = this.config.upstreamTraceConfiguration.outputConditions;
-        
+
         let CustomerConfiguration = lang.clone(this.config.emptyTraceConfiguration);
         CustomerConfiguration.outputFilters = this.config.customerCountTraceConfiguration.outputFilters;
 
@@ -945,7 +902,7 @@ function(declare,
                 let totalTime = (end.getTime() - start.getTime()) / 1000
                 this.updateStatus("Done in .. " + totalTime + " seconds " + " found " + realValveBarrier.traceResults.elements.length + " isolation devices where only " + realIsolatingDevices + " are valid, and total affected customers of " + customersResults.traceResults.elements.length);
                 //.catch(err=> updateStatus(err));
-                
+
             } catch (err) {
                 this.updateStatus(err);
             }
@@ -981,7 +938,7 @@ function(declare,
             let startingLocations = [];
             e.traceLocationType = this.config.TRACELOCATION_START;
             startingLocations.push(e);
-            //for each element but as starting point and all the rest as barriers... 
+            //for each element but as starting point and all the rest as barriers...
             for (let i = 0; i < traceResults.elements.length; i++) {
                 let e1 = traceResults.elements[i];
                 //don't add the same element as starting point
@@ -1104,7 +1061,7 @@ function(declare,
   makeRequest: function(opts) {
     return new Promise(function (resolve, reject) {
         let xhr = new XMLHttpRequest();
-            
+
         xhr.open(opts.method, opts.url);
         xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
         xhr.onload = function () {
@@ -1122,17 +1079,17 @@ function(declare,
 
     //xhr.onerror =   err => reject({status: this.status, statusText: xhr.statusText}) ;
     xhr.onerror =   err => reject(err) ;
-    
 
-    if (opts.headers) 
+
+    if (opts.headers)
     Object.keys(opts.headers).forEach(  key => xhr.setRequestHeader(key, opts.headers[key]) )
 
     let params = opts.params;
     // We'll need to stringify if we've been given an object
     // If we have a string, this is skipped.
-    if (params && typeof params === 'object') 
+    if (params && typeof params === 'object')
         params = Object.keys(params).map(key =>  encodeURIComponent(key) + '=' + encodeURIComponent(params[key])).join('&');
-    
+
     xhr.send(params);
     });
   },

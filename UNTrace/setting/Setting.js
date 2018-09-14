@@ -34,8 +34,8 @@ define([
   "dijit/form/TextBox",
   "dijit/form/Select"
 ],
-function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, lang, array, 
-  agsPortal, PrivilegeUtil, UtilityNetwork, PortalHelper, traceParameters, tokenUtils, 
+function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, lang, array,
+  agsPortal, PrivilegeUtil, UtilityNetwork, PortalHelper, traceParameters, tokenUtils,
   SimpleTable, Popup, Textbox, Select) {
   return declare([BaseWidgetSetting, _TemplatedMixin], {
     baseClass: 'jimu-widget-untrace-setting',
@@ -47,14 +47,13 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
     domainValueListHelper: [],
     tempTraceConfigs: null,
     traceConfigParameter: null,
-    barriersList: [],
 
     userDefinedTraces: null,
     traceTypesTable: null,
     conditionBarriersTable: null,
 
     postCreate: function(){
-    
+
       this.portalHelper = PortalHelper;
       this.un = UtilityNetwork;
       this.token = this.generateToken();
@@ -63,20 +62,14 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
         "userTraces":{}
       };
 
-      this.barriersList = [
-        "conditionBarriers",
-        "filterBarriers",
-        "outputConditions"
-      ];
-
       this.setConfig(this.config);
-
+console.log(this.config);
       this.portalConnect();
 
       //the config object is passed in
       this.own(on(this.cmbItems, "change", lang.hitch(this,this.listDomainNetworks)));
       this.own(on(this.cmbDomainNetworks, "change", lang.hitch(this,this.listTiers)));
-      //this.own(on(this.cmbTiers, "change", lang.hitch(this,this.resetAll)));         
+      //this.own(on(this.cmbTiers, "change", lang.hitch(this,this.resetAll)));
 
       this.own(on(this.addUserTraces, "click", lang.hitch(this, function() {
         this.addRowUserDefined({"predefined":null});
@@ -88,7 +81,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
     },
 
     setConfig: function(config){
-      this.tempTraceConfigs["userTraces"] =  this.config["userTraces"]; 
+      this.tempTraceConfigs["userTraces"] =  this.config["userTraces"];
     },
 
     getConfig: function(){
@@ -102,6 +95,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
       this.config.subnetLineLayer = this.un.subnetLineLayerId;
       this.config.UNLayerId = this.un.layerId;
       this.config.FSurl = this.un.featureServiceUrl;
+
       this.config["userTraces"] = this.tempTraceConfigs["userTraces"];
 
       return this.config;
@@ -113,8 +107,8 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
       return tokenTool.getPortalCredential(this.appConfig.portalUrl).token;
     },
 
-    portalConnect: async function() {  
-      
+    portalConnect: async function() {
+
       var cred = new PrivilegeUtil(this.appConfig.portalUrl);
       await cred.loadPrivileges(this.appConfig.portalUrl).then(lang.hitch(this, function() {
         this.portal = new agsPortal.Portal(this.appConfig.portalUrl);
@@ -139,11 +133,11 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
                 }
                 this.cmbItems.appendChild(listItem);
               }
-            })); 
+            }));
             if(this.config.service !== null) {
-              this.cmbItems.setAttribute("value", this.config.service);  
+              this.cmbItems.setAttribute("value", this.config.service);
             }
-            
+
             if (this.cmbItems.options.length === 0) {
               this.cmbItems.selectedIndex = -1;
             } else {
@@ -157,8 +151,8 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
             //this._createUserDefinedTraceTable();
 
           }));
-        })); 
-      })); 
+        }));
+      }));
     },
 
     listDomainNetworks: function(e) {
@@ -182,12 +176,12 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
             this.cmbDomainNetworks.selectedIndex = -1;
         }
 
-        this.deleteConfigurationTable(this.userDefinedTraces, this.dynamicUserTraces);
-        this.deleteConfigurationTable(this.traceTypesTable, this.traceTypesTableHolder);
+        //this.deleteConfigurationTable(this.userDefinedTraces, this.dynamicUserTraces);
+        //this.deleteConfigurationTable(this.traceTypesTable, this.traceTypesTableHolder);
 
-        this._createUserDefinedTraceTable();
+        //this._createUserDefinedTraceTable();
 
-      }));         
+      }));
     },
 
     listTiers: async function(e) {
@@ -199,6 +193,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
       var domainNetwork = this.un.getDomainNetwork(selectedDomainNetwork);
 
       await this.pullDomainValueList();
+      console.log(this.domainValueListHelper);
 
       domainNetwork.tiers.forEach(tier => {
           let tn = document.createElement("option");
@@ -213,6 +208,12 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
       } else {
         this.cmbTiers.selectedIndex = -1;
       }
+
+      this.deleteConfigurationTable(this.userDefinedTraces, this.dynamicUserTraces);
+      this.deleteConfigurationTable(this.traceTypesTable, this.traceTypesTableHolder);
+
+      this._createUserDefinedTraceTable();
+
     },
 
     _createUserDefinedTraceTable: function() {
@@ -244,12 +245,16 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
         for (var key in existTraceCheck) {
           if (key === tr.userDefinedName.value) {
             var obj = {};
-            obj[key] = existTraceCheck[key];            
+            obj[key] = existTraceCheck[key];
             defaultVal = obj;
           }
-        } 
-        this._createTraceTypeTable({"predefined":defaultVal});        
+        }
+        this._createTraceTypeTable({"predefined":defaultVal});
         this._restoreTraceTypeRows({"tr":tr, "predefined":defaultVal});
+      })));
+
+      this.own(on(this.userDefinedTraces, "row-delete", lang.hitch(this, function(tr) {
+        this.deleteUserGroup(tr);
       })));
 
       var existTraceCheck = this.tempTraceConfigs["userTraces"];
@@ -261,9 +266,9 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
           this.addRowUserDefined({"predefined":obj});
           newFlag = false;
         }
-      }      
+      }
       if(newFlag) {
-        this.addRowUserDefined({"predefined":null});  
+        this.addRowUserDefined({"predefined":null});
       }
 
 
@@ -272,8 +277,8 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
     addRowUserDefined: function(param) {
       var addRowResult = this.userDefinedTraces.addRow({});
       this._addUserTextbox({"tr":addRowResult.tr, "predefined":param.predefined});
-      this.userDefinedTraces.selectRow(addRowResult.tr); 
-           
+      this.userDefinedTraces.selectRow(addRowResult.tr);
+
       return addRowResult;
     },
 
@@ -282,7 +287,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
       if(param.predefined !== null) {
         for (var key in param.predefined) {
           defaultText = key;
-        } 
+        }
       }
       var td = query('.simple-table-cell', param.tr)[0];
       var userTextbox = new Textbox({
@@ -299,7 +304,6 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
     },
 
     _createTraceTypeTable: function(param) {
-      console.log(param);
       if(this.traceTypesTable !== null) {
         domConstruct.empty(this.traceTypesTableHolder);
         this.traceTypesTable = null;
@@ -345,13 +349,13 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
         var rowData = this.userDefinedTraces.getSelectedRow();
         for (var key in this.tempTraceConfigs.userTraces) {
           if(rowData.userDefinedName.value === key) {
-            var arrTraces = this.tempTraceConfigs.userTraces[key].traces; 
-            array.forEach(arrTraces, lang.hitch(this, function(trace) { 
+            var arrTraces = this.tempTraceConfigs.userTraces[key].traces;
+            array.forEach(arrTraces, lang.hitch(this, function(trace) {
               if(trace.type === tr.traceType.value) {
                 existingData = trace;
               }
             }));
-          }              
+          }
         }
         this.launchTraceParameters({"tr":tr, "predefined":existingData});
       })));
@@ -361,7 +365,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
           var arrTraces = param.predefined[key].traces;
           array.forEach(arrTraces, lang.hitch(this, function(trace) {
             this.addRowTraceType({"predefined":trace});
-          })); 
+          }));
         }
       } else {
         this.addRowTraceType({"predefined":param.predefined});
@@ -388,6 +392,14 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
         "useAsStart": defaultUseAsStart,
         "useAsBarrier": defaultUseAsBarrier
       });
+
+      var deleteBtn = query(".jimu-icon-delete", addRowResult.tr);
+      if(deleteBtn.length > 0) {
+        this.own(on(deleteBtn[0], "click", lang.hitch(this, function() {
+          this.deleteTraceType();
+        })));
+      }
+
       this._addTraceTypeSelection({"tr":addRowResult.tr, "predefined":param.predefined});
       this._addTraceStartSelection({"tr":addRowResult.tr, "predefined":param.predefined});
       this._addTraceBarrierSelection({"tr":addRowResult.tr, "predefined":param.predefined});
@@ -410,7 +422,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
       param.tr.traceType = selectionBox;
 
       if(param.predefined !== null) {
-        selectionBox.set("value", param.predefined.type); 
+        selectionBox.set("value", param.predefined.type);
         param.tr.traceType.value = param.predefined.type;
       }
 
@@ -431,13 +443,13 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
       param.tr.useAsStart = selectionBox;
 
       if(param.predefined !== null) {
-        selectionBox.set("value", param.predefined.useAsStart); 
+        selectionBox.set("value", param.predefined.useAsStart);
         param.tr.useAsStart.value = param.predefined.useAsStart;
       }
 
       this.own(on(selectionBox, "change", lang.hitch(this, function(val) {
         if(this.traceConfigParameter !== null) {
-          this.traceConfigParameter._createStartList({"value":val}); 
+          this.traceConfigParameter._createStartList({"value":val});
         }
         this.traceConfigParameter.storeTempConfig();
       })));
@@ -455,84 +467,85 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
       param.tr.useAsBarrier = selectionBox;
 
       if(param.predefined !== null) {
-        selectionBox.set("value", param.predefined.useAsBarrier); 
+        selectionBox.set("value", param.predefined.useAsBarrier);
         param.tr.useAsBarrier.value = param.predefined.useAsBarrier;
       }
 
       this.own(on(selectionBox, "change", lang.hitch(this, function(val) {
         if(this.traceConfigParameter !== null) {
-          this.traceConfigParameter._createBarrierList({"value":val}); 
-        }        
+          this.traceConfigParameter._createBarrierList({"value":val});
+        }
         this.traceConfigParameter.storeTempConfig();
       })));
 
     },
 
     _restoreTraceTypeRows: function(param) {
-      this.traceTypesTable.clear(); 
+      this.traceTypesTable.clear();
       if(param.predefined !== null) {
         for (var key in param.predefined) {
-          var arrTraces = param.predefined[key].traces;        
+          var arrTraces = param.predefined[key].traces;
           array.forEach(arrTraces, lang.hitch(this, function(trace) {
             this.addRowTraceType({"predefined":trace});
           }));
         }
       } else {
-        this.addRowTraceType(param);  
-      }     
+        this.addRowTraceType(param);
+      }
     },
 
 
     storeTempConfig: function(param) {
       var userRowData = this.userDefinedTraces.getSelectedRow();
       var row = this.traceTypesTable.getSelectedRow();
-     
-      var userGroupName = {"traces":[]};
-      var selectedRowMatch = this.traceTypesTable.getSelectedRowData();
-      var match = false;
-      if((this.tempTraceConfigs.userTraces).hasOwnProperty(userRowData.userDefinedName.value)) {
-        array.forEach(this.tempTraceConfigs.userTraces[userRowData.userDefinedName.value].traces, lang.hitch(this, function(trace) {
-          //var rowData = this.traceTypesTable.getRowData(tr);  
-          if(selectedRowMatch.rowID === trace.traceID) {
-              trace["type"] = row.traceType.value;
-              trace["traceID"] = selectedRowMatch.rowID;
-              trace["useAsStart"] = row.useAsStart.value;
-              trace["useAsBarrier"] = row.useAsBarrier.value;       
-              if(typeof(param) !== "undefined") {
-                trace["traceConfig"] = param.traceConfig;
-              }
-              match = true;
-          }        
-        }));
-        if(!match) {
+      if(row !== null) {
+        var userGroupName = {"traces":[]};
+        var selectedRowMatch = this.traceTypesTable.getSelectedRowData();
+        var match = false;
+        if((this.tempTraceConfigs.userTraces).hasOwnProperty(userRowData.userDefinedName.value)) {
+          array.forEach(this.tempTraceConfigs.userTraces[userRowData.userDefinedName.value].traces, lang.hitch(this, function(trace) {
+            //var rowData = this.traceTypesTable.getRowData(tr);
+            if(selectedRowMatch.rowID === trace.traceID) {
+                trace["type"] = row.traceType.value;
+                trace["traceID"] = selectedRowMatch.rowID;
+                trace["useAsStart"] = row.useAsStart.value;
+                trace["useAsBarrier"] = row.useAsBarrier.value;
+                if(typeof(param) !== "undefined") {
+                  trace["traceConfig"] = param.traceConfig;
+                }
+                match = true;
+            }
+          }));
+          if(!match) {
+            var obj = {
+              "type": row.traceType.value,
+              "traceID": selectedRowMatch.rowID,
+              "useAsStart": row.useAsStart.value,
+              "useAsBarrier": row.useAsBarrier.value
+            };
+            if(typeof(param) !== "undefined") {
+              obj["traceConfig"] = param.traceConfig;
+            }
+            this.tempTraceConfigs.userTraces[userRowData.userDefinedName.value].traces.push(obj);
+          }
+        } else {
           var obj = {
             "type": row.traceType.value,
             "traceID": selectedRowMatch.rowID,
             "useAsStart": row.useAsStart.value,
             "useAsBarrier": row.useAsBarrier.value
-          };       
+          };
           if(typeof(param) !== "undefined") {
             obj["traceConfig"] = param.traceConfig;
           }
-          this.tempTraceConfigs.userTraces[userRowData.userDefinedName.value].traces.push(obj);             
-        }        
-      } else {
-        var obj = {
-          "type": row.traceType.value,
-          "traceID": selectedRowMatch.rowID,
-          "useAsStart": row.useAsStart.value,
-          "useAsBarrier": row.useAsBarrier.value
-        };       
-        if(typeof(param) !== "undefined") {
-          obj["traceConfig"] = param.traceConfig;
+          this.tempTraceConfigs.userTraces[userRowData.userDefinedName.value] = {"traces":[]};
+          this.tempTraceConfigs.userTraces[userRowData.userDefinedName.value].traces.push(obj);
         }
-        this.tempTraceConfigs.userTraces[userRowData.userDefinedName.value] = {"traces":[]};
-        this.tempTraceConfigs.userTraces[userRowData.userDefinedName.value].traces.push(obj);  
+        //console.log(this.tempTraceConfigs);
+        return userGroupName;
       }
-      console.log(this.tempTraceConfigs);
-      return userGroupName;
     },
-  
+
     launchTraceParameters: function(param) {
       domConstruct.empty(this.traceConfigHolder);
       this.traceConfigParameter = null;
@@ -540,7 +553,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
         un: this.un,
         domainValueListHelper: this.domainValueListHelper,
         cmbDomainNetworks: this.cmbDomainNetworks,
-        nls: this.nls,     
+        nls: this.nls,
         row: param.tr,
         existingValues: param.predefined
       }).placeAt(this.traceConfigHolder);
@@ -550,13 +563,45 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
 
     },
 
-    //Delete from temp if table row deleted
-    deleteTempConfig: function(param) {
+    deleteUserGroup: function(param) {
+      if(this.tempTraceConfigs.userTraces.hasOwnProperty(param.userDefinedName.value)) {
+        delete this.tempTraceConfigs.userTraces[param.userDefinedName.value];
+      }
+      var rows = this.userDefinedTraces.getRows();
+      if (rows.length > 0) {
+        this.userDefinedTraces.selectRow(rows[rows.length - 1]);
+      }
+      console.log(this.tempTraceConfigs);
+    },
 
-      
-      array.forEach(this.tempTraceConfigs.userTraces[userRowData.userDefinedName.value].traces, lang.hitch(this, function(trace) {
+    deleteTraceType: function(tr, data) {
+      var userRowData = this.userDefinedTraces.getSelectedRow();
+      var rows = this.traceTypesTable.getRows();
+      var spliceValue = -1;
+      var found = false;
+      if(userRowData) {
+          var counter = 0;
+          array.forEach(this.tempTraceConfigs.userTraces[userRowData.userDefinedName.value].traces, lang.hitch(this, function(trace) {
+            if(typeof(trace) !== "undefined") {
+              array.some(rows, lang.hitch(this, function(row) {
+                var rowData = this.traceTypesTable.getRowData(row);
+                if(trace.traceID === rowData.rowID) {
+                  found = true;
+                  //(this.tempTraceConfigs.userTraces[userRowData.userDefinedName.value].traces).splice(counter, 1);
+                }
+              }));
+            }
+            if(!found) {
+              (this.tempTraceConfigs.userTraces[userRowData.userDefinedName.value].traces).splice(counter, 1);
+            }
+            found = false;
+            counter++;
+          }));
+      }
 
-      }));
+      if(rows.length > 0) {
+        this.traceTypesTable.selectRow(rows[rows.length-1]);
+      }
     },
 
     //Reset functions
@@ -584,7 +629,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
                 }
               }
               if(!dupeFlag) {
-                this.domainValueListHelper.push(fieldObj.domain); 
+                this.domainValueListHelper.push(fieldObj.domain);
               }
             }
           }));
