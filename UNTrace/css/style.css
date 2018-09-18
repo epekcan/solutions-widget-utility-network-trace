@@ -4,14 +4,6 @@
   height: 100%;
 }
 
-.jimu-widget-untrace .shadow {
-  -webkit-box-shadow: 1px 1px 3px 0px rgba(0, 0, 0, 0.3);
-  -moz-box-shadow: 1px 1px 3px 0px rgba(0, 0, 0, 0.3);
-  box-shadow: 1px 1px 3px 0px rgba(0, 0, 0, 0.3);
-  width: 100%;
-  height: 100%;
-}
-
 .jimu-widget-untrace .tr {
   height: 24px;
 }
@@ -31,19 +23,17 @@
 }
 
 .button_nonactive {
-  width: 300px;
-  height: 28px;
-  background-color: #0d88c8;
+  height: 32px;
+  background-color: #8c8d8d;
   color: #ffffff;
   border: 1px solid #ffffff;
 }
 
 .button_active {
-  width: 300px;
-  height: 28px;
-  background-color: #aaaaaa;
+  height: 32px;
+  background-color: #000000;
   color: #000000;
-  border: 1px solid #ffffff;  
+  border: 1px solid #ffffff;
 }
 
 /* ESRI */
@@ -53,7 +43,7 @@
 }
 
 .jimu-widget-untrace #mapDiv {
-  position: absolute; 
+  position: absolute;
   padding: 0;
   margin: 0;
   height: 100%;
@@ -62,7 +52,7 @@
 
 
 .jimu-widget-untrace #panelView {
-  position: absolute; 
+  position: absolute;
   padding: 0;
   margin: 0;
 }
@@ -74,21 +64,21 @@
   left: 0px;
   top: 0px;
   width: 100%;
-  height: 90%;
-  color: #ffffff;
-  background-color: rgba(0, 0, 0, 0.9);
+  height: 98%;
+  color: #000000;
 }
 
 .jimu-widget-untrace #title {
   position: absolute;
   width: 100%;
-  height: 90px;
-  padding: 10px;
-  line-height: 70px;
-  font-size: 16px;
+  height: 50px;
+  padding: 5px;
+  line-height: 50px;
+  font-size: 14px;
   letter-spacing: 4px;
   text-align: center;
-  background-color: #0d88c8;
+  background-color: #8c8d8d;
+  color: #ffffff;
   box-sizing: border-box;
   display: block;
 }
@@ -101,7 +91,7 @@
   line-height: 30px;
   font-size: 11px;
   letter-spacing: 3px;
-  color: #0d88c8;
+  color: #8c8d8d;
 }
 
 .jimu-widget-untrace #optTools {
@@ -133,13 +123,11 @@
   height: 25px;
   line-height: 25px;
   text-align: center;
-  color: #0d88c8;
+  color: #8c8d8d;
 }
 
 .jimu-widget-untrace #content {
   position: absolute;
-  top: 110px;
-  bottom: 30px;
   width: 100%;
   height: 100%;
   overflow-x: hidden;
@@ -160,7 +148,6 @@
 
 .jimu-widget-untrace .inner {
   width: 100%;
-  padding: 10px;
   box-sizing: border-box;
 }
 
@@ -168,7 +155,7 @@
   width: 100%;
   height: 20px;
   line-height: 20px;
-  margin-top: 10px;
+  margin-top: 0px;
   font-size: 10px;
   letter-spacing: 3px;
   box-sizing: border-box;
@@ -189,6 +176,29 @@
   box-sizing: border-box;
 }
 
+.jimu-widget-untrace .userTraces {
+  padding-top: 8px;
+  padding-left: 5px;
+}
+
+.jimu-widget-untrace .btnFlags {
+  height: 32px;
+  line-height: 32px;
+  margin-top: 0px;
+  margin-bottom: 10px;
+  box-sizing: border-box;
+}
+
+.jimu-widget-untrace .traceLocations {
+  margin-bottom: 10px;
+  width: 100%;
+  max-height: 200px;
+  min-height: 50px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  display: none;
+}
+
 .jimu-widget-untrace .rowChk {
   width: 100%;
   height: 30px;
@@ -204,10 +214,24 @@
 .jimu-widget-untrace .btnX {
   width: 24px;
   height: 24px;
-  border-radius: 11px;
   border: 1px solid #ffffff;
   font-size: 9px;
-  background-color: #ff0000;
+}
+
+.jimu-widget-untrace .btnStartItems {
+  width: 32px;
+  height: 32px;
+  border: 2px solid #35ca55;
+  font-size: 9px;
+  background-color: #8c8d8d;
+}
+
+.jimu-widget-untrace .btnBarrierItems {
+  width: 32px;
+  height: 32px;
+  border: 2px solid #ff0000;
+  font-size: 9px;
+  background-color: #8c8d8d;
 }
 
 .jimu-widget-untrace tr {
@@ -221,6 +245,7 @@
 
 .jimu-widget-untrace .col120 {
   width: 140px;
+  height: 32px;
 }
 
 .jimu-widget-untrace .mini {
@@ -229,5 +254,47 @@
 
 .jimu-widget-untrace .block-remove {
   text-align: right;
+}
+
+.jimu-widget-untrace .subnetTrace {
+  width: 100%;
+}
+
+.jimu-widget-untrace .action-button {
+  font-size: 16px;
+  background-color: transparent;
+  border: 1px solid #D3D3D3;
+  color: #6e6e6e;
+  height: 32px;
+  width: 32px;
+  text-align: center;
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0.3);
+}
+
+.jimu-widget-untrace .action-button:hover,
+.jimu-widget-untrace .action-button:focus {
+  background: #000000;
+  color: #e4e4e4;
+}
+
+.jimu-widget-untrace .active {
+  background: #000000;
+  color: #e4e4e4;
+}
+
+.jimu-widget-untrace .flagCell {
+  width: 50%;
+  text-align: left;
+  vertical-align: top;
+}
+
+.jimu-widget-untrace .drawCell {
+  width: 50%;
+  text-align: right;
+  vertical-align: top;
+}
+
+.jimu-widget-untrace .drawIconGroup {
+  display: none;
 }
 

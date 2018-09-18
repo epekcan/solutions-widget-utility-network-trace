@@ -1,84 +1,51 @@
 <div>
-	<div id="panelView"></div>
-	<div id="panelTop" class="shadow">
-			<div id="title">
-					TRACE TOOL
-			</div>
+	<div id="panelTop">
 			<div id="options" style='display: none;'>
 					<div id="optTools" data-dojo-attach-point="optTools">TOOLS</div>
 					<div id="optSettings" data-dojo-attach-point="optSettings">SETTINGS</div>
 			</div>
 			<div id="content">
-					<div id="settings" style='display: none;'>
-						<div class="inner">
-							<div class="rowLabel">ENTERPRISE URL:</div>
-							<div class="row30">
-								<input data-dojo-type="dijit/form/TextBox" style="width:300px;" data-dojo-attach-point="portalUrl" id="portalUrl" name="portalUrl" value="https://arcgisutilitysolutionsdemo.esri.com/portal" />
-								<!--<input type="text" id="portalUrl" value="https://uc2018webgis-un.bd.esri.com/portal" style='width:300px'> -->
-							</div>
-							<div class="rowLabel">USERNAME:</div>
-							<div class="row30">
-								<input data-dojo-type="dijit/form/TextBox" style="width:300px;" data-dojo-attach-point="username" id="username" name="username" value="admin" />
-								<!-- <input type="text" id="username" value="unadmin"> -->
-							</div>
-							<div class="rowLabel">PASSWORD:</div>
-							<div class="row30">
-								<input data-dojo-type="dijit/form/TextBox" style="width:300px;" data-dojo-attach-point="password" id="password" name="password" value="esri.agp" />
-								<!-- <input type="password" id="password" value="unadmin12345"> -->
-							</div>
-							<div class="rowBtn">
-								<div data-dojo-attach-point="btnConnect" class="button_nonactive">Connect</div>
-								<!-- <button class="button_nonactive" id='btnConnect'>Connect</button> -->
-							</div>
-							<div class="rowLabel">SERVICE:</div>
-							<div class="row30">
-								<select name="cmbItems" data-dojo-attach-point="cmbItems" data-dojo-type="dijit/form/Select"></select>
-							</div>
-							<div class="rowLabel">DOMAIN NETWORKS:</div>
-							<div class="row30">
-								<select name="cmbDomainNetworks" data-dojo-attach-point="cmbDomainNetworks" data-dojo-type="dijit/form/Select"></select>
-							</div>
-							<div class="rowLabel">TIERS:</div>
-							<div class="row30">
-								<select name="cmbTiers" data-dojo-attach-point="cmbTiers" data-dojo-type="dijit/form/Select"></select>
-							</div>
-						</div>
-					</div>
 					<div id="tools">
 						<div class="inner">
+              <div class="rowLabel">FLAGS & BARRIERS:</div>
+							<div class="btnFlags">
+                <table width="100%">
+                  <tr>
+                  <td class="flagCell">
+                      <img src="widgets/untrace/images/delete.png"  data-dojo-attach-point="btnClearTraceLocations" class="button_nonactive" alt="Clear" width="32" height="32">
+                      <img src="widgets/untrace/images/add.png" data-dojo-attach-point="btnStartingPoint" class="button_nonactive" alt="Starting Points" width="32" height="32">
+                      <img src="widgets/untrace/images/add-barriers-select.png" data-dojo-attach-point="btnBarriers" class="button_nonactive" alt="Barriers" width="32" height="32">
+                  </td>
+                  <td class="drawCell">
+                    <div class="drawIconGroup">
+                    <button class="action-button esri-icon-blank-map-pin" data-dojo-attach-point="btnPoint" id="pointButton" type="button" title="Draw point"></button>
+                    <button class="action-button esri-icon-polygon" data-dojo-attach-point="btnPolygon" id="polygonButton" type="button" title="Draw polygon"></button>
+                    </div>
+                  </td>
+                  </tr>
+                </table>
+              </div>
+              <div class="traceLocations">
+                <table id='traceLocations'></table>
+              </div>
 							<div class="rowLabel">SUBNETWORKS:</div>
 							<div class="row30">
-								<select name="cmbSubnetworks" data-dojo-attach-point="cmbSubnetworks" data-dojo-type="dijit/form/Select"></select>
-								<!-- <select id='cmbSubnetworks'></select> -->
-							</div>
-							<div class="rowBtn">
-								<div data-dojo-attach-point="btnClearTraceLocations" class="button_nonactive">Clear</div>
-								<!-- <button class="button_nonactive" id='btnClearTraceLocations'>Clear</button> -->
-							</div>
-							<div class="rowBtn">
-								<div data-dojo-attach-point="btnStartingPoint" class="button_nonactive">Set Starting Points</div>
-								<!-- <button class="button_nonactive" id='btnStartingPoint'>Set Starting Points</button> -->
-							</div>
-							<div class="rowBtn">
-								<div data-dojo-attach-point="btnBarriers" class="button_nonactive">Set Barriers</div>
-								<!-- <button class="button_nonactive" id='btnBarriers'>Set Barriers</button> -->
-							</div>
-							<br><br>
-							<div data-dojo-attach-point="customTracesHolder">
-
-							</div>
+								<select name="cmbSubnetworks" class="subnetTrace" data-dojo-attach-point="cmbSubnetworks" data-dojo-type="dijit/form/Select"></select>
+              </div>
+              <div class="rowLabel">CUSTOM TRACES:</div>
+							<div data-dojo-attach-point="customTracesHolder"></div>
 							<!--
 							<div class="rowBtn" data-dojo-attach-point="divTraceConnected">
 								<div data-dojo-attach-point="btnTraceConnected" class="button_nonactive">Connected Trace</div>
 							</div>
 							<div class="rowBtn" data-dojo-attach-point="divTraceUpstream">
 								<div data-dojo-attach-point="btnTraceUpstream" class="button_nonactive">Upstream Trace</div>
-							</div>	
+							</div>
 							<div class="rowBtn" data-dojo-attach-point="divTraceDownstream">
 								<div data-dojo-attach-point="btnTraceDownstream" class="button_nonactive">Downstream Trace</div>
-							</div>													
+							</div>
 							<div class="rowBtn" data-dojo-attach-point="divTrace">
-								<div data-dojo-attach-point="btnTrace" class="button_nonactive">Subnetwork Trace</div>	
+								<div data-dojo-attach-point="btnTrace" class="button_nonactive">Subnetwork Trace</div>
 							</div>
 							<div class="rowBtn" data-dojo-attach-point="divTraceIsolation">
 								<div data-dojo-attach-point="btnTraceIsolation" class="button_nonactive">Isolation Trace (Water only)</div>
@@ -89,17 +56,16 @@
 							</div>
 							<div class="rowBtn" data-dojo-attach-point="divIslandsTrace">
 								<div data-dojo-attach-point="btnFindIslands" class="button_nonactive">Find Islands Trace</div>
-							</div>								
+							</div>
 							-->
 
 							<div class="rowChk"></div>
-							<table id='traceLocations'></table>
 						</div>
 					</div>
 			</div>
 			<div id="status">
 					<label id='lblStatus'></label>
 			</div>
-	</div>   
+	</div>
 
 </div>

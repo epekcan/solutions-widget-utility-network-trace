@@ -2,7 +2,7 @@ define([
   'dojo/_base/declare',
   'dijit/_WidgetBase',
   'dijit/_TemplatedMixin',
-  'dojo/text!./Widget.html',  
+  'dojo/text!./Widget.html',
   'dojo/dom',
   'dojo/on',
   'dojo/_base/lang',
@@ -10,6 +10,7 @@ define([
   'dijit/registry',
   'dojo/dom-attr',
   'dojo/dom-style',
+  'dojo/dom-class',
   'dojo/dom-construct',
   'dojo/query',
   'esri/geometry/geometryEngineAsync',
@@ -20,7 +21,7 @@ define([
   "esri/WebMap",
   "esri/identity/IdentityManager",
   "esri/widgets/LayerList",
-  "esri/layers/MapImageLayer",  
+  "esri/layers/MapImageLayer",
   "esri/layers/GraphicsLayer",
   "esri/Graphic",
   "esri/tasks/ImageServiceIdentifyTask",
@@ -30,6 +31,7 @@ define([
   "esri/tasks/support/Query",
   "esri/geometry/projection",
   "esri/geometry/SpatialReference",
+  'esri/views/2d/draw/Draw',
   'jimu/tokenUtils',
   "./portal",
   "./utilitynetwork",
@@ -48,6 +50,7 @@ function(declare,
   registry,
   domAttr,
   domStyle,
+  domClass,
   domConstruct,
   domQuery,
   geometryEngineAsync,
@@ -68,6 +71,7 @@ function(declare,
   Query,
   projection,
   SpatialReference,
+  Draw,
   tokenUtils,
   Portal,
   UtilityNetwork,
@@ -88,49 +92,60 @@ function(declare,
     un: null,
     gl: null,
     activeTraceLocation: null,
-    traceLocations: null,  
+    traceLocations: null,
     handleStartPoints: null,
-    handleBarriers: null, 
+    handleBarriers: null,
     mouseHandler: null,
     traceCounter: 0,
     traceMax: 0,
     token: null,
     traceLocationsParam: [],
     tempRecordSet: null,
-    //config: JSON.parse(Configuration),   
+    selectionMode: "point",
+    //config: JSON.parse(Configuration),
 
     postCreate: function() {
-      this.inherited(arguments);      
+      this.inherited(arguments);
       console.log('postCreate');
-        this.mapView = this.sceneView;  
+      this.mapView = this.sceneView;
 
-        this.portal = Portal;
-        this.un = UtilityNetwork;
-        this.token = this.generateToken();
+      this.portal = Portal;
+      this.un = UtilityNetwork;
+      this.token = this.generateToken();
 
-        this.createCustomTraceButtons();
+      this.createCustomTraceButtons();
     },
 
     startup: function() {
       this.inherited(arguments);
       console.log('startup');
-      this.connect();
+      this.loadUN();
 
       this.own(on(this.optTools, "click", lang.hitch(this, function() {
-        this.switchPanels("tools");  
+        this.switchPanels("tools");
       })));
 
       this.own(on(this.optSettings, "click", lang.hitch(this, function() {
-        this.switchPanels("settings");  
+        this.switchPanels("settings");
       })));
 
       this.own(on(this.btnStartingPoint, "click", lang.hitch(this, this.btnStartingPointClick)));
 
       this.own(on(this.btnBarriers, "click", lang.hitch(this, this.btnBarriersClick)));
 
-      //this.own(on(this.btnTraceConnected, "click", lang.hitch(this, this.btnTraceConnectedClick)));
+      this.own(on(this.btnPoint, "click", lang.hitch(this, function(){
+        this.selectionMode = "point";
+        this.enableCreateDrawing();
+        domClass.add(this.btnPoint, "active");
+        domClass.remove(this.btnPolygon, "active");
+      })));
 
-      //this.own(on(this.btnTraceUpstream, "click", lang.hitch(this, this.btnTraceUpstreamClick)));
+      this.own(on(this.btnPolygon, "click", lang.hitch(this, function(){
+        this.selectionMode = "polygon";
+        this.enableCreateDrawing();
+        domClass.add(this.btnPolygon, "active");
+        domClass.remove(this.btnPoint, "active");
+      })));
 
       //this.own(on(this.btnFindIslands, "click", lang.hitch(this, this.IslandTrace)));
 
@@ -145,75 +160,39 @@ function(declare,
             while (traceLocations.firstChild) traceLocations.removeChild(traceLocations.firstChild);
         }
         domAttr.set(this.btnStartingPoint, "class", "button_nonactive");
-        domAttr.set(this.btnBarriers, "class", "button_nonactive");        
+        domAttr.set(this.btnBarriers, "class", "button_nonactive");
+        domQuery(".traceLocations").style("display", "none");
+        domQuery(".drawIconGroup").style("display", "none");
         this.mapView.graphics = [];
         this.gl.graphics = [];
         this.updateStatus("");
-      }))); 
-      
-      this.own(on(this.btnConnect, "click", lang.hitch(this, function(e) {
-        this.connect();
       })));
-
-      this.own(on(this.cmbItems, "change", lang.hitch(this,this.cmbItemsChange)));
 
     },
 
     createCustomTraceButtons: function() {
-        //if(this.config.userTraces !== null) {
-            for (var key in this.config.userTraces) {
-                let container = domConstruct.create("div",{'class':'rowBtn'},this.customTracesHolder);
-                let userTrace = domConstruct.create("div",{'class':'button_nonactive', 'innerHTML': key, 'count':this.config.userTraces[key].traces.length},container);
-                
-                this.own(on(userTrace, "click", lang.hitch(this, function() {
-                    this.traceCounter = 0;
-                    this.traceMax = parseInt(domAttr.get(userTrace,'count'));  
-                    this.traceLocationsParam = [];                 
-                    this.determineTracesToRun({'groupName':domAttr.get(userTrace,'innerHTML')});
-                })));
-            }            
-        //}
+      for (var key in this.config.userTraces) {
+          let container = domConstruct.create("div",{'class':'customTraceItem'},this.customTracesHolder);
+          let userTrace = domConstruct.create("div",{'class':'button_nonactive userTraces', 'innerHTML': key, 'count':this.config.userTraces[key].traces.length},container);
+
+          this.own(on(userTrace, "click", lang.hitch(this, function() {
+              this.traceCounter = 0;
+              this.traceMax = parseInt(domAttr.get(userTrace,'count'));
+              this.traceLocationsParam = [];
+              this.determineTracesToRun({'groupName':domAttr.get(userTrace,'innerHTML')});
+          })));
+      }
     },
 
-
-    connect: function() {
-        //let portalUrl = "http://arcgisutilitysolutionsdemo.esri.com/portal";
-        //let username = "admin";
-        //let password = "esri.agp";    
-      //clear the list of services.
-      while (this.cmbItems.firstChild) this.cmbItems.removeChild(this.cmbItems.firstChild);
-      this.portal = Portal;
-      this.portal.url = this.portalUrl.value;
-      this.portal.username = this.username.value;
-      this.portal.password = this.password.value;
-      this.portal.connect().then(lang.hitch(this, function(token) {
-          //populate domain networks, clear list first
-          while (this.cmbDomainNetworks.firstChild) this.cmbDomainNetworks.removeChild(this.cmbDomainNetworks.firstChild);
-          while (this.cmbTiers.firstChild) this.cmbTiers.removeChild(this.cmbTiers.firstChild);
-          while (this.cmbSubnetworks.firstChild) this.cmbSubnetworks.removeChild(this.cmbSubnetworks.firstChild);
-          this.portal.items().then(myItems => {
-              myItems.forEach(a => {
-                      if (a.type === "Web Map") {
-                          let listItem = document.createElement("option");
-                          listItem.textContent = a.title;
-                          listItem.url = a.url;
-                          listItem.id = a.id;
-                          this.cmbItems.appendChild(listItem);
-                      }
-                  }
-              )
-              if (this.cmbItems.options.length === 0) {
-                this.updateStatus("No web maps found for user  " + username);
-                this.cmbItems.selectedIndex = -1;
-              } else {
-                  let event = new Event('change');
-                  this.cmbItems.selectedIndex = 4;
-                  this.cmbItems.dispatchEvent(event);
-              }
-          })
-
-
-      })).catch(rejected => this.updateStatus("Unable to connect to portal. " + rejected));
+    loadUN: function(params) {
+      this.updateStatus("");
+      this.un = UtilityNetwork;
+      this.un.token = this.token;
+      this.un.featureServiceUrl = this.config.FSurl;
+      this.un.emptyTraceConfiguration = this.config.emptyTraceConfiguration;
+      this.un.load().then(lang.hitch(this, function() {
+        this.loadGraphicLayer();
+      }),function (err) {console.log(err)});
     },
 
     updateStatus: function(params) {
@@ -222,7 +201,7 @@ function(declare,
 
     getTraceLocationsParam: function() {
       let traceLocationsParam = [];
-      traceLocations.childNodes.forEach(li => {        
+      traceLocations.childNodes.forEach(li => {
           let startLocation = {};
           startLocation.globalId = li.globalId;
           startLocation.layerId = li.layerId;
@@ -240,35 +219,34 @@ function(declare,
     },
 
     mapClick: function(event) {
-        event.stopPropagation();
-
         let color = this.activeTraceLocation === this.config.TRACELOCATION_START ? this.config.TRACING_STARTPOINT_COLOR : this.config.TRACING_BARRIER_COLOR;
-
-        this.un.traceControls.forEach(tc => {  
-                       
+        this.un.traceControls.forEach(tc => {
         const fl = new FeatureLayer({
             url: this.un.featureServiceUrl + "/" + tc
-        });        
-
+        });
         const query = new Query();
         query.outSpatialReference = { wkid: 102100 };
         query.returnGeometry = true;
         query.outFields = [ "*" ];
         query.distance = 2;
-        query.geometry = event.mapPoint;
+        query.geometry = event;
         fl.queryFeatures(query).then(lang.hitch(this, function(hitResults){
             console.log(hitResults.features);  // prints the array of features to the console
+            domQuery(".traceLocations").style("display", "block");
 
             let supportedClasses = ["esriUNFCUTDevice", "esriUNFCUTJunction"] //, "esriUNFCUTLine" ]
             if (hitResults.features.length) {
                 hitResults.features.forEach(g => {
 
                     let img = document.createElement("img");
-
-                    if (this.activeTraceLocation === this.config.TRACELOCATION_START)
-                        img.src = this.folderUrl + "/images/startPoint.png"
-                    else
-                        img.src = this.folderUrl + "/images/barrier.png";
+                    if (this.activeTraceLocation === this.config.TRACELOCATION_START) {
+                        img.src = this.folderUrl + "/images/add.png";
+                        img.className = "btnStartItems";
+                    }
+                    else {
+                        img.src = this.folderUrl + "/images/add-barriers-select.png";
+                        img.className = "btnBarrierItems";
+                    }
                     let rowTraceLocation = document.createElement("tr");
                     let columnImg = document.createElement("td");
                     rowTraceLocation.appendChild(columnImg);
@@ -283,8 +261,8 @@ function(declare,
                     rowTraceLocation.appendChild(columnTerminal);
                     let columnBtn = document.createElement("td");
                     rowTraceLocation.appendChild(columnBtn);
-                    let deleteTraceLocation = document.createElement("button");
-                    deleteTraceLocation.textContent = "X";
+                    let deleteTraceLocation = document.createElement("img");
+                    deleteTraceLocation.src = this.folderUrl + "/images/delete.png"
                     deleteTraceLocation.className = "btnX";
                     deleteTraceLocation.addEventListener("click", lang.hitch(this, function(e){
                         traceLocations.removeChild(rowTraceLocation);
@@ -297,7 +275,9 @@ function(declare,
                             }
 
                         }
-
+                        if(this.gl.graphics.items.length <= 0) {
+                          domQuery(".traceLocations").style("display", "none");
+                        }
 
                     }));
                     columnBtn.appendChild(deleteTraceLocation);
@@ -314,7 +294,7 @@ function(declare,
                     rowTraceLocation.assetTypeCode = this.getVal(g.attributes, "assettype");
                     columnElement.textContent = " (" + at.assetGroupName + "/" + at.assetTypeName + ") "
                     // columntraceLocationType.textContent = activeTraceLocation;
-                    //if termianls supported show it 
+                    //if termianls supported show it
                     if (at.isTerminalConfigurationSupported == true) {
                         let terminalList = document.createElement("select");
                         terminalList.className = "mini";
@@ -344,118 +324,35 @@ function(declare,
             }
 
         }));
- 
-
-        //this.mapServiceHandler({"mapServiceURL":this.mapView.map.itemInfo.itemData.operationalLayers});
         /*
         this.mapView.hitTest({ x: event.x, y: event.y }).then(lang.hitch(this,function(hitResults) {
             //console.log(hitResults);
-
-            let supportedClasses = ["esriUNFCUTDevice", "esriUNFCUTJunction", "esriUNFCUTLine"] //, "esriUNFCUTLine" ]
-            if (hitResults.results.length) {
-                hitResults.results.forEach(g => {
-
-                    let img = document.createElement("img");
-
-                    if (this.activeTraceLocation === this.config.TRACELOCATION_START)
-                        img.src = this.folderUrl + "/images/startPoint.png"
-                    else
-                        img.src = this.folderUrl + "/images/barrier.png";
-                    let rowTraceLocation = document.createElement("tr");
-                    let columnImg = document.createElement("td");
-                    rowTraceLocation.appendChild(columnImg);
-                    columnImg.appendChild(img);
-                    let columnElement = document.createElement("td");
-                    // let columntraceLocationType = document.createElement("td");
-                    let columnTerminal = document.createElement("td");
-                    columnTerminal.className = "col120";
-                    //rowTraceLocation.appendChild(img)
-                    rowTraceLocation.appendChild(columnElement);
-                    //   rowTraceLocation.appendChild(columntraceLocationType);
-                    rowTraceLocation.appendChild(columnTerminal);
-                    let columnBtn = document.createElement("td");
-                    rowTraceLocation.appendChild(columnBtn);
-                    let deleteTraceLocation = document.createElement("button");
-                    deleteTraceLocation.textContent = "X";
-                    deleteTraceLocation.className = "btnX";
-                    deleteTraceLocation.addEventListener("click", lang.hitch(this, function(e){
-                        traceLocations.removeChild(rowTraceLocation);
-                        //try to remove the graphic
-                        for (let i = 0; i < this.gl.graphics.items.length; i++) {
-                            let g = this.gl.graphics.items[i];
-                            if (g.name === rowTraceLocation.globalId) {
-                                this.gl.remove(g);
-                                break;
-                            }
-
-                        }
-
-
-                    }));
-                    columnBtn.appendChild(deleteTraceLocation);
-
-                    let at = this.un.getAssetType(g.graphic.layer.layerId, this.getVal(g.graphic.attributes, "assetgroup"), this.getVal(g.graphic.attributes, "assettype"));
-                    //if it is not a device or a junction or a line exit..
-                    if (!supportedClasses.find(c => c == at.utilityNetworkFeatureClassUsageType)) return;
-                    this.config.locationId++;
-                    rowTraceLocation.globalId = this.getVal(g.graphic.attributes, "globalid");
-                    rowTraceLocation.locationId = this.config.locationId;
-                    rowTraceLocation.isTerminalConfigurationSupported = at.isTerminalConfigurationSupported;
-                    rowTraceLocation.layerId = g.graphic.layer.layerId;
-                    rowTraceLocation.assetGroupCode = this.getVal(g.graphic.attributes, "assetgroup");
-                    rowTraceLocation.assetTypeCode = this.getVal(g.graphic.attributes, "assettype");
-                    columnElement.textContent = " (" + at.assetGroupName + "/" + at.assetTypeName + ") "
-                    // columntraceLocationType.textContent = activeTraceLocation;
-                    //if termianls supported show it 
-                    if (at.isTerminalConfigurationSupported == true) {
-                        let terminalList = document.createElement("select");
-                        terminalList.className = "mini";
-                        terminalList.id = "cmbTerminalConfig" + this.config.locationId;
-                        let terminalConfiguration = this.un.getTerminalConfiguration(at.terminalConfigurationId);
-                        terminalConfiguration.terminals.forEach(t => {
-                            let terminalItem = document.createElement("option");
-                            terminalItem.textContent = t.terminalName;
-                            terminalItem.value = t.terminalId;
-                            terminalList.appendChild(terminalItem);
-                        })
-                        columnTerminal.appendChild(terminalList);
-                    }
-
-                    rowTraceLocation.traceLocationType = this.activeTraceLocation;
-                    traceLocations.appendChild(rowTraceLocation);
-
-                    //create graphic on the map
-                    let bufferedGeo =  geometryEngineAsync.buffer(g.graphic.geometry, this.config.TRACING_STARTLOCATION_BUFFER)
-                        .then(lang.hitch(this, function(geom){
-                            this.gl.graphics.add(this.getGraphic("polygon", geom, color, rowTraceLocation.globalId));
-                        }));
-                })
-
-
-
-            }
-
-        }));
         */
         });
 
     },
 
     btnBarriersClick: function(params) {
-        domAttr.set(this.btnStartingPoint, "class", "button_nonactive");
-        domAttr.set(this.btnBarriers, "class", "button_active");        
-      if (this.activeTraceLocation == undefined) {
-        this.mouseHandler = this.mapView.on("click", lang.hitch(this,this.mapClick));
-      }
+      domAttr.set(this.btnStartingPoint, "class", "button_nonactive");
+      domAttr.set(this.btnBarriers, "class", "button_active");
+      //if (this.activeTraceLocation == undefined) {
+        domQuery(".drawIconGroup").style("display", "block");
+        var event = new Event('click');
+        this.btnPoint.dispatchEvent(event);
+        //this.mouseHandler = this.mapView.on("click", lang.hitch(this,this.mapClick));
+      //}
       this.activeTraceLocation = this.config.TRACELOCATION_BARRIER;
     },
 
     btnStartingPointClick: function(params) {
       domAttr.set(this.btnStartingPoint, "class", "button_active");
       domAttr.set(this.btnBarriers, "class", "button_nonactive");
-      if (this.activeTraceLocation == undefined) {
-        this.mouseHandler = this.mapView.on("click", lang.hitch(this, this.mapClick));
-      }
+      //if (this.activeTraceLocation == undefined) {
+        domQuery(".drawIconGroup").style("display", "block");
+        var event = new Event('click');
+        this.btnPoint.dispatchEvent(event);
+        //this.mouseHandler = this.mapView.on("click", lang.hitch(this, this.mapClick));
+      //}
       this.activeTraceLocation = this.config.TRACELOCATION_START;
     },
 
@@ -463,234 +360,83 @@ function(declare,
         for (var key in this.config.userTraces) {
             if(key === param.groupName) {
                 var arrTraces = this.config.userTraces[key].traces;
-                if(arrTraces[this.traceCounter].type === 'connected') {
-                    this.btnTraceConnectedClick({'traceInfo':arrTraces[this.traceCounter]}).then(lang.hitch(this, function() {
-                        console.log("run" + this.traceCounter);
-                        this.traceCounter++;
-                        if(this.traceCounter < this.traceMax) {
-                            this.determineTracesToRun(param);
-                        }
-                    }))     
-                } 
-                if(arrTraces[this.traceCounter].type === 'upstream') {
-                    this.btnTraceUpstreamClick({'traceInfo':arrTraces[this.traceCounter]}).then(lang.hitch(this, function() {
-                        console.log("run" + this.traceCounter);
-                        this.traceCounter++;
-                        if(this.traceCounter < this.traceMax) {
-                            this.determineTracesToRun(param);
-                        }
-                    }))     
-                }
-                                                      
-            }    
+                this._traceToRun({'traceInfo':arrTraces[this.traceCounter]}).then(lang.hitch(this, function() {
+                  console.log("run" + this.traceCounter);
+                  this.traceCounter++;
+                  if(this.traceCounter < this.traceMax) {
+                      this.determineTracesToRun(param);
+                  }
+              }));
+            }
         }
     },
 
+    _traceToRun: async function(param) {
+      return new Promise( (resolve, reject) => {
+          this.updateStatus("Tracing...");
+          if(param.traceInfo.useAsStart !== "userDefined" || param.traceInfo.useAsBarrier !== "userDefined") {
+              this.updateLocationsFromResults({"traceInfo":param.traceInfo, "featuresJson":this.tempRecordSet});
+          } else {
+              if(this.traceLocationsParam.length <= 0) {
+                  this.traceLocationsParam = this.getTraceLocationsParam();
+              }
+          }
 
+          let configuration = this.replaceSpecificTraceConfig(param);
 
+          //only attempt to trace when there is at leats one starting point
+          if (!this.traceLocationsParam.length) {
+              this.updateStatus("No starting points were found.");
+              return;
+          }
+          //var traceObj = this.un;
+          switch(param.traceInfo.type) {
+            case 'connected':
+              var traceObj = this.un.connectedTrace(this.traceLocationsParam, configuration);
+              break;
+            case 'upstream':
+              var traceObj = this.un.upstreamTrace(this.traceLocationsParam, this.config.domainNetwork, this.config.tier, "", configuration);
+              break;
+            case 'downstream':
+              var traceObj = this.un.downstream(this.traceLocationsParam, this.config.domainNetwork, this.config.tier, "", configuration);
+              break;
+            default:
+              var traceObj = this.un.connectedTrace(this.traceLocationsParam, configuration);
+              break;
+          }
 
-
-    btnTraceConnectedClick: async function(param) {
-        return new Promise( (resolve, reject) => {
-            this.updateStatus("Tracing...");
-            if(param.traceInfo.useAsStart === "previousTrace" || param.traceInfo.useAsStart === "existingResults") {
-                this.updateLocationsFromResults({"traceInfo":param.traceInfo, "featuresJson":this.tempRecordSet});
-            } else {
-                if(this.traceLocationsParam.length <= 0) {
-                    this.traceLocationsParam = this.getTraceLocationsParam();
-                }
-            } 
-            
-            let connectedConfiguration = lang.clone(this.config.emptyTraceConfiguration);
-            /*
-            connectedConfiguration.includeContainers = this.config.connectedTraceConfiguration.includeContainers;
-            connectedConfiguration.domainNetworkName = this.config.connectedTraceConfiguration.domainNetworkName;
-            connectedConfiguration.tierName = this.config.connectedTraceConfiguration.tierName;
-            connectedConfiguration.conditionBarriers = this.config.connectedTraceConfiguration.conditionBarriers;
-            connectedConfiguration.filterBarriers = this.config.connectedTraceConfiguration.filterBarriers;
-            connectedConfiguration.outputConditions = this.config.connectedTraceConfiguration.outputConditions;
-
-            console.log(connectedConfiguration);
-            */
-            //only attempt to trace when there is at leats one starting point
-            if (!this.traceLocationsParam.length) {
-                this.updateStatus("No starting points were found.");
-                return;
-            }
-            this.un.connectedTrace(this.traceLocationsParam, connectedConfiguration)
-                .then(traceResults => {    
-                    if(this.traceCounter === (this.traceMax - 1)) {
-                      this.drawTraceResults(this.un, traceResults);
-                    }
-                    this.tempRecordSet = traceResults;
-                    //this.updateLocationsFromResults({"traceInfo":param.traceInfo, "featuresJson":traceResults});
-                  })
-                .then(a => { 
-                    this.updateStatus("Done");
-                    resolve(true);
+          traceObj.then(traceResults => {
+                  if(this.traceCounter === (this.traceMax - 1)) {
+                    this.drawTraceResults(this.un, traceResults);
+                  }
+                  this.tempRecordSet = traceResults;
                 })
-                .catch(er => {
-                    this.updateStatus(er);
-                    reject(true);
-                });
-
-        });
-    },
-
-    btnTraceUpstreamClick: async function(param) {
-        return new Promise( (resolve, reject) => {
-            this.updateStatus("Tracing...");
-            if(param.traceInfo.useAsStart === "previousTrace" || param.traceInfo.useAsStart === "existingResults") {
-                this.updateLocationsFromResults({"traceInfo":param.traceInfo, "featuresJson":this.tempRecordSet});
-            } else {
-                if(this.traceLocationsParam.length <= 0) {
-                    this.traceLocationsParam = this.getTraceLocationsParam();
-                }
-            }            
-    
-            let upstreamConfiguration = lang.clone(this.config.emptyTraceConfiguration);
-            
-            //upstreamConfiguration.includeContainers = this.config.upstreamTraceConfiguration.includeContainers;
-            upstreamConfiguration.domainNetworkName = this.config.domainNetwork;
-            upstreamConfiguration.tierName = this.config.tier;
-            //upstreamConfiguration.conditionBarriers = this.config.upstreamTraceConfiguration.conditionBarriers;
-            //upstreamConfiguration.filterBarriers = this.config.upstreamTraceConfiguration.filterBarriers;
-            //upstreamConfiguration.outputConditions = this.config.upstreamTraceConfiguration.outputConditions;
-            
-    
-            //only attempt to trace when there is at leats one starting point
-            if (!this.traceLocationsParam.length) {
-            this.updateStatus("No starting points were found.");
-            return;
-            }
-            this.un.upstreamTrace(this.traceLocationsParam, this.config.domainNetwork, this.config.tier, "", upstreamConfiguration)
-            .then(traceResults => {
-                if(this.traceCounter === (this.traceMax - 1)) {
-                  this.drawTraceResults(this.un, traceResults);
-                }
-                //if(param.traceInfo.resultAsStart || param.traceInfo.resultAsStart) {
-                this.tempRecordSet = traceResults;
-                   // this.updateLocationsFromResults({"traceInfo":param.traceInfo, "featuresJson":traceResults});
-                //}
+              .then(a => {
+                  this.updateStatus("Done");
+                  resolve(true);
               })
-            .then(a => { 
-                this.updateStatus("Done");
-                resolve(true);
-            })
-            .catch(er => {
-                this.updateStatus(er);
-                reject(true);
-            });
+              .catch(er => {
+                  this.updateStatus(er);
+                  reject(true);
+              });
 
-        });
+      });
+  },
+
+    replaceSpecificTraceConfig: function(param) {
+        let configuration = lang.clone(this.config.emptyTraceConfiguration);
+        configuration.includeContainers = param.traceInfo.traceConfig.includeContainers;
+        configuration.includeContent = param.traceInfo.traceConfig.includeStructLineContent;
+        configuration.includeStructures = param.traceInfo.traceConfig.includeStructures;
+        configuration.includeBarriers = param.traceInfo.traceConfig.includeBarriers;
+        configuration.validateConsistency = param.traceInfo.traceConfig.validateConsistency;
+        configuration.domainNetworkName = this.config.domainNetwork;
+        configuration.tierName = this.config.tier;
+        configuration.conditionBarriers = param.traceInfo.traceConfig.conditionBarriers;
+        configuration.filterBarriers = param.traceInfo.traceConfig.filterBarriers;
+        configuration.outputConditions = param.traceInfo.traceConfig.outputConditions;
+        return configuration;
     },
-
-
-    cmbItemsChange: function(params) {
-      let itemId = params.target.options[params.target.selectedIndex].id;
-      this.updateStatus("Loading item...");
-      let itemData = this.portal.loadItem(itemId).then(lang.hitch(this, function(result) {
-        this.updateStatus("");
-        // get the first operational layer so we know the feature service
-        let serviceUrl = result.operationalLayers[0].url;
-        let arrayService = serviceUrl.split("/")
-        arrayService.length--;
-        serviceUrl = arrayService.join("/");
-        this.un = UtilityNetwork;
-        this.un.token = this.portal.token;
-        this.un.featureServiceUrl = serviceUrl;
-        this.un.emptyTraceConfiguration = this.config.emptyTraceConfiguration;
-        let serviceJson = this.un.featureServiceJson;
-        this.un.load().then(lang.hitch(this, function() {
-                this.loadUtilityNetwork(this.un, itemId, "mapDiv");
-
-                //this.own(on(this.btnTrace, "click" , lang.hitch(this, this.btnTraceClick)));
-                this.own(on(this.cmbDomainNetworks, "change" , lang.hitch(this, this.cmbDomainNetworksChange)));
-                this.own(on(this.cmbTiers, "change" , lang.hitch(this, this.cmbTiersChange)));
-                this.own(on(this.cmbSubnetworks, "change" , lang.hitch(this, this.cmbSubnetworksChange)));
-
-                //populate domain networks, clear list first
-                while (this.cmbDomainNetworks.firstChild) this.cmbDomainNetworks.removeChild(this.cmbDomainNetworks.firstChild);
-                while (this.cmbTiers.firstChild) this.cmbTiers.removeChild(this.cmbTiers.firstChild);
-                while (this.cmbSubnetworks.firstChild) this.cmbSubnetworks.removeChild(this.cmbSubnetworks.firstChild);
-                this.un.dataElement.domainNetworks.forEach(domainNetwork => {
-                    let dn = document.createElement("option");
-                    dn.textContent = domainNetwork.domainNetworkName;
-                    this.cmbDomainNetworks.appendChild(dn);
-                })
-                //cmbDomainNetworks.selectedIndex = -1;
-                // ST - Hard code to WaterDistribution for demo
-                if (this.un.dataElement.domainNetworks.length > 1) {
-                    let event = new Event('change');
-                    this.cmbDomainNetworks.selectedIndex = 1;
-                    this.cmbDomainNetworks.dispatchEvent(event);
-                } else {
-                    this.cmbDomainNetworks.selectedIndex = -1;
-                }
-        }),function (err) {console.log(err)});
-    }));
-
-    },
-
-    btnTraceClick: function(params) {
-      let domainNetworkName = this.cmbDomainNetworks.options[this.cmbDomainNetworks.selectedIndex].textContent;
-      let tierName = this.cmbTiers.options[this.cmbTiers.selectedIndex].textContent;
-      let subnetworkName = "";
-      //if subnetwork is not selected
-      if (this.cmbSubnetworks.options[this.cmbSubnetworks.selectedIndex] != undefined) {
-          subnetworkName = this.cmbSubnetworks.options[this.cmbSubnetworks.selectedIndex].textContent;
-      }
-
-      this.updateStatus("Tracing...");
-      this.traceLocationsParam = this.getTraceLocationsParam();
-      this.un.subnetworkTrace(this.traceLocationsParam, domainNetworkName, tierName, subnetworkName)
-          .then(traceResults => {
-            if(this.traceCounter === (this.traceMax - 1)) {
-              this.drawTraceResults(this.un, traceResults);
-            }
-          })
-          .then(a => this.updateStatus("Done"))
-          .catch(err => this.updateStatus(err));
-    },
-
-    cmbDomainNetworksChange: function(params) {
-      while (this.cmbTiers.firstChild) this.cmbTiers.removeChild(this.cmbTiers.firstChild);
-      while (this.cmbSubnetworks.firstChild) this.cmbSubnetworks.removeChild(this.cmbSubnetworks.firstChild);
-      let selectedDomainNetwork = params.target.options[params.target.selectedIndex].textContent;
-
-      let domainNetwork = this.un.getDomainNetwork(selectedDomainNetwork);
-
-      domainNetwork.tiers.forEach(tier => {
-          let tn = document.createElement("option");
-          tn.textContent = tier.name;
-          this.cmbTiers.appendChild(tn);
-      })
-      //cmbTiers.selectedIndex = -1;
-      if (domainNetwork.tiers.length > 0) {
-          let event = new Event('change');
-          this.cmbTiers.dispatchEvent(event);
-      } else {
-          this.cmbTiers.selectedIndex = -1;
-      }
-    },
-
-    cmbTiersChange: function(params) {
-      while (this.cmbSubnetworks.firstChild) this.cmbSubnetworks.removeChild(this.cmbSubnetworks.firstChild);
-      let selectedDomainNetwork = this.cmbDomainNetworks.options[this.cmbDomainNetworks.selectedIndex].textContent;
-      let selectedTier = this.cmbTiers.options[this.cmbTiers.selectedIndex].textContent;
-
-      this.un.getSubnetworks(selectedDomainNetwork, selectedTier).then(lang.hitch(this, function(results) {
-          results.features.forEach(feature => {
-              let sn = document.createElement("option");
-              for (let propt in feature.attributes)
-                  if (propt.toUpperCase() === "SUBNETWORKNAME")
-                      sn.textContent = feature.attributes[propt];
-
-              this.cmbSubnetworks.appendChild(sn);
-          })
-          this.cmbSubnetworks.selectedIndex = -1;
-      }));
-    },    
 
     cmbSubnetworksChange: function(params) {
       this.mapView.graphics = []
@@ -712,16 +458,11 @@ function(declare,
           });
     },
 
-    loadUtilityNetwork: function(utilityNetwork, itemId, mapViewDiv) {
-      let token = this.portal.token;
-      let serviceJson = utilityNetwork.featureServiceJson;
-      let serviceUrl = utilityNetwork.featureServiceUrl;
-
+    loadGraphicLayer: function() {
       this.GraphicClass = Graphic;
       this.gl = new GraphicsLayer();
       this.gl.screenSizePerspectiveEnabled = true
       this.mapView.map.add(this.gl);
-
     },
 
     updateLocationsFromResults: function(param) {
@@ -734,12 +475,12 @@ function(declare,
                 continue; //if the element is disabled skip it
             }
             let layerObj = this.un.getLayerIdfromSourceId(f.networkSourceId);
-            if (layerObj === undefined) continue; 
-            let layerId = layerObj.layerId; 
+            if (layerObj === undefined) continue;
+            let layerId = layerObj.layerId;
             if(param.traceInfo.useAsStart !== "userDefined") {
                 for (let s of param.traceInfo.traceConfig.startLocationLayers) {
                     if(s.layerId === layerId) {
-                        if(parseInt(s.assetGroupCode) === parseInt(f.assetGroupCode) && 
+                        if(parseInt(s.assetGroupCode) === parseInt(f.assetGroupCode) &&
                         parseInt(s.assetTypeCode) === parseInt(f.assetTypeCode)
                         ) {
                             let newObj = {
@@ -758,7 +499,7 @@ function(declare,
             if(param.traceInfo.useAsBarrier !== "userDefined") {
                 for (let s of param.traceInfo.traceConfig.barriersLayers) {
                     if(s.layerId === layerId) {
-                        if(parseInt(s.assetGroupCode) === parseInt(f.assetGroupCode) && 
+                        if(parseInt(s.assetGroupCode) === parseInt(f.assetGroupCode) &&
                         parseInt(s.assetTypeCode) === parseInt(f.assetTypeCode)
                         ) {
                             let newObj = {
@@ -772,16 +513,18 @@ function(declare,
                             newBarrArr.push(newObj);
                         }
                     }
-                }                
+                }
             }
         }
         if(newStartArr.length > 0) {
-            let filteredArr = array.filter(this.traceLocationsParam, function(item){
-                return item.traceLocationType !== "startingPoint";
-            });
-            this.traceLocationsParam = filteredArr;
-            this.traceLocationsParam = this.traceLocationsParam.concat(newStartArr);  
-        } 
+            if(param.traceInfo.useAsStart !== "addToExistingResults") {
+                let filteredArr = array.filter(this.traceLocationsParam, function(item){
+                    return item.traceLocationType !== "startingPoint";
+                });
+                this.traceLocationsParam = filteredArr;
+            }
+            this.traceLocationsParam = this.traceLocationsParam.concat(newStartArr);
+        }
         if(newBarrArr.length > 0) {
             if(param.traceInfo.useAsBarrier !== "addToExistingResults") {
                 let filteredArr = array.filter(this.traceLocationsParam, function(item){
@@ -789,8 +532,29 @@ function(declare,
                 });
                 this.traceLocationsParam = filteredArr;
             }
-            this.traceLocationsParam = this.traceLocationsParam.concat(newBarrArr);  
-        }             
+            this.traceLocationsParam = this.traceLocationsParam.concat(newBarrArr);
+        }
+    },
+
+    btnTraceClick: function(params) {
+      let domainNetworkName = this.config.domainNetwork;
+      let tierName = this.config.tier;
+      let subnetworkName = "";
+      //if subnetwork is not selected
+      if (this.cmbSubnetworks.options[this.cmbSubnetworks.selectedIndex] != undefined) {
+          subnetworkName = this.cmbSubnetworks.options[this.cmbSubnetworks.selectedIndex].textContent;
+      }
+
+      this.updateStatus("Tracing...");
+      this.traceLocationsParam = this.getTraceLocationsParam();
+      this.un.subnetworkTrace(this.traceLocationsParam, domainNetworkName, tierName, subnetworkName)
+          .then(traceResults => {
+            if(this.traceCounter === (this.traceMax - 1)) {
+              this.drawTraceResults(this.un, traceResults);
+            }
+          })
+          .then(a => this.updateStatus("Done"))
+          .catch(err => this.updateStatus(err));
     },
 
     buildTraceResults: function(featuresJson) {
@@ -853,7 +617,7 @@ function(declare,
         let islands = 0;
         let total = 0;
         let startTime = new Date();
-        //for each layer that is device/line/junction in each domain network, query and find disconnected features. 
+        //for each layer that is device/line/junction in each domain network, query and find disconnected features.
         let layers = [];
         let deviceLayers = this.un.getDeviceLayers();
         let junctionLayers = this.un.getJunctionLayers();
@@ -914,18 +678,18 @@ function(declare,
         UpstreamConfiguration.conditionBarriers = this.config.upstreamTraceConfiguration.conditionBarriers;
         UpstreamConfiguration.filterBarriers = this.config.upstreamTraceConfiguration.filterBarriers;
         UpstreamConfiguration.outputConditions = this.config.upstreamTraceConfiguration.outputConditions;
-        
+
         let CustomerConfiguration = lang.clone(this.config.emptyTraceConfiguration);
         CustomerConfiguration.outputFilters = this.config.customerCountTraceConfiguration.outputFilters;
 
         let traceConfiguration = UpstreamConfiguration;
         let customerConfiguration = CustomerConfiguration; //only return customers config
 
-        if (this.cmbDomainNetworks.selectedIndex != -1 && this.cmbTiers.selectedIndex != -1) {
+        if (this.config.domainNetwork && this.config.tier) {
             try {
 
-                let domainNetworkName = this.cmbDomainNetworks.options[this.cmbDomainNetworks.selectedIndex].textContent;
-                let tierName = this.cmbTiers.options[this.cmbTiers.selectedIndex].textContent;
+                let domainNetworkName = this.config.domainNetwork;
+                let tierName = this.config.tier;
                 traceConfiguration.domainNetworkName = domainNetworkName;
                 traceConfiguration.tierName = tierName;
                 let totalIsolatingDevices = 0;
@@ -949,7 +713,7 @@ function(declare,
                 let totalTime = (end.getTime() - start.getTime()) / 1000
                 this.updateStatus("Done in .. " + totalTime + " seconds " + " found " + realValveBarrier.traceResults.elements.length + " isolation devices where only " + realIsolatingDevices + " are valid, and total affected customers of " + customersResults.traceResults.elements.length);
                 //.catch(err=> updateStatus(err));
-                
+
             } catch (err) {
                 this.updateStatus(err);
             }
@@ -985,7 +749,7 @@ function(declare,
             let startingLocations = [];
             e.traceLocationType = this.config.TRACELOCATION_START;
             startingLocations.push(e);
-            //for each element but as starting point and all the rest as barriers... 
+            //for each element but as starting point and all the rest as barriers...
             for (let i = 0; i < traceResults.elements.length; i++) {
                 let e1 = traceResults.elements[i];
                 //don't add the same element as starting point
@@ -1108,7 +872,7 @@ function(declare,
   makeRequest: function(opts) {
     return new Promise(function (resolve, reject) {
         let xhr = new XMLHttpRequest();
-            
+
         xhr.open(opts.method, opts.url);
         xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
         xhr.onload = function () {
@@ -1126,17 +890,17 @@ function(declare,
 
     //xhr.onerror =   err => reject({status: this.status, statusText: xhr.statusText}) ;
     xhr.onerror =   err => reject(err) ;
-    
 
-    if (opts.headers) 
+
+    if (opts.headers)
     Object.keys(opts.headers).forEach(  key => xhr.setRequestHeader(key, opts.headers[key]) )
 
     let params = opts.params;
     // We'll need to stringify if we've been given an object
     // If we have a string, this is skipped.
-    if (params && typeof params === 'object') 
+    if (params && typeof params === 'object')
         params = Object.keys(params).map(key =>  encodeURIComponent(key) + '=' + encodeURIComponent(params[key])).join('&');
-    
+
     xhr.send(params);
     });
   },
@@ -1145,6 +909,98 @@ function(declare,
     var tokenTool = tokenUtils;
     tokenTool.portalUrl = this.appConfig.portalUrl;
     return tokenTool.getPortalCredential(this.appConfig.portalUrl).token;
+  },
+
+
+  //draw functions
+  enableCreateDrawing: function() {
+    var newDraw = new Draw({"view":this.mapView});
+    if(this.selectionMode === "point") {
+      var action = newDraw.create("point");
+      this.mapView.focus();
+
+      // Add a graphic representing the completed polygon
+      // when user double-clicks on the view or presses the "C" key
+      action.on("draw-complete", lang.hitch(this, function (evt) {
+        this.createDrawGraphic({"vertices":evt, "status":"draw-complete"});
+      }));
+
+    } else {
+      var action = newDraw.create("polygon");
+
+      this.mapView.focus();
+      // listen to vertex-add event on the action
+      action.on("vertex-add", lang.hitch(this, function (evt) {
+        this.createDrawGraphic({"vertices":evt.vertices, "status":"draw-progress"});
+      }));
+
+      // listen to cursor-update event on the action
+      action.on("cursor-update", lang.hitch(this, function (evt) {
+        this.createDrawGraphic({"vertices":evt.vertices, "status":"draw-progress"});
+      }));
+
+      // listen to vertex-remove event on the action
+      action.on("vertex-remove", lang.hitch(this, function (evt) {
+        this.createDrawGraphic({"vertices":evt.vertices, "status":"draw-progress"});
+      }));
+      // Add a graphic representing the completed polygon
+      // when user double-clicks on the view or presses the "C" key
+      action.on("draw-complete", lang.hitch(this, function (evt) {
+        this.createDrawGraphic({"vertices":evt.vertices, "status":"draw-complete"});
+      }));
+    }
+  },
+
+  createDrawGraphic: function(param){
+    this.mapView.graphics.removeAll();
+    if(this.selectionMode === "polygon") {
+      var geom = {
+        type: "polygon", // autocasts as Polygon
+        rings: param.vertices,
+        spatialReference: this.mapView.spatialReference
+      };
+      var graphic = new Graphic({
+        geometry: geom,
+        symbol: {
+          type: "simple-fill", // autocasts as SimpleFillSymbol
+          color: "blue",
+          style: "solid",
+          outline: {  // autocasts as SimpleLineSymbol
+            color: "white",
+            width: 1
+          }
+        }
+      });
+    } else {
+      var geom = {
+        type: "point", // autocasts as /Point
+        x: param.vertices.coordinates[0],
+        y: param.vertices.coordinates[1],
+        spatialReference: this.mapView.spatialReference
+      };
+
+      var graphic = new Graphic({
+        geometry: geom,
+        symbol: {
+          type: "simple-marker", // autocasts as SimpleMarkerSymbol
+          style: "square",
+          color: "red",
+          size: "16px",
+          outline: { // autocasts as SimpleLineSymbol
+            color: [255, 255, 0],
+            width: 3
+          }
+        }
+      });
+    }
+
+    this.mapView.graphics.add(graphic);
+
+    if(param.status === "draw-complete") {
+      this.mapView.graphics.removeAll();
+      this.mapClick(geom);
+    }
+
   },
 
     onOpen: function(){
