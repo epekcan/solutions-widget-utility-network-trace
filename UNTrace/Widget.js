@@ -10,6 +10,7 @@ define([
   'dijit/registry',
   'dojo/dom-attr',
   'dojo/dom-style',
+  'dojo/dom-class',
   'dojo/dom-construct',
   'dojo/query',
   'esri/geometry/geometryEngineAsync',
@@ -30,6 +31,7 @@ define([
   "esri/tasks/support/Query",
   "esri/geometry/projection",
   "esri/geometry/SpatialReference",
+  'esri/views/2d/draw/Draw',
   'jimu/tokenUtils',
   "./portal",
   "./utilitynetwork",
@@ -48,6 +50,7 @@ function(declare,
   registry,
   domAttr,
   domStyle,
+  domClass,
   domConstruct,
   domQuery,
   geometryEngineAsync,
@@ -68,6 +71,7 @@ function(declare,
   Query,
   projection,
   SpatialReference,
+  Draw,
   tokenUtils,
   Portal,
   UtilityNetwork,
@@ -97,6 +101,7 @@ function(declare,
     token: null,
     traceLocationsParam: [],
     tempRecordSet: null,
+    selectionMode: "point",
     //config: JSON.parse(Configuration),
 
     postCreate: function() {
@@ -128,6 +133,20 @@ function(declare,
 
       this.own(on(this.btnBarriers, "click", lang.hitch(this, this.btnBarriersClick)));
 
+      this.own(on(this.btnPoint, "click", lang.hitch(this, function(){
+        this.selectionMode = "point";
+        this.enableCreateDrawing();
+        domClass.add(this.btnPoint, "active");
+        domClass.remove(this.btnPolygon, "active");
+      })));
+
+      this.own(on(this.btnPolygon, "click", lang.hitch(this, function(){
+        this.selectionMode = "polygon";
+        this.enableCreateDrawing();
+        domClass.add(this.btnPolygon, "active");
+        domClass.remove(this.btnPoint, "active");
+      })));
+
       //this.own(on(this.btnFindIslands, "click", lang.hitch(this, this.IslandTrace)));
 
       //this.own(on(this.btnTraceIsolation, "click", lang.hitch(this, this.IsolationTrace)));
@@ -142,6 +161,8 @@ function(declare,
         }
         domAttr.set(this.btnStartingPoint, "class", "button_nonactive");
         domAttr.set(this.btnBarriers, "class", "button_nonactive");
+        domQuery(".traceLocations").style("display", "none");
+        domQuery(".drawIconGroup").style("display", "none");
         this.mapView.graphics = [];
         this.gl.graphics = [];
         this.updateStatus("");
@@ -158,8 +179,8 @@ function(declare,
     createCustomTraceButtons: function() {
         //if(this.config.userTraces !== null) {
             for (var key in this.config.userTraces) {
-                let container = domConstruct.create("div",{'class':'rowBtn'},this.customTracesHolder);
-                let userTrace = domConstruct.create("div",{'class':'button_nonactive', 'innerHTML': key, 'count':this.config.userTraces[key].traces.length},container);
+                let container = domConstruct.create("div",{'class':'customTraceItem'},this.customTracesHolder);
+                let userTrace = domConstruct.create("div",{'class':'button_nonactive userTraces', 'innerHTML': key, 'count':this.config.userTraces[key].traces.length},container);
 
                 this.own(on(userTrace, "click", lang.hitch(this, function() {
                     this.traceCounter = 0;
@@ -236,8 +257,6 @@ function(declare,
     },
 
     mapClick: function(event) {
-        event.stopPropagation();
-
         let color = this.activeTraceLocation === this.config.TRACELOCATION_START ? this.config.TRACING_STARTPOINT_COLOR : this.config.TRACING_BARRIER_COLOR;
 
         this.un.traceControls.forEach(tc => {
@@ -251,20 +270,24 @@ function(declare,
         query.returnGeometry = true;
         query.outFields = [ "*" ];
         query.distance = 2;
-        query.geometry = event.mapPoint;
+        query.geometry = event;
         fl.queryFeatures(query).then(lang.hitch(this, function(hitResults){
             console.log(hitResults.features);  // prints the array of features to the console
+            domQuery(".traceLocations").style("display", "block");
 
             let supportedClasses = ["esriUNFCUTDevice", "esriUNFCUTJunction"] //, "esriUNFCUTLine" ]
             if (hitResults.features.length) {
                 hitResults.features.forEach(g => {
 
                     let img = document.createElement("img");
-
-                    if (this.activeTraceLocation === this.config.TRACELOCATION_START)
-                        img.src = this.folderUrl + "/images/startPoint.png"
-                    else
-                        img.src = this.folderUrl + "/images/barrier.png";
+                    if (this.activeTraceLocation === this.config.TRACELOCATION_START) {
+                        img.src = this.folderUrl + "/images/add.png";
+                        img.className = "btnStartItems";
+                    }
+                    else {
+                        img.src = this.folderUrl + "/images/add-barriers-select.png";
+                        img.className = "btnBarrierItems";
+                    }
                     let rowTraceLocation = document.createElement("tr");
                     let columnImg = document.createElement("td");
                     rowTraceLocation.appendChild(columnImg);
@@ -279,8 +302,8 @@ function(declare,
                     rowTraceLocation.appendChild(columnTerminal);
                     let columnBtn = document.createElement("td");
                     rowTraceLocation.appendChild(columnBtn);
-                    let deleteTraceLocation = document.createElement("button");
-                    deleteTraceLocation.textContent = "X";
+                    let deleteTraceLocation = document.createElement("img");
+                    deleteTraceLocation.src = this.folderUrl + "/images/delete.png"
                     deleteTraceLocation.className = "btnX";
                     deleteTraceLocation.addEventListener("click", lang.hitch(this, function(e){
                         traceLocations.removeChild(rowTraceLocation);
@@ -293,7 +316,9 @@ function(declare,
                             }
 
                         }
-
+                        if(this.gl.graphics.items.length <= 0) {
+                          domQuery(".traceLocations").style("display", "none");
+                        }
 
                     }));
                     columnBtn.appendChild(deleteTraceLocation);
@@ -438,20 +463,26 @@ function(declare,
     },
 
     btnBarriersClick: function(params) {
-        domAttr.set(this.btnStartingPoint, "class", "button_nonactive");
-        domAttr.set(this.btnBarriers, "class", "button_active");
-      if (this.activeTraceLocation == undefined) {
-        this.mouseHandler = this.mapView.on("click", lang.hitch(this,this.mapClick));
-      }
+      domAttr.set(this.btnStartingPoint, "class", "button_nonactive");
+      domAttr.set(this.btnBarriers, "class", "button_active");
+      //if (this.activeTraceLocation == undefined) {
+        domQuery(".drawIconGroup").style("display", "block");
+        var event = new Event('click');
+        this.btnPoint.dispatchEvent(event);
+        //this.mouseHandler = this.mapView.on("click", lang.hitch(this,this.mapClick));
+      //}
       this.activeTraceLocation = this.config.TRACELOCATION_BARRIER;
     },
 
     btnStartingPointClick: function(params) {
       domAttr.set(this.btnStartingPoint, "class", "button_active");
       domAttr.set(this.btnBarriers, "class", "button_nonactive");
-      if (this.activeTraceLocation == undefined) {
-        this.mouseHandler = this.mapView.on("click", lang.hitch(this, this.mapClick));
-      }
+      //if (this.activeTraceLocation == undefined) {
+        domQuery(".drawIconGroup").style("display", "block");
+        var event = new Event('click');
+        this.btnPoint.dispatchEvent(event);
+        //this.mouseHandler = this.mapView.on("click", lang.hitch(this, this.mapClick));
+      //}
       this.activeTraceLocation = this.config.TRACELOCATION_START;
     },
 
@@ -1098,6 +1129,98 @@ function(declare,
     var tokenTool = tokenUtils;
     tokenTool.portalUrl = this.appConfig.portalUrl;
     return tokenTool.getPortalCredential(this.appConfig.portalUrl).token;
+  },
+
+
+  //draw functions
+  enableCreateDrawing: function() {
+    var newDraw = new Draw({"view":this.mapView});
+    if(this.selectionMode === "point") {
+      var action = newDraw.create("point");
+      this.mapView.focus();
+
+      // Add a graphic representing the completed polygon
+      // when user double-clicks on the view or presses the "C" key
+      action.on("draw-complete", lang.hitch(this, function (evt) {
+        this.createDrawGraphic({"vertices":evt, "status":"draw-complete"});
+      }));
+
+    } else {
+      var action = newDraw.create("polygon");
+
+      this.mapView.focus();
+      // listen to vertex-add event on the action
+      action.on("vertex-add", lang.hitch(this, function (evt) {
+        this.createDrawGraphic({"vertices":evt.vertices, "status":"draw-progress"});
+      }));
+
+      // listen to cursor-update event on the action
+      action.on("cursor-update", lang.hitch(this, function (evt) {
+        this.createDrawGraphic({"vertices":evt.vertices, "status":"draw-progress"});
+      }));
+
+      // listen to vertex-remove event on the action
+      action.on("vertex-remove", lang.hitch(this, function (evt) {
+        this.createDrawGraphic({"vertices":evt.vertices, "status":"draw-progress"});
+      }));
+      // Add a graphic representing the completed polygon
+      // when user double-clicks on the view or presses the "C" key
+      action.on("draw-complete", lang.hitch(this, function (evt) {
+        this.createDrawGraphic({"vertices":evt.vertices, "status":"draw-complete"});
+      }));
+    }
+  },
+
+  createDrawGraphic: function(param){
+    this.mapView.graphics.removeAll();
+    if(this.selectionMode === "polygon") {
+      var geom = {
+        type: "polygon", // autocasts as Polygon
+        rings: param.vertices,
+        spatialReference: this.mapView.spatialReference
+      };
+      var graphic = new Graphic({
+        geometry: geom,
+        symbol: {
+          type: "simple-fill", // autocasts as SimpleFillSymbol
+          color: "blue",
+          style: "solid",
+          outline: {  // autocasts as SimpleLineSymbol
+            color: "white",
+            width: 1
+          }
+        }
+      });
+    } else {
+      var geom = {
+        type: "point", // autocasts as /Point
+        x: param.vertices.coordinates[0],
+        y: param.vertices.coordinates[1],
+        spatialReference: this.mapView.spatialReference
+      };
+
+      var graphic = new Graphic({
+        geometry: geom,
+        symbol: {
+          type: "simple-marker", // autocasts as SimpleMarkerSymbol
+          style: "square",
+          color: "red",
+          size: "16px",
+          outline: { // autocasts as SimpleLineSymbol
+            color: [255, 255, 0],
+            width: 3
+          }
+        }
+      });
+    }
+
+    this.mapView.graphics.add(graphic);
+
+    if(param.status === "draw-complete") {
+      this.mapView.graphics.removeAll();
+      this.mapClick(geom);
+    }
+
   },
 
     onOpen: function(){

@@ -48,9 +48,14 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
     tempTraceConfigs: null,
     traceConfigParameter: null,
 
+    servicesTable: null,
     userDefinedTraces: null,
     traceTypesTable: null,
     conditionBarriersTable: null,
+
+    cmbItems: null,
+    cmbDomainNetworks: null,
+    cmbTiers: null,
 
     postCreate: function(){
 
@@ -62,8 +67,9 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
         "userTraces":{}
       };
 
+      this.createServiceTable();
+
       this.setConfig(this.config);
-console.log(this.config);
       this.portalConnect();
 
       //the config object is passed in
@@ -107,6 +113,43 @@ console.log(this.config);
       return tokenTool.getPortalCredential(this.appConfig.portalUrl).token;
     },
 
+    createServiceTable: function() {
+      var fields = [{
+        name: 'service',
+        title: "Service",
+        type: 'empty',
+        'class': 'editable'
+      },{
+        name: 'domain',
+        title: "Domains",
+        type: 'empty',
+        'class': 'editable'
+      },{
+        name: 'tier',
+        title: "Tiers",
+        type: 'empty',
+        'class': 'editable'
+      }];
+      var args = {
+        fields: fields
+      };
+      this.servicesTable = new SimpleTable(args);
+      this.servicesTable.placeAt(this.UNConfig);
+      this.servicesTable.startup();
+      this.servicesTable.addRow({});
+      var rows = this.servicesTable.getRows()[0];
+      console.log(rows);
+      var slService = new Select();
+      this.cmbItems = slService;
+      slService.placeAt(rows.children[0]);
+      var slDomain = new Select();
+      this.cmbDomainNetworks = slDomain;
+      slDomain.placeAt(rows.children[1]);
+      var slTiers = new Select();
+      this.cmbTiers = slTiers;
+      slTiers.placeAt(rows.children[2]);
+    },
+
     portalConnect: async function() {
 
       var cred = new PrivilegeUtil(this.appConfig.portalUrl);
@@ -131,7 +174,7 @@ console.log(this.config);
                     listItem.setAttribute("selected", "selected");
                   }
                 }
-                this.cmbItems.appendChild(listItem);
+                this.cmbItems.addOption(listItem);
               }
             }));
             if(this.config.service !== null) {
@@ -143,9 +186,16 @@ console.log(this.config);
             } else {
               this.un = UtilityNetwork;
               this.un.token = this.token;
-              this.un.featureServiceUrl = this.cmbItems.options[this.cmbItems.selectedIndex].url;
+              var fsUrl = "";
+              array.forEach(this.cmbItems.options, function(ops) {
+                if(ops.defaultSelected) {
+                  fsUrl = ops.url;
+                }
+              });
+              this.un.featureServiceUrl = fsUrl;
               var event = new Event('change');
-              this.cmbItems.dispatchEvent(event);
+              //this.cmbItems.dispatchEvent(event);
+              this.cmbItems.emit("change", this.cmbItems);
             }
 
             //this._createUserDefinedTraceTable();
@@ -157,21 +207,31 @@ console.log(this.config);
 
     listDomainNetworks: function(e) {
       //this.resetAll();
-      this.un.featureServiceUrl = this.cmbItems.options[this.cmbItems.selectedIndex].url;
+      var fsUrl = "";
+      array.forEach(this.cmbItems.options, function(ops) {
+        if(ops.value === e) {
+          fsUrl = ops.url;
+        }
+      });
+      this.un.featureServiceUrl = fsUrl;
       this.un.load().then(lang.hitch(this, function() {
         console.log(this.un);
         //populate tiers, clear list first
-        while (this.cmbDomainNetworks.firstChild) this.cmbDomainNetworks.removeChild(this.cmbDomainNetworks.firstChild);
-        while (this.cmbTiers.firstChild) this.cmbTiers.removeChild(this.cmbTiers.firstChild);
+        while (this.cmbDomainNetworks.options.length > 0) this.cmbDomainNetworks.removeOption(this.cmbDomainNetworks.getOptions());
+        while (this.cmbTiers.options.length > 0) this.cmbTiers.removeOption(this.cmbTiers.getOptions());
         this.un.dataElement.domainNetworks.forEach(domainNetwork => {
             var dn = document.createElement("option");
             dn.textContent = domainNetwork.domainNetworkName;
-            this.cmbDomainNetworks.appendChild(dn);
-        })
+            this.cmbDomainNetworks.addOption(dn);
+        });
+        if(this.config.domainNetwork !== null) {
+          this.cmbDomainNetworks.setAttribute("value", this.config.domainNetwork);
+        }
         if (this.un.dataElement.domainNetworks.length > 1) {
             let event = new Event('change');
             this.cmbDomainNetworks.selectedIndex = 1;
-            this.cmbDomainNetworks.dispatchEvent(event);
+            //this.cmbDomainNetworks.dispatchEvent(event);
+            this.cmbDomainNetworks.emit("change", this.cmbDomainNetworks);
         } else {
             this.cmbDomainNetworks.selectedIndex = -1;
         }
@@ -186,25 +246,27 @@ console.log(this.config);
 
     listTiers: async function(e) {
       //this.resetAll();
+      while (this.cmbTiers.options.length > 0) this.cmbTiers.removeOption(this.cmbTiers.getOptions());
+     // var selectedDomainNetwork = e.target.options[e.target.selectedIndex].textContent;
 
-      while (this.cmbTiers.firstChild) this.cmbTiers.removeChild(this.cmbTiers.firstChild);
-      var selectedDomainNetwork = e.target.options[e.target.selectedIndex].textContent;
-
-      var domainNetwork = this.un.getDomainNetwork(selectedDomainNetwork);
+      var domainNetwork = this.un.getDomainNetwork(e);
 
       await this.pullDomainValueList();
-      console.log(this.domainValueListHelper);
 
       domainNetwork.tiers.forEach(tier => {
           let tn = document.createElement("option");
           tn.textContent = tier.name;
-          this.cmbTiers.appendChild(tn);
+          this.cmbTiers.addOption(tn);
       });
+      if(this.config.tier !== null) {
+        this.cmbTiers.setAttribute("value", this.config.tier);
+      }
 
       if (this.cmbTiers.options.length > 1) {
         let event = new Event('change');
         this.cmbTiers.selectedIndex = 0;
-        this.cmbTiers.dispatchEvent(event);
+        //this.cmbTiers.dispatchEvent(event);
+        this.cmbTiers.emit("change", this.cmbTiers.selectIndex);
       } else {
         this.cmbTiers.selectedIndex = -1;
       }
@@ -427,6 +489,7 @@ console.log(this.config);
       }
 
       this.own(on(selectionBox, "change", lang.hitch(this, function(val) {
+        this.traceTypesTable.selectRow(param.tr);
         this.traceConfigParameter.storeTempConfig();
       })));
 
@@ -448,10 +511,12 @@ console.log(this.config);
       }
 
       this.own(on(selectionBox, "change", lang.hitch(this, function(val) {
+        this.traceTypesTable.selectRow(param.tr);
         if(this.traceConfigParameter !== null) {
           this.traceConfigParameter._createStartList({"value":val});
         }
         this.traceConfigParameter.storeTempConfig();
+
       })));
     },
 
@@ -472,10 +537,12 @@ console.log(this.config);
       }
 
       this.own(on(selectionBox, "change", lang.hitch(this, function(val) {
+        this.traceTypesTable.selectRow(param.tr);
         if(this.traceConfigParameter !== null) {
           this.traceConfigParameter._createBarrierList({"value":val});
         }
         this.traceConfigParameter.storeTempConfig();
+       //this.launchTraceParameters({"tr":param.tr, "predefined":param.predefined});
       })));
 
     },
@@ -541,7 +608,6 @@ console.log(this.config);
           this.tempTraceConfigs.userTraces[userRowData.userDefinedName.value] = {"traces":[]};
           this.tempTraceConfigs.userTraces[userRowData.userDefinedName.value].traces.push(obj);
         }
-        //console.log(this.tempTraceConfigs);
         return userGroupName;
       }
     },
@@ -571,7 +637,6 @@ console.log(this.config);
       if (rows.length > 0) {
         this.userDefinedTraces.selectRow(rows[rows.length - 1]);
       }
-      console.log(this.tempTraceConfigs);
     },
 
     deleteTraceType: function(tr, data) {

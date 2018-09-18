@@ -112,7 +112,7 @@ function (declare,
         this._resetInclusionTypes();
       }
 
-      this.storeTempConfig();
+      //this.storeTempConfig({"referrer":"start up" + Date()});
 
       this.own(on(this.addConditionBarriers, "click", lang.hitch(this, function() {
         this.addRowTraverse(this.conditionBarriersTable, this.existingValues);
@@ -127,19 +127,19 @@ function (declare,
       })));
 
       this.own(on(this.chkContainers, "change", lang.hitch(this, function() {
-        this.storeTempConfig();
+        this.storeTempConfig({"referrer":"container change" + Date()});
       })));
       this.own(on(this.chkStructLineContent, "change", lang.hitch(this, function() {
-        this.storeTempConfig();
+        this.storeTempConfig({"referrer":"struct line change" + Date()});
       })));
       this.own(on(this.chkStructures, "change", lang.hitch(this, function() {
-        this.storeTempConfig();
+        this.storeTempConfig({"referrer":"structures change" + Date()});
       })));
       this.own(on(this.chkBarrierFeatures, "change", lang.hitch(this, function() {
-        this.storeTempConfig();
+        this.storeTempConfig({"referrer":"sinclude bearrier change" + Date()});
       })));
       this.own(on(this.chkValidateConsistency, "change", lang.hitch(this, function() {
-        this.storeTempConfig();
+        this.storeTempConfig({"referrer":"valid consistenacy" + Date()});
       })));
 
     },
@@ -187,11 +187,13 @@ function (declare,
     },
 
     _createAGATList: function(param) {
-      console.log(param);
       if(param.type === "start") {
         this.startLocationCheckboxList = [];
-      } else {
+      } else if (param.type === "barrier") {
         this.barriersLocationCheckboxList = [];
+      }
+      else {
+        //this.barriersLocationCheckboxList = [];
       }
       var assetGroupList = this.un.getAGByDevice(this.cmbDomainNetworks.value);
       array.forEach(assetGroupList[0].assetGroup, lang.hitch(this, function(ag) {
@@ -241,20 +243,19 @@ function (declare,
           domConstruct.place(label, dom);
 
           this.own(on(checkBox, "change", lang.hitch(this, function(val) {
-            this.storeTempConfig();
+            this.storeTempConfig({"referrer":param.type+" feature checkbox" + Date()});
           })));
 
           if(param.type === "start") {
             this.startLocationCheckboxList.push(checkBox);
-          } else {
+          } else if (param.type === "barrier") {
             this.barriersLocationCheckboxList.push(checkBox);
+          } else {
+            //this.barriersLocationCheckboxList.push(checkBox);
           }
 
         }));
       }));
-      //this.own(on(selectionBox, "change", lang.hitch(this, function(val) {
-      //  this.storeTempConfig();
-      //})));
 
     },
 
@@ -518,7 +519,7 @@ function (declare,
               }
               categorySelection.addOption(selOption);
             });
-            this.own(on(categorySelection, "change", lang.hitch(this, this.storeTempConfig)));
+            this.own(on(categorySelection, "change", lang.hitch(this, function() {this.storeTempConfig()})));
             if(flag !== "") {
               categorySelection.set("value",flag);
             }
@@ -542,7 +543,7 @@ function (declare,
                 }));
               }
             }));
-            this.own(on(fbValueSelection, "change", lang.hitch(this, this.storeTempConfig)));
+            this.own(on(fbValueSelection, "change", lang.hitch(this, function() {this.storeTempConfig()})));
             if(flag !== "") {
               fbValueSelection.set("value", flag);
             }
@@ -555,7 +556,7 @@ function (declare,
               textbox.set("value", param.currValues.value);
             }
           }
-          this.own(on(textbox, "blur", lang.hitch(this, this.storeTempConfig)));
+          this.own(on(textbox, "blur", lang.hitch(this, function() {this.storeTempConfig()})));
         }
       } else {
         var domainSelection = new Select().placeAt(td);
@@ -577,9 +578,8 @@ function (declare,
         if(flag !== "") {
           domainSelection.set("value",flag);
         }
-        this.own(on(domainSelection, "change", lang.hitch(this, this.storeTempConfig)));
+        this.own(on(domainSelection, "change", lang.hitch(this, function() {this.storeTempConfig()})));
       }
-      this.storeTempConfig();
     },
 
     _restoreIncludesCheckboxesState: function(param) {
@@ -600,7 +600,7 @@ function (declare,
       this.chkValidateConsistency.checked = false;
     },
 
-    storeTempConfig: function() {
+    storeTempConfig: function(param) {
       var tempSetting = {};
       //Starts and barriers
       var layerAsStart = [];
@@ -669,7 +669,6 @@ function (declare,
         }
         tempSetting[item.node] = objArray;
       }));
-
       //emit that config change so it can saved
       this.emit("config-change", tempSetting);
 
@@ -708,7 +707,6 @@ function (declare,
             }
           }));
         }));
-        console.log(this.domainValueListHelper);
       }));
     },
 
