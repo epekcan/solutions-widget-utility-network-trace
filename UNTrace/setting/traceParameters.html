@@ -2,23 +2,23 @@
   <div class="traceConfigBlock">
       <div class="startFeatureGroup">
           Select template to use for starting locations<br>
-          <div class="startFeatureHolder" data-dojo-attach-point="startFeatureHolder"></div>       
+          <div class="startFeatureHolder" data-dojo-attach-point="startFeatureHolder"></div>
       </div>
       <div class="barrierFeatureGroup">
           Select template to use for barriers<br>
-          <div class="barrierFeatureHolder" data-dojo-attach-point="barrierFeatureHolder"></div>        
+          <div class="barrierFeatureHolder" data-dojo-attach-point="barrierFeatureHolder"></div>
       </div>
       <div class="traceConfigBlock-inner">
           <div class="includeParameters">
               Include parameters for trace and results<br>
               <div class="includeParametersHolder">
                 <input type="checkbox" data-dojo-attach-point="chkContainers" value="true" data-dojo-type="dijit/form/CheckBox"> Include Containers<br>
-                <input type="checkbox" data-dojo-attach-point="chkStructLineContent" value="true" data-dojo-type="dijit/form/CheckBox"> Include Structure Line/Junction Container Content<br>	
+                <input type="checkbox" data-dojo-attach-point="chkStructLineContent" value="true" data-dojo-type="dijit/form/CheckBox"> Include Structure Line/Junction Container Content<br>
                 <input type="checkbox" data-dojo-attach-point="chkStructures" value="true" data-dojo-type="dijit/form/CheckBox"> Include Structures<br>
-                <input type="checkbox" data-dojo-attach-point="chkBarrierFeatures" value="true" data-dojo-type="dijit/form/CheckBox"> Include Barrier Features<br>				
+                <input type="checkbox" data-dojo-attach-point="chkBarrierFeatures" value="true" data-dojo-type="dijit/form/CheckBox"> Include Barrier Features<br>
                 <input type="checkbox" data-dojo-attach-point="chkValidateConsistency" value="true" data-dojo-type="dijit/form/CheckBox"> Validate Consistency<br>
-              </div>         
-          </div>        
+              </div>
+          </div>
       <div class="barriersGroup">
         <div class="conditionBarriers">
           <div class="addConditionBarriers" data-dojo-attach-point="addConditionBarriers">Add Condition Barriers</div>
@@ -31,10 +31,12 @@
           <div class="dynamicfilterBarriers"></div>
         </div>
         <div class="OutputConditions">
+          <div class="addOutputCondition" data-dojo-attach-point="addOutputCondition">Output Filter</div>
+          <div class="outputFilterHolder" data-dojo-attach-point="outputFilterHolder"></div>
           <div class="addOutputCondition" data-dojo-attach-point="addOutputCondition">Add Output Condition</div>
           <div data-dojo-attach-point="outputConditionsHolder"></div>
-        </div>									
+        </div>
       </div>
     </div>
-  </div> 
+  </div>
 </div>

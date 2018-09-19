@@ -399,6 +399,7 @@ function(declare,
         configuration.tierName = this.config.tier;
         configuration.conditionBarriers = param.traceInfo.traceConfig.conditionBarriers;
         configuration.filterBarriers = param.traceInfo.traceConfig.filterBarriers;
+        configuration.outputFilters = param.traceInfo.traceConfig.outputFilters;
         configuration.outputConditions = param.traceInfo.traceConfig.outputConditions;
         return configuration;
     },

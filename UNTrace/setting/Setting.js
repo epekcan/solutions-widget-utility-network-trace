@@ -95,7 +95,6 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
       delete this.config.userTraces[""];
       this.traceConfigParameter.storeTempConfig();
       this.config.service = this.cmbItems.value;
-      this.config.featureServiceItem = this.cmbItems.options[this.cmbItems.selectedIndex].id;
       this.config.domainNetwork = this.cmbDomainNetworks.value;
       this.config.tier = this.cmbTiers.value;
       this.config.subnetLineLayer = this.un.subnetLineLayerId;
@@ -138,7 +137,6 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
       this.servicesTable.startup();
       this.servicesTable.addRow({});
       var rows = this.servicesTable.getRows()[0];
-      console.log(rows);
       var slService = new Select();
       this.cmbItems = slService;
       slService.placeAt(rows.children[0]);

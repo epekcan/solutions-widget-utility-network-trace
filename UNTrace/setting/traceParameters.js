@@ -60,6 +60,7 @@ function (declare,
     row: null,
     startLocationCheckboxList: [],
     barriersLocationCheckboxList: [],
+    outputFilterCheckboxlist: [],
     existingValues: null,
 
     constructor: function (/*Object*/args) {
@@ -80,6 +81,8 @@ function (declare,
 
       this._createTraverseFilterTable("condition");
       this._createTraverseFilterTable("filter");
+
+      this._createAGATList({"node":this.outputFilterHolder, "type": "output", "predefined":this.existingValues});
       this._createTraverseFilterTable("output");
 
       if(this.existingValues !== null) {
@@ -187,73 +190,92 @@ function (declare,
     },
 
     _createAGATList: function(param) {
-      if(param.type === "start") {
-        this.startLocationCheckboxList = [];
-      } else if (param.type === "barrier") {
-        this.barriersLocationCheckboxList = [];
+      switch(param.type) {
+        case "start":
+          this.startLocationCheckboxList = [];
+          break;
+        case "barrier":
+          this.barriersLocationCheckboxList = [];
+          break;
+        case "output":
+          this.outputFilterCheckboxlist = [];
+          break;
+        default:
+          break;
       }
-      else {
-        //this.barriersLocationCheckboxList = [];
-      }
-      var assetGroupList = this.un.getAGByDevice(this.cmbDomainNetworks.value);
-      array.forEach(assetGroupList[0].assetGroup, lang.hitch(this, function(ag) {
-        array.forEach(ag.assetTypes, lang.hitch(this, function(at) {
-          //Check for exisitng values, and check box if it exist
-          var flag = false;
-          if(param.type === "start") {
+      var deviceList = this.un.getAGByDevice(this.cmbDomainNetworks.value);
+      var junctionList = this.un.getAGByJunction(this.cmbDomainNetworks.value);
+      var assetGroupList = deviceList.concat(junctionList);
+      array.forEach(assetGroupList, lang.hitch(this, function(agl) {
+        array.forEach(agl.assetGroup, lang.hitch(this, function(ag) {
+          array.forEach(ag.assetTypes, lang.hitch(this, function(at) {
+            //Check for exisitng values, and check box if it exist
+            var flag = false;
             if(typeof(param.predefined) !== "undefined") {
               if (param.predefined !== null) {
                 if(typeof(param.predefined.traceConfig) !== "undefined") {
-                  if((param.predefined.traceConfig.startLocationLayers).length > 0) {
-                    array.forEach(param.predefined.traceConfig.startLocationLayers, lang.hitch(this, function(item) {
-                      if(ag.assetGroupCode === parseInt(item.assetGroupCode) && at.assetTypeCode === parseInt(item.assetTypeCode)) {
-                        flag = true;
-                      }
-                    }));
+                  if(param.type === "start") {
+                    if((param.predefined.traceConfig.startLocationLayers).length > 0) {
+                      array.forEach(param.predefined.traceConfig.startLocationLayers, lang.hitch(this, function(item) {
+                        if(ag.assetGroupCode === parseInt(item.assetGroupCode) && at.assetTypeCode === parseInt(item.assetTypeCode) && agl.layerId === parseInt(item.layerId)) {
+                          flag = true;
+                        }
+                      }));
+                    }
+                  } else if (param.type === "barrier")  {
+                    if((param.predefined.traceConfig.barriersLayers).length > 0) {
+                      array.forEach(param.predefined.traceConfig.barriersLayers, lang.hitch(this, function(item) {
+                        if(ag.assetGroupCode === parseInt(item.assetGroupCode) && at.assetTypeCode === parseInt(item.assetTypeCode) && agl.layerId === parseInt(item.layerId)) {
+                          flag = true;
+                        }
+                      }));
+                    }
+                  } else {
+                    if((param.predefined.traceConfig.outputFilters).length > 0) {
+                      array.forEach(param.predefined.traceConfig.outputFilters, lang.hitch(this, function(item) {
+                        if(ag.assetGroupCode === parseInt(item.assetGroupCode) && at.assetTypeCode === parseInt(item.assetTypeCode) && agl.sourceId === parseInt(item.networkSourceId)) {
+                          flag = true;
+                        }
+                      }));
+                    }
                   }
                 }
               }
             }
-          } else {
-            if(typeof(param.predefined) !== "undefined") {
-              if (param.predefined !== null) {
-                if(typeof(param.predefined.traceConfig) !== "undefined") {
-                  if((param.predefined.traceConfig.barriersLayers).length > 0) {
-                    array.forEach(param.predefined.traceConfig.barriersLayers, lang.hitch(this, function(item) {
-                      if(ag.assetGroupCode === parseInt(item.assetGroupCode) && at.assetTypeCode === parseInt(item.assetTypeCode)) {
-                        flag = true;
-                      }
-                    }));
-                  }
-                }
-              }
+
+            var dom = domConstruct.create("div");
+            domConstruct.place(dom, param.node);
+            var checkBox = new CheckBox({
+              name: "AGAT_" + param.type,
+              value: ag.assetGroupCode + ":" + at.assetTypeCode + ":",
+              checked: flag,
+              "layerId": agl.layerId,
+              "sourceId": agl.sourceId
+
+            });
+            checkBox.placeAt(dom);
+            var label = domConstruct.create("label", {"innerHTML": " " + ag.assetGroupName + " - " + at.assetTypeName + "<br>", "for":"AGAT"}, param.node );
+            domConstruct.place(label, dom);
+
+            this.own(on(checkBox, "change", lang.hitch(this, function(val) {
+              this.storeTempConfig();
+            })));
+
+            switch(param.type) {
+              case "start":
+                this.startLocationCheckboxList.push(checkBox);
+                break;
+              case "barrier":
+                this.barriersLocationCheckboxList.push(checkBox);
+                break;
+              case "output":
+                this.outputFilterCheckboxlist.push(checkBox);
+                break;
+              default:
+                break;
             }
-          }
 
-          var dom = domConstruct.create("div");
-          domConstruct.place(dom, param.node);
-          var checkBox = new CheckBox({
-            name: "AGAT_" + param.type,
-            value: ag.assetGroupCode + ":" + at.assetTypeCode,
-            checked: flag,
-            "layerId": assetGroupList[0].layerId
-          });
-          checkBox.placeAt(dom);
-          var label = domConstruct.create("label", {"innerHTML": " " + ag.assetGroupName + " - " + at.assetTypeName + "<br>", "for":"AGAT"}, param.node );
-          domConstruct.place(label, dom);
-
-          this.own(on(checkBox, "change", lang.hitch(this, function(val) {
-            this.storeTempConfig({"referrer":param.type+" feature checkbox" + Date()});
-          })));
-
-          if(param.type === "start") {
-            this.startLocationCheckboxList.push(checkBox);
-          } else if (param.type === "barrier") {
-            this.barriersLocationCheckboxList.push(checkBox);
-          } else {
-            //this.barriersLocationCheckboxList.push(checkBox);
-          }
-
+          }));
         }));
       }));
 
@@ -311,7 +333,7 @@ function (declare,
         name: 'actions',
         title: "Actions",
         type: 'actions',
-        width: '100px',
+        width: '75px',
         'class': 'actions',
         actions: ['up','down','delete']//'up','down',
       }];
@@ -600,11 +622,13 @@ function (declare,
       this.chkValidateConsistency.checked = false;
     },
 
-    storeTempConfig: function(param) {
+    storeTempConfig: function() {
       var tempSetting = {};
       //Starts and barriers
       var layerAsStart = [];
       var layerAsBarrier = [];
+      var layerAsOutputFilters = [];
+
       if(this.startLocationCheckboxList.length > 0) {
         array.forEach(this.startLocationCheckboxList, lang.hitch(this, function(startChk) {
           if(startChk.get("checked")) {
@@ -618,6 +642,7 @@ function (declare,
         }));
       }
       tempSetting["startLocationLayers"] = layerAsStart;
+
       if(this.barriersLocationCheckboxList.length > 0) {
         array.forEach(this.barriersLocationCheckboxList, lang.hitch(this, function(barrierChk) {
           if(barrierChk.get("checked")) {
@@ -631,6 +656,20 @@ function (declare,
         }));
       }
       tempSetting["barriersLayers"] = layerAsBarrier;
+
+      if(this.outputFilterCheckboxlist.length > 0) {
+        array.forEach(this.outputFilterCheckboxlist, lang.hitch(this, function(outputChk) {
+          if(outputChk.get("checked")) {
+            var splitAGAT = (outputChk.get("value")).split(":");
+            layerAsOutputFilters.push({
+              "assetGroupCode": splitAGAT[0],
+              "assetTypeCode": splitAGAT[1],
+              "networkSourceId": outputChk.get("sourceId")
+            });
+          }
+        }));
+      }
+      tempSetting["outputFilters"] = layerAsOutputFilters;
 
       //includes and checkboxes
       tempSetting["includeContainers"] = this.chkContainers.checked;
