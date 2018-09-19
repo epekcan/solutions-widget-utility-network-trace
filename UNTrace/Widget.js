@@ -2,80 +2,44 @@ define([
   'dojo/_base/declare',
   'dijit/_WidgetBase',
   'dijit/_TemplatedMixin',
-  'dojo/text!./Widget.html',
   'dojo/dom',
   'dojo/on',
   'dojo/_base/lang',
   'dojo/_base/array',
-  'dijit/registry',
   'dojo/dom-attr',
-  'dojo/dom-style',
   'dojo/dom-class',
   'dojo/dom-construct',
   'dojo/query',
   'esri/geometry/geometryEngineAsync',
-  "esri/Map",
-  "esri/views/MapView",
   "esri/layers/FeatureLayer",
-  "esri/layers/MapImageLayer",
-  "esri/WebMap",
-  "esri/identity/IdentityManager",
-  "esri/widgets/LayerList",
-  "esri/layers/MapImageLayer",
   "esri/layers/GraphicsLayer",
   "esri/Graphic",
-  "esri/tasks/ImageServiceIdentifyTask",
-  "esri/tasks/support/ImageServiceIdentifyParameters",
-  "esri/tasks/IdentifyTask",
-  "esri/tasks/support/IdentifyParameters",
   "esri/tasks/support/Query",
-  "esri/geometry/projection",
-  "esri/geometry/SpatialReference",
   'esri/views/2d/draw/Draw',
   'jimu/tokenUtils',
-  "./portal",
   "./utilitynetwork",
-  'dojo/text!./config.json',
   'dijit/form/TextBox',
   'dijit/form/Select'
 ],
 function(declare,
-    _WidgetBase,
-    _TemplatedMixin,
-    template,
+  _WidgetBase,
+  _TemplatedMixin,
   dom,
   on,
   lang,
   array,
-  registry,
   domAttr,
-  domStyle,
   domClass,
   domConstruct,
   domQuery,
   geometryEngineAsync,
-  Map,
-  MapView,
   FeatureLayer,
-  MapLayer,
-  WebMap,
-  IdentityManager,
-  Toc,
-  MapImageLayer,
   GraphicsLayer,
   Graphic,
-  ImageServiceIdentifyTask,
-  ImageServiceIdentifyParameters,
-  IdentifyTask,
-  IdentifyParameters,
   Query,
-  projection,
-  SpatialReference,
   Draw,
   tokenUtils,
-  Portal,
-  UtilityNetwork,
-  Configuration
+  UtilityNetwork
 ) {
   //To create a widget, you need to derive from BaseWidget.
   return declare([_WidgetBase, _TemplatedMixin],{
@@ -85,7 +49,6 @@ function(declare,
     baseClass: 'jimu-widget-untrace',
 
     highlight: null,
-    portal: null,
     mapView: null,
     GraphicClass: null,
     handles: [],
@@ -109,7 +72,6 @@ function(declare,
       console.log('postCreate');
       this.mapView = this.sceneView;
 
-      this.portal = Portal;
       this.un = UtilityNetwork;
       this.token = this.generateToken();
 
@@ -120,14 +82,6 @@ function(declare,
       this.inherited(arguments);
       console.log('startup');
       this.loadUN();
-
-      this.own(on(this.optTools, "click", lang.hitch(this, function() {
-        this.switchPanels("tools");
-      })));
-
-      this.own(on(this.optSettings, "click", lang.hitch(this, function() {
-        this.switchPanels("settings");
-      })));
 
       this.own(on(this.btnStartingPoint, "click", lang.hitch(this, this.btnStartingPointClick)));
 
@@ -195,143 +149,17 @@ function(declare,
       }),function (err) {console.log(err)});
     },
 
-    updateStatus: function(params) {
-      dom.byId("lblStatus").textContent = params;
+    loadGraphicLayer: function() {
+      this.GraphicClass = Graphic;
+      this.gl = new GraphicsLayer();
+      this.gl.screenSizePerspectiveEnabled = true
+      this.mapView.map.add(this.gl);
     },
 
-    getTraceLocationsParam: function() {
-      let traceLocationsParam = [];
-      traceLocations.childNodes.forEach(li => {
-          let startLocation = {};
-          startLocation.globalId = li.globalId;
-          startLocation.layerId = li.layerId;
-          startLocation.assetGroupCode = li.assetGroupCode;
-          startLocation.assetTypeCode = li.assetTypeCode;
-          if (li.isTerminalConfigurationSupported == true) {
-              let cmbTerminalConfig = document.getElementById("cmbTerminalConfig" + li.locationId);
-              startLocation.terminalId = cmbTerminalConfig.options[cmbTerminalConfig.selectedIndex].value;
-          }
-          startLocation.traceLocationType = li.traceLocationType;
-          traceLocationsParam.push(startLocation);
-      });
-
-      return traceLocationsParam;
-    },
-
-    mapClick: function(event) {
-        let color = this.activeTraceLocation === this.config.TRACELOCATION_START ? this.config.TRACING_STARTPOINT_COLOR : this.config.TRACING_BARRIER_COLOR;
-        this.un.traceControls.forEach(tc => {
-        const fl = new FeatureLayer({
-            url: this.un.featureServiceUrl + "/" + tc
-        });
-        const query = new Query();
-        query.outSpatialReference = { wkid: 102100 };
-        query.returnGeometry = true;
-        query.outFields = [ "*" ];
-        query.distance = 2;
-        query.geometry = event;
-        fl.queryFeatures(query).then(lang.hitch(this, function(hitResults){
-            console.log(hitResults.features);  // prints the array of features to the console
-            domQuery(".traceLocations").style("display", "block");
-
-            let supportedClasses = ["esriUNFCUTDevice", "esriUNFCUTJunction"] //, "esriUNFCUTLine" ]
-            if (hitResults.features.length) {
-                hitResults.features.forEach(g => {
-
-                    let img = document.createElement("img");
-                    if (this.activeTraceLocation === this.config.TRACELOCATION_START) {
-                        img.src = this.folderUrl + "/images/add.png";
-                        img.className = "btnStartItems";
-                    }
-                    else {
-                        img.src = this.folderUrl + "/images/add-barriers-select.png";
-                        img.className = "btnBarrierItems";
-                    }
-                    let rowTraceLocation = document.createElement("tr");
-                    let columnImg = document.createElement("td");
-                    rowTraceLocation.appendChild(columnImg);
-                    columnImg.appendChild(img);
-                    let columnElement = document.createElement("td");
-                    // let columntraceLocationType = document.createElement("td");
-                    let columnTerminal = document.createElement("td");
-                    columnTerminal.className = "col120";
-                    //rowTraceLocation.appendChild(img)
-                    rowTraceLocation.appendChild(columnElement);
-                    //   rowTraceLocation.appendChild(columntraceLocationType);
-                    rowTraceLocation.appendChild(columnTerminal);
-                    let columnBtn = document.createElement("td");
-                    rowTraceLocation.appendChild(columnBtn);
-                    let deleteTraceLocation = document.createElement("img");
-                    deleteTraceLocation.src = this.folderUrl + "/images/delete.png"
-                    deleteTraceLocation.className = "btnX";
-                    deleteTraceLocation.addEventListener("click", lang.hitch(this, function(e){
-                        traceLocations.removeChild(rowTraceLocation);
-                        //try to remove the graphic
-                        for (let i = 0; i < this.gl.graphics.items.length; i++) {
-                            let g = this.gl.graphics.items[i];
-                            if (g.name === rowTraceLocation.globalId) {
-                                this.gl.remove(g);
-                                break;
-                            }
-
-                        }
-                        if(this.gl.graphics.items.length <= 0) {
-                          domQuery(".traceLocations").style("display", "none");
-                        }
-
-                    }));
-                    columnBtn.appendChild(deleteTraceLocation);
-                    let at = this.un.getAssetType(tc, this.getVal(g.attributes, "assetgroup"), this.getVal(g.attributes, "assettype"));
-
-                    //if it is not a device or a junction or a line exit..
-                    if (!supportedClasses.find(c => c == at.utilityNetworkFeatureClassUsageType)) return;
-                    this.config.locationId++;
-                    rowTraceLocation.globalId = this.getVal(g.attributes, "globalid");
-                    rowTraceLocation.locationId = this.config.locationId;
-                    rowTraceLocation.isTerminalConfigurationSupported = at.isTerminalConfigurationSupported;
-                    rowTraceLocation.layerId = tc;
-                    rowTraceLocation.assetGroupCode = this.getVal(g.attributes, "assetgroup");
-                    rowTraceLocation.assetTypeCode = this.getVal(g.attributes, "assettype");
-                    columnElement.textContent = " (" + at.assetGroupName + "/" + at.assetTypeName + ") "
-                    // columntraceLocationType.textContent = activeTraceLocation;
-                    //if termianls supported show it
-                    if (at.isTerminalConfigurationSupported == true) {
-                        let terminalList = document.createElement("select");
-                        terminalList.className = "mini";
-                        terminalList.id = "cmbTerminalConfig" + this.config.locationId;
-                        let terminalConfiguration = this.un.getTerminalConfiguration(at.terminalConfigurationId);
-                        terminalConfiguration.terminals.forEach(t => {
-                            let terminalItem = document.createElement("option");
-                            terminalItem.textContent = t.terminalName;
-                            terminalItem.value = t.terminalId;
-                            terminalList.appendChild(terminalItem);
-                        })
-                        columnTerminal.appendChild(terminalList);
-                    }
-
-                    rowTraceLocation.traceLocationType = this.activeTraceLocation;
-                    traceLocations.appendChild(rowTraceLocation);
-
-                    //create graphic on the map
-                    let bufferedGeo =  geometryEngineAsync.buffer(g.geometry, this.config.TRACING_STARTLOCATION_BUFFER)
-                        .then(lang.hitch(this, function(geom){
-                            this.gl.graphics.add(this.getGraphic("polygon", geom, color, rowTraceLocation.globalId));
-                        }));
-                })
-
-
-
-            }
-
-        }));
-        /*
-        this.mapView.hitTest({ x: event.x, y: event.y }).then(lang.hitch(this,function(hitResults) {
-            //console.log(hitResults);
-        */
-        });
-
-    },
-
+    /*****  STARTS AND BARRIERS
+    handles handles starts and barriers adding/removing
+    and map action after drawing is done to get start and barriers
+    *******/
     btnBarriersClick: function(params) {
       domAttr.set(this.btnStartingPoint, "class", "button_nonactive");
       domAttr.set(this.btnBarriers, "class", "button_active");
@@ -356,6 +184,143 @@ function(declare,
       this.activeTraceLocation = this.config.TRACELOCATION_START;
     },
 
+    mapClick: function(event) {
+      let color = this.activeTraceLocation === this.config.TRACELOCATION_START ? this.config.TRACING_STARTPOINT_COLOR : this.config.TRACING_BARRIER_COLOR;
+      this.un.traceControls.forEach(tc => {
+      const fl = new FeatureLayer({
+          url: this.un.featureServiceUrl + "/" + tc
+      });
+      const query = new Query();
+      query.outSpatialReference = { wkid: 102100 };
+      query.returnGeometry = true;
+      query.outFields = [ "*" ];
+      query.distance = 2;
+      query.geometry = event;
+      fl.queryFeatures(query).then(lang.hitch(this, function(hitResults){
+          console.log(hitResults.features);  // prints the array of features to the console
+          domQuery(".traceLocations").style("display", "block");
+
+          let supportedClasses = ["esriUNFCUTDevice", "esriUNFCUTJunction"] //, "esriUNFCUTLine" ]
+          if (hitResults.features.length) {
+              hitResults.features.forEach(g => {
+
+                  let img = document.createElement("img");
+                  if (this.activeTraceLocation === this.config.TRACELOCATION_START) {
+                      img.src = this.folderUrl + "/images/add.png";
+                      img.className = "btnStartItems";
+                  }
+                  else {
+                      img.src = this.folderUrl + "/images/add-barriers-select.png";
+                      img.className = "btnBarrierItems";
+                  }
+                  let rowTraceLocation = document.createElement("tr");
+                  let columnImg = document.createElement("td");
+                  rowTraceLocation.appendChild(columnImg);
+                  columnImg.appendChild(img);
+                  let columnElement = document.createElement("td");
+                  // let columntraceLocationType = document.createElement("td");
+                  let columnTerminal = document.createElement("td");
+                  columnTerminal.className = "col120";
+                  //rowTraceLocation.appendChild(img)
+                  rowTraceLocation.appendChild(columnElement);
+                  //   rowTraceLocation.appendChild(columntraceLocationType);
+                  rowTraceLocation.appendChild(columnTerminal);
+                  let columnBtn = document.createElement("td");
+                  rowTraceLocation.appendChild(columnBtn);
+                  let deleteTraceLocation = document.createElement("img");
+                  deleteTraceLocation.src = this.folderUrl + "/images/delete.png"
+                  deleteTraceLocation.className = "btnX";
+                  deleteTraceLocation.addEventListener("click", lang.hitch(this, function(e){
+                      traceLocations.removeChild(rowTraceLocation);
+                      //try to remove the graphic
+                      for (let i = 0; i < this.gl.graphics.items.length; i++) {
+                          let g = this.gl.graphics.items[i];
+                          if (g.name === rowTraceLocation.globalId) {
+                              this.gl.remove(g);
+                              break;
+                          }
+
+                      }
+                      if(this.gl.graphics.items.length <= 0) {
+                        domQuery(".traceLocations").style("display", "none");
+                      }
+
+                  }));
+                  columnBtn.appendChild(deleteTraceLocation);
+                  let at = this.un.getAssetType(tc, this.getVal(g.attributes, "assetgroup"), this.getVal(g.attributes, "assettype"));
+
+                  //if it is not a device or a junction or a line exit..
+                  if (!supportedClasses.find(c => c == at.utilityNetworkFeatureClassUsageType)) return;
+                  this.config.locationId++;
+                  rowTraceLocation.globalId = this.getVal(g.attributes, "globalid");
+                  rowTraceLocation.locationId = this.config.locationId;
+                  rowTraceLocation.isTerminalConfigurationSupported = at.isTerminalConfigurationSupported;
+                  rowTraceLocation.layerId = tc;
+                  rowTraceLocation.assetGroupCode = this.getVal(g.attributes, "assetgroup");
+                  rowTraceLocation.assetTypeCode = this.getVal(g.attributes, "assettype");
+                  columnElement.textContent = " (" + at.assetGroupName + "/" + at.assetTypeName + ") "
+                  // columntraceLocationType.textContent = activeTraceLocation;
+                  //if termianls supported show it
+                  if (at.isTerminalConfigurationSupported == true) {
+                      let terminalList = document.createElement("select");
+                      terminalList.className = "mini";
+                      terminalList.id = "cmbTerminalConfig" + this.config.locationId;
+                      let terminalConfiguration = this.un.getTerminalConfiguration(at.terminalConfigurationId);
+                      terminalConfiguration.terminals.forEach(t => {
+                          let terminalItem = document.createElement("option");
+                          terminalItem.textContent = t.terminalName;
+                          terminalItem.value = t.terminalId;
+                          terminalList.appendChild(terminalItem);
+                      })
+                      columnTerminal.appendChild(terminalList);
+                  }
+
+                  rowTraceLocation.traceLocationType = this.activeTraceLocation;
+                  traceLocations.appendChild(rowTraceLocation);
+
+                  //create graphic on the map
+                  let bufferedGeo =  geometryEngineAsync.buffer(g.geometry, this.config.TRACING_STARTLOCATION_BUFFER)
+                      .then(lang.hitch(this, function(geom){
+                          this.gl.graphics.add(this.getGraphic("polygon", geom, color, rowTraceLocation.globalId));
+                      }));
+              })
+
+
+
+          }
+
+      }));
+      /*
+      this.mapView.hitTest({ x: event.x, y: event.y }).then(lang.hitch(this,function(hitResults) {
+          //console.log(hitResults);
+      */
+      });
+
+    },
+
+    getTraceLocationsParam: function() {
+      let traceLocationsParam = [];
+      traceLocations.childNodes.forEach(li => {
+          let startLocation = {};
+          startLocation.globalId = li.globalId;
+          startLocation.layerId = li.layerId;
+          startLocation.assetGroupCode = li.assetGroupCode;
+          startLocation.assetTypeCode = li.assetTypeCode;
+          if (li.isTerminalConfigurationSupported == true) {
+              let cmbTerminalConfig = document.getElementById("cmbTerminalConfig" + li.locationId);
+              startLocation.terminalId = cmbTerminalConfig.options[cmbTerminalConfig.selectedIndex].value;
+          }
+          startLocation.traceLocationType = li.traceLocationType;
+          traceLocationsParam.push(startLocation);
+      });
+
+      return traceLocationsParam;
+    },
+
+    /*****  CUSTOM TRACE RUNS
+    determines what traces to run, how many traces
+    and replaces empty trace config for each trace
+    *******/
     determineTracesToRun: function(param) {
         for (var key in this.config.userTraces) {
             if(key === param.groupName) {
@@ -421,7 +386,7 @@ function(declare,
               });
 
       });
-  },
+    },
 
     replaceSpecificTraceConfig: function(param) {
         let configuration = lang.clone(this.config.emptyTraceConfiguration);
@@ -438,6 +403,9 @@ function(declare,
         return configuration;
     },
 
+    /*****  SUBNET TRACE FUNCTIONS
+    handles the subnetwork drop down trace
+    *******/
     cmbSubnetworksChange: function(params) {
       this.mapView.graphics = []
       let subnetworkName = this.cmbSubnetworks.options[this.cmbSubnetworks.selectedIndex].textContent;
@@ -458,13 +426,31 @@ function(declare,
           });
     },
 
-    loadGraphicLayer: function() {
-      this.GraphicClass = Graphic;
-      this.gl = new GraphicsLayer();
-      this.gl.screenSizePerspectiveEnabled = true
-      this.mapView.map.add(this.gl);
+    btnTraceClick: function(params) {
+      let domainNetworkName = this.config.domainNetwork;
+      let tierName = this.config.tier;
+      let subnetworkName = "";
+      //if subnetwork is not selected
+      if (this.cmbSubnetworks.options[this.cmbSubnetworks.selectedIndex] != undefined) {
+          subnetworkName = this.cmbSubnetworks.options[this.cmbSubnetworks.selectedIndex].textContent;
+      }
+
+      this.updateStatus("Tracing...");
+      this.traceLocationsParam = this.getTraceLocationsParam();
+      this.un.subnetworkTrace(this.traceLocationsParam, domainNetworkName, tierName, subnetworkName)
+          .then(traceResults => {
+            if(this.traceCounter === (this.traceMax - 1)) {
+              this.drawTraceResults(this.un, traceResults);
+            }
+          })
+          .then(a => this.updateStatus("Done"))
+          .catch(err => this.updateStatus(err));
     },
 
+    /*****  TRACE RESULT FUNCTIONS
+    If running multiple traces, starts and barriers will be updated.
+    drawn results will not happen until all traces are run
+    *******/
     updateLocationsFromResults: function(param) {
         console.log(param);
         let newStartArr = [];
@@ -536,27 +522,6 @@ function(declare,
         }
     },
 
-    btnTraceClick: function(params) {
-      let domainNetworkName = this.config.domainNetwork;
-      let tierName = this.config.tier;
-      let subnetworkName = "";
-      //if subnetwork is not selected
-      if (this.cmbSubnetworks.options[this.cmbSubnetworks.selectedIndex] != undefined) {
-          subnetworkName = this.cmbSubnetworks.options[this.cmbSubnetworks.selectedIndex].textContent;
-      }
-
-      this.updateStatus("Tracing...");
-      this.traceLocationsParam = this.getTraceLocationsParam();
-      this.un.subnetworkTrace(this.traceLocationsParam, domainNetworkName, tierName, subnetworkName)
-          .then(traceResults => {
-            if(this.traceCounter === (this.traceMax - 1)) {
-              this.drawTraceResults(this.un, traceResults);
-            }
-          })
-          .then(a => this.updateStatus("Done"))
-          .catch(err => this.updateStatus(err));
-    },
-
     buildTraceResults: function(featuresJson) {
       //build the trace results so we group them by layerid
       let traceResults = {};
@@ -612,6 +577,10 @@ function(declare,
       });
     },
 
+
+    /**********
+      handling ISO trace, not used for now. just here for reference
+    ***********/
     IslandTrace: function() {
 
         let islands = 0;
@@ -664,26 +633,14 @@ function(declare,
         }
     },
 
-    //only for water
     IsolationTrace: async function() {
         //run upstream trace, stop when you find protective device valves
         //trace configuration for barrier protective
-        //let WaterUpstreamConfiguration = {"includeContainers": true, "includeContent": false, "includeStructures": true, "includeBarriers": true, "validateConsistency": false, "domainNetworkName": "Water", "tierName": "System", "targetTierName": "", "subnetworkName": "", "diagramTemplateName": "", "shortestPathNetworkAttributeName": "", "filterBitsetNetworkAttributeName": "", "traversabilityScope": "junctionsAndEdges", "conditionBarriers": [{ "name": "Pipe Device Status", "type": "networkAttribute", "operator": "equal", "value": 0, "combineUsingOr": true, "isSpecificValue": true }, { "name": "Lifecycle Status", "type": "networkAttribute", "operator": "doesNotIncludeAny", "value": 24, "combineUsingOr": false, "isSpecificValue": true }], "functionBarriers": [], "arcadeExpressionBarrier": "", "filterBarriers": [{ "name": "Category", "type": "category", "operator": "equal", "value": "Disconnecting", "combineUsingOr": true, "isSpecificValue": true }, { "name": "Category", "type": "category", "operator": "equal", "value": "Protective", "combineUsingOr": true, "isSpecificValue": true }, { "name": "Category", "type": "category", "operator": "equal", "value": "Isolating", "combineUsingOr": false, "isSpecificValue": true }], "filterFunctionBarriers": [], "filterScope": "junctionsAndEdges", "functions": [], "nearestNeighbor": { "count": -1, "costNetworkAttributeName": "", "nearestCategories": [], "nearestAssets": [] }, "outputFilters": [], "outputConditions": [{ "name": "Category", "type": "category", "operator": "equal", "value": "Disconnecting", "combineUsingOr": true, "isSpecificValue": true }, { "name": "Category", "type": "category", "operator": "equal", "value": "Protective", "combineUsingOr": true, "isSpecificValue": true }, { "name": "Category", "type": "category", "operator": "equal", "value": "Isolating", "combineUsingOr": false, "isSpecificValue": true }], "propagators": [] };
-        //let WaterCustomerConfiguration = {"includeContainers": false, "includeContent": false, "includeStructures": false, "includeBarriers": true, "validateConsistency": true, "domainNetworkName": "", "tierName": "", "targetTierName": "", "subnetworkName": "", "diagramTemplateName": "", "shortestPathNetworkAttributeName": "", "filterBitsetNetworkAttributeName": "", "traversabilityScope": "junctionsAndEdges", "conditionBarriers": [], "functionBarriers": [], "arcadeExpressionBarrier": "", "filterBarriers": [], "filterFunctionBarriers": [], "filterScope": "junctionsAndEdges", "functions": [], "nearestNeighbor": { "count": -1, "costNetworkAttributeName": "", "nearestCategories": [], "nearestAssets": [] }, "outputFilters": [{"networkSourceId":6,"assetGroupCode":12,"assetTypeCode":65},{"networkSourceId":6,"assetGroupCode":12,"assetTypeCode":61},{"networkSourceId":6,"assetGroupCode":12,"assetTypeCode":62},{"networkSourceId":6,"assetGroupCode":12,"assetTypeCode":63},{"networkSourceId":6,"assetGroupCode":12,"assetTypeCode":64},{"networkSourceId":6,"assetGroupCode":12,"assetTypeCode":0}], "outputConditions": [], "propagators": [] };
+        let WaterUpstreamConfiguration = {"includeContainers": true, "includeContent": false, "includeStructures": true, "includeBarriers": true, "validateConsistency": false, "domainNetworkName": "Water", "tierName": "System", "targetTierName": "", "subnetworkName": "", "diagramTemplateName": "", "shortestPathNetworkAttributeName": "", "filterBitsetNetworkAttributeName": "", "traversabilityScope": "junctionsAndEdges", "conditionBarriers": [{ "name": "Pipe Device Status", "type": "networkAttribute", "operator": "equal", "value": 0, "combineUsingOr": true, "isSpecificValue": true }, { "name": "Lifecycle Status", "type": "networkAttribute", "operator": "doesNotIncludeAny", "value": 24, "combineUsingOr": false, "isSpecificValue": true }], "functionBarriers": [], "arcadeExpressionBarrier": "", "filterBarriers": [{ "name": "Category", "type": "category", "operator": "equal", "value": "Disconnecting", "combineUsingOr": true, "isSpecificValue": true }, { "name": "Category", "type": "category", "operator": "equal", "value": "Protective", "combineUsingOr": true, "isSpecificValue": true }, { "name": "Category", "type": "category", "operator": "equal", "value": "Isolating", "combineUsingOr": false, "isSpecificValue": true }], "filterFunctionBarriers": [], "filterScope": "junctionsAndEdges", "functions": [], "nearestNeighbor": { "count": -1, "costNetworkAttributeName": "", "nearestCategories": [], "nearestAssets": [] }, "outputFilters": [], "outputConditions": [{ "name": "Category", "type": "category", "operator": "equal", "value": "Disconnecting", "combineUsingOr": true, "isSpecificValue": true }, { "name": "Category", "type": "category", "operator": "equal", "value": "Protective", "combineUsingOr": true, "isSpecificValue": true }, { "name": "Category", "type": "category", "operator": "equal", "value": "Isolating", "combineUsingOr": false, "isSpecificValue": true }], "propagators": [] };
+        let WaterCustomerConfiguration = {"includeContainers": false, "includeContent": false, "includeStructures": false, "includeBarriers": true, "validateConsistency": true, "domainNetworkName": "", "tierName": "", "targetTierName": "", "subnetworkName": "", "diagramTemplateName": "", "shortestPathNetworkAttributeName": "", "filterBitsetNetworkAttributeName": "", "traversabilityScope": "junctionsAndEdges", "conditionBarriers": [], "functionBarriers": [], "arcadeExpressionBarrier": "", "filterBarriers": [], "filterFunctionBarriers": [], "filterScope": "junctionsAndEdges", "functions": [], "nearestNeighbor": { "count": -1, "costNetworkAttributeName": "", "nearestCategories": [], "nearestAssets": [] }, "outputFilters": [{"networkSourceId":6,"assetGroupCode":12,"assetTypeCode":65},{"networkSourceId":6,"assetGroupCode":12,"assetTypeCode":61},{"networkSourceId":6,"assetGroupCode":12,"assetTypeCode":62},{"networkSourceId":6,"assetGroupCode":12,"assetTypeCode":63},{"networkSourceId":6,"assetGroupCode":12,"assetTypeCode":64},{"networkSourceId":6,"assetGroupCode":12,"assetTypeCode":0}], "outputConditions": [], "propagators": [] };
 
-        let UpstreamConfiguration = lang.clone(this.config.emptyTraceConfiguration);
-        UpstreamConfiguration.includeContainers = this.config.upstreamTraceConfiguration.includeContainers;
-        UpstreamConfiguration.domainNetworkName = this.config.upstreamTraceConfiguration.domainNetworkName;
-        UpstreamConfiguration.tierName = this.config.upstreamTraceConfiguration.tierName;
-        UpstreamConfiguration.conditionBarriers = this.config.upstreamTraceConfiguration.conditionBarriers;
-        UpstreamConfiguration.filterBarriers = this.config.upstreamTraceConfiguration.filterBarriers;
-        UpstreamConfiguration.outputConditions = this.config.upstreamTraceConfiguration.outputConditions;
-
-        let CustomerConfiguration = lang.clone(this.config.emptyTraceConfiguration);
-        CustomerConfiguration.outputFilters = this.config.customerCountTraceConfiguration.outputFilters;
-
-        let traceConfiguration = UpstreamConfiguration;
-        let customerConfiguration = CustomerConfiguration; //only return customers config
+        let traceConfiguration = WaterUpstreamConfiguration;
+        let customerConfiguration = WaterCustomerConfiguration; //only return customers config
 
         if (this.config.domainNetwork && this.config.tier) {
             try {
@@ -779,20 +736,12 @@ function(declare,
         })
     },
 
-    switchPanels: function(id) {
-      if (id === "settings") {
-          document.getElementById("optTools").style.display = "block";
-          document.getElementById("optSettings").style.display = "none";
-          document.getElementById("tools").style.display = "none";
-          document.getElementById("settings").style.display = "block";
-      } else {
-          document.getElementById("optTools").style.display = "none";
-          document.getElementById("optSettings").style.display = "block";
-          document.getElementById("tools").style.display = "block";
-          document.getElementById("settings").style.display = "none";
-      }
-    },
-
+    /********SUPPORT FUNCTIONS
+      creating a graphic,
+      generate a token,
+      make http request,
+      upate status
+    */
     getVal: function(obj, prop) {
       prop = (prop + "").toLowerCase();
       for (var p in obj) {
@@ -867,9 +816,9 @@ function(declare,
           name: name
       });
 
-  },
+    },
 
-  makeRequest: function(opts) {
+    makeRequest: function(opts) {
     return new Promise(function (resolve, reject) {
         let xhr = new XMLHttpRequest();
 
@@ -903,16 +852,19 @@ function(declare,
 
     xhr.send(params);
     });
-  },
+    },
 
-  generateToken: function() {
-    var tokenTool = tokenUtils;
-    tokenTool.portalUrl = this.appConfig.portalUrl;
-    return tokenTool.getPortalCredential(this.appConfig.portalUrl).token;
-  },
+    generateToken: function() {
+      var tokenTool = tokenUtils;
+      tokenTool.portalUrl = this.appConfig.portalUrl;
+      return tokenTool.getPortalCredential(this.appConfig.portalUrl).token;
+    },
 
+    updateStatus: function(params) {
+      dom.byId("lblStatus").textContent = params;
+    },
 
-  //draw functions
+  //************ HANDLE DRAWING FUNCTIONS */
   enableCreateDrawing: function() {
     var newDraw = new Draw({"view":this.mapView});
     if(this.selectionMode === "point") {
