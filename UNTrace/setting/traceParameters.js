@@ -130,26 +130,26 @@ function (declare,
       })));
 
       this.own(on(this.chkContainers, "change", lang.hitch(this, function() {
-        this.storeTempConfig({"referrer":"container change" + Date()});
+        this.storeTempConfig();
       })));
       this.own(on(this.chkStructLineContent, "change", lang.hitch(this, function() {
-        this.storeTempConfig({"referrer":"struct line change" + Date()});
+        this.storeTempConfig();
       })));
       this.own(on(this.chkStructures, "change", lang.hitch(this, function() {
-        this.storeTempConfig({"referrer":"structures change" + Date()});
+        this.storeTempConfig();
       })));
       this.own(on(this.chkBarrierFeatures, "change", lang.hitch(this, function() {
-        this.storeTempConfig({"referrer":"sinclude bearrier change" + Date()});
+        this.storeTempConfig();
       })));
       this.own(on(this.chkValidateConsistency, "change", lang.hitch(this, function() {
-        this.storeTempConfig({"referrer":"valid consistenacy" + Date()});
+        this.storeTempConfig();
       })));
 
     },
 
     _createStartList: function(param) {
       if(typeof(param.value) !== "undefined") {
-        if(param.value === 'userDefined' || param.value === "") {
+        if(param.value === 'useExisting' || param.value === "") {
           this.startLocationCheckboxList = [];
           domConstruct.empty(this.startFeatureHolder);
           query(".startFeatureGroup").style("display", "none");
@@ -170,7 +170,7 @@ function (declare,
 
     _createBarrierList: function(param) {
       if(typeof(param.value) !== "undefined") {
-          if(param.value === 'userDefined' || param.value === "") {
+          if(param.value === 'useExisting' || param.value === "") {
             this.barriersLocationCheckboxList = [];
             domConstruct.empty(this.barrierFeatureHolder);
             query(".barrierFeatureGroup").style("display", "none");
@@ -207,6 +207,7 @@ function (declare,
       var junctionList = this.un.getAGByJunction(this.cmbDomainNetworks.value);
       var assetGroupList = deviceList.concat(junctionList);
       array.forEach(assetGroupList, lang.hitch(this, function(agl) {
+        agl.assetGroup.sort((a,b) => (a.assetGroupName > b.assetGroupName) ? 1 : ((b.assetGroupName > a.assetGroupName) ? -1 : 0));
         array.forEach(agl.assetGroup, lang.hitch(this, function(ag) {
           array.forEach(ag.assetTypes, lang.hitch(this, function(at) {
             //Check for exisitng values, and check box if it exist
@@ -492,7 +493,7 @@ function (declare,
     },
 
     _addTraverseCombineSelection: function(param) {
-      var flag = "";
+      var flag = "false";
       var td = query('.simple-table-cell', param.tr)[4];
       var selectionBox = new Select().placeAt(td);
       var combineList = this.createCombineUsingList();
@@ -505,16 +506,14 @@ function (declare,
       flag = "";
       if(param.predefinedValues !== null) {
         if(typeof(param.predefinedValues.combineUsingOr) !== 'undefined') {
-          if(param.predefinedValues.combineUsingOr === true) {
-            flag = "Or";
+          if(param.predefinedValues.combineUsingOr === "true") {
+            flag = "true";
           } else {
-            flag = "And";
+            flag = "false";
           }
         }
       }
-      if(flag !== "") {
-        selectionBox.set("value",flag);
-      }
+      selectionBox.set("value",flag);
       selectionBox.startup();
       param.tr.combine = selectionBox;
     },
@@ -775,7 +774,6 @@ function (declare,
 
     createCombineUsingList: function() {
       var combineList = [
-        {display: "", value: false},
         {display: "And", value: false},
         {display: "Or", value: true}
       ];

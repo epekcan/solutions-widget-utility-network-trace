@@ -58,13 +58,15 @@ function(declare,
     traceLocations: null,
     handleStartPoints: null,
     handleBarriers: null,
-    mouseHandler: null,
+   // mouseHandler: null,
     traceCounter: 0,
     traceMax: 0,
     token: null,
     traceLocationsParam: [],
     tempRecordSet: null,
     selectionMode: "point",
+    runFlag: true,
+    initialRun: true,
     //config: JSON.parse(Configuration),
 
     postCreate: function() {
@@ -87,6 +89,8 @@ function(declare,
 
       this.own(on(this.btnBarriers, "click", lang.hitch(this, this.btnBarriersClick)));
 
+      this.own(on(this.cmbSubnetworks, "change" , lang.hitch(this, this.cmbSubnetworksChange)));
+
       this.own(on(this.btnPoint, "click", lang.hitch(this, function(){
         this.selectionMode = "point";
         this.enableCreateDrawing();
@@ -106,9 +110,9 @@ function(declare,
       //this.own(on(this.btnTraceIsolation, "click", lang.hitch(this, this.IsolationTrace)));
 
       this.own(on(this.btnClearTraceLocations, "click", lang.hitch(this, function(e) {
-        if(this.mouseHandler !== null) {
-            this.mouseHandler.remove();
-        }
+        //if(this.mouseHandler !== null) {
+        //    this.mouseHandler.remove();
+        //}
         this.activeTraceLocation = undefined;
         if(traceLocations !== null) {
             while (traceLocations.firstChild) traceLocations.removeChild(traceLocations.firstChild);
@@ -119,6 +123,7 @@ function(declare,
         domQuery(".drawIconGroup").style("display", "none");
         this.mapView.graphics = [];
         this.gl.graphics = [];
+        this.selectionMode = "none";
         this.updateStatus("");
       })));
 
@@ -126,14 +131,15 @@ function(declare,
 
     createCustomTraceButtons: function() {
       for (var key in this.config.userTraces) {
-          let container = domConstruct.create("div",{'class':'customTraceItem'},this.customTracesHolder);
-          let userTrace = domConstruct.create("div",{'class':'button_nonactive userTraces', 'innerHTML': key, 'count':this.config.userTraces[key].traces.length},container);
+          let container = domConstruct.create("div",{'class':'customTraceItem'}, this.customTracesHolder);
+          let userTrace = domConstruct.create("div",{'class':'button_nonactive userTraces', 'innerHTML': key, 'count':this.config.userTraces[key].traces.length}, container);
 
           this.own(on(userTrace, "click", lang.hitch(this, function() {
-              this.traceCounter = 0;
-              this.traceMax = parseInt(domAttr.get(userTrace,'count'));
-              this.traceLocationsParam = [];
-              this.determineTracesToRun({'groupName':domAttr.get(userTrace,'innerHTML')});
+            this.initialRun = true;
+            this.traceCounter = 0;
+            this.traceMax = parseInt(domAttr.get(userTrace,'count'));
+            this.traceLocationsParam = [];
+            this.determineTracesToRun({'groupName':domAttr.get(userTrace,'innerHTML')});
           })));
       }
     },
@@ -146,6 +152,7 @@ function(declare,
       this.un.emptyTraceConfiguration = this.config.emptyTraceConfiguration;
       this.un.load().then(lang.hitch(this, function() {
         this.loadGraphicLayer();
+        this._populateSubnetWorkDropdown();
       }),function (err) {console.log(err)});
     },
 
@@ -322,29 +329,37 @@ function(declare,
     and replaces empty trace config for each trace
     *******/
     determineTracesToRun: function(param) {
-        for (var key in this.config.userTraces) {
-            if(key === param.groupName) {
-                var arrTraces = this.config.userTraces[key].traces;
-                this._traceToRun({'traceInfo':arrTraces[this.traceCounter]}).then(lang.hitch(this, function() {
-                  console.log("run" + this.traceCounter);
-                  this.traceCounter++;
-                  if(this.traceCounter < this.traceMax) {
-                      this.determineTracesToRun(param);
-                  }
-              }));
-            }
-        }
+      for (var key in this.config.userTraces) {
+          if(key === param.groupName) {
+              var arrTraces = this.config.userTraces[key].traces;
+              this.runFlag = this.config.userTraces[key].runAmount;
+              this._traceToRun({'traceInfo':arrTraces[this.traceCounter]}).then(lang.hitch(this, function() {
+                console.log("run" + this.traceCounter);
+               // this.traceCounter++;
+                this.initialRun = false;
+                if(this.traceCounter < this.traceMax) {
+                    this.determineTracesToRun(param);
+                }
+            }));
+          }
+      }
     },
 
     _traceToRun: async function(param) {
       return new Promise( (resolve, reject) => {
           this.updateStatus("Tracing...");
-          if(param.traceInfo.useAsStart !== "userDefined" || param.traceInfo.useAsBarrier !== "userDefined") {
-              this.updateLocationsFromResults({"traceInfo":param.traceInfo, "featuresJson":this.tempRecordSet});
+          if(!this.initialRun) {
+            if(param.traceInfo.useAsStart !== "useExisting" || param.traceInfo.useAsBarrier !== "useExisting") {
+                this.updateLocationsFromResults({"traceInfo":param.traceInfo, "featuresJson":this.tempRecordSet});
+            } else {
+                if(this.traceLocationsParam.length <= 0) {
+                    this.traceLocationsParam = this.getTraceLocationsParam();
+                }
+            }
           } else {
-              if(this.traceLocationsParam.length <= 0) {
-                  this.traceLocationsParam = this.getTraceLocationsParam();
-              }
+            if(this.traceLocationsParam.length <= 0) {
+              this.traceLocationsParam = this.getTraceLocationsParam();
+            }
           }
 
           let configuration = this.replaceSpecificTraceConfig(param);
@@ -365,25 +380,52 @@ function(declare,
             case 'downstream':
               var traceObj = this.un.downstream(this.traceLocationsParam, this.config.domainNetwork, this.config.tier, "", configuration);
               break;
+            case 'subnetwork':
+              if (this.cmbSubnetworks.options[this.cmbSubnetworks.selectedIndex] != undefined) {
+                subnetworkName = this.cmbSubnetworks.options[this.cmbSubnetworks.selectedIndex].textContent;
+                var traceObj = this.un.subnetworkTrace(this.traceLocationsParam, this.config.domainNetwork, this.config.tier, subnetworkName, configuration);
+              } else {
+                var traceObj = this.un.subnetworkTrace(this.traceLocationsParam, this.config.domainNetwork, this.config.tier, "", configuration);
+              }
+              break;
             default:
               var traceObj = this.un.connectedTrace(this.traceLocationsParam, configuration);
               break;
           }
 
           traceObj.then(traceResults => {
-                  if(this.traceCounter === (this.traceMax - 1)) {
+            if(this.traceCounter >= (this.traceMax - 1)) {
+              switch(this.runFlag) {
+                case "runOnce":
+                  this.drawTraceResults(this.un, traceResults);
+                  this.traceCounter++;
+                  break;
+                case "runTillNoResults":
+                  if(traceResults.traceResults.elements.length > 0) {
+                    this.traceCounter = 0;
+                  } else {
                     this.drawTraceResults(this.un, traceResults);
+                    this.traceCounter++;
                   }
-                  this.tempRecordSet = traceResults;
-                })
-              .then(a => {
-                  this.updateStatus("Done");
-                  resolve(true);
-              })
-              .catch(er => {
-                  this.updateStatus(er);
-                  reject(true);
-              });
+                  break;
+                default:
+                  this.drawTraceResults(this.un, traceResults);
+                  this.traceCounter++;
+                  break;
+              }
+            } else {
+              this.traceCounter++;
+            }
+            this.tempRecordSet = traceResults;
+          })
+        .then(a => {
+            this.updateStatus("Done");
+            resolve(true);
+        })
+        .catch(er => {
+            this.updateStatus(er);
+            reject(true);
+        });
 
       });
     },
@@ -407,8 +449,26 @@ function(declare,
     /*****  SUBNET TRACE FUNCTIONS
     handles the subnetwork drop down trace
     *******/
+    _populateSubnetWorkDropdown: function() {
+      while (this.cmbSubnetworks.firstChild) this.cmbSubnetworks.removeChild(this.cmbSubnetworks.firstChild);
+      let selectedDomainNetwork = this.config.domainNetwork;
+      let selectedTier = this.config.tier;
+
+      this.un.getSubnetworks(selectedDomainNetwork, selectedTier).then(lang.hitch(this, function(results) {
+          results.features.forEach(feature => {
+              let sn = document.createElement("option");
+              for (let propt in feature.attributes)
+                  if (propt.toUpperCase() === "SUBNETWORKNAME")
+                      sn.textContent = feature.attributes[propt];
+
+              this.cmbSubnetworks.appendChild(sn);
+          })
+          this.cmbSubnetworks.selectedIndex = -1;
+      }));
+    },
+
     cmbSubnetworksChange: function(params) {
-      this.mapView.graphics = []
+      this.mapView.graphics = [];
       let subnetworkName = this.cmbSubnetworks.options[this.cmbSubnetworks.selectedIndex].textContent;
       this.un.query(this.un.subnetLineLayerId, "SUBNETWORKNAME = '" + subnetworkName + "'")
           .then(rowsJson => {
@@ -427,33 +487,11 @@ function(declare,
           });
     },
 
-    btnTraceClick: function(params) {
-      let domainNetworkName = this.config.domainNetwork;
-      let tierName = this.config.tier;
-      let subnetworkName = "";
-      //if subnetwork is not selected
-      if (this.cmbSubnetworks.options[this.cmbSubnetworks.selectedIndex] != undefined) {
-          subnetworkName = this.cmbSubnetworks.options[this.cmbSubnetworks.selectedIndex].textContent;
-      }
-
-      this.updateStatus("Tracing...");
-      this.traceLocationsParam = this.getTraceLocationsParam();
-      this.un.subnetworkTrace(this.traceLocationsParam, domainNetworkName, tierName, subnetworkName)
-          .then(traceResults => {
-            if(this.traceCounter === (this.traceMax - 1)) {
-              this.drawTraceResults(this.un, traceResults);
-            }
-          })
-          .then(a => this.updateStatus("Done"))
-          .catch(err => this.updateStatus(err));
-    },
-
     /*****  TRACE RESULT FUNCTIONS
     If running multiple traces, starts and barriers will be updated.
     drawn results will not happen until all traces are run
     *******/
     updateLocationsFromResults: function(param) {
-        console.log(param);
         let newStartArr = [];
         let newBarrArr = [];
         for (let f of param.featuresJson.traceResults.elements) {
@@ -464,7 +502,7 @@ function(declare,
             let layerObj = this.un.getLayerIdfromSourceId(f.networkSourceId);
             if (layerObj === undefined) continue;
             let layerId = layerObj.layerId;
-            if(param.traceInfo.useAsStart !== "userDefined") {
+            if(param.traceInfo.useAsStart === "addToExisting" || param.traceInfo.useAsStart === "replaceAllWith" || param.traceInfo.useAsStart === "replaceFirst") {
                 for (let s of param.traceInfo.traceConfig.startLocationLayers) {
                     if(s.layerId === layerId) {
                         if(parseInt(s.assetGroupCode) === parseInt(f.assetGroupCode) &&
@@ -483,7 +521,7 @@ function(declare,
                     }
                 }
             }
-            if(param.traceInfo.useAsBarrier !== "userDefined") {
+            if(param.traceInfo.useAsBarrier === "addToExisting" || param.traceInfo.useAsBarrier === "replaceAllWith" || param.traceInfo.useAsBarrier === "replaceFirst") {
                 for (let s of param.traceInfo.traceConfig.barriersLayers) {
                     if(s.layerId === layerId) {
                         if(parseInt(s.assetGroupCode) === parseInt(f.assetGroupCode) &&
@@ -502,9 +540,15 @@ function(declare,
                     }
                 }
             }
+            if (param.traceInfo.useAsStart === "replaceFirst" &&  newStartArr.length === 1) {
+              break;
+            }
+            if (param.traceInfo.useAsBarrier === "replaceFirst" &&  newBarrArr.length === 1) {
+              break;
+            }
         }
         if(newStartArr.length > 0) {
-            if(param.traceInfo.useAsStart !== "addToExistingResults") {
+            if(param.traceInfo.useAsStart === "replaceAllWith" || param.traceInfo.useAsStart === "replaceFirst") {
                 let filteredArr = array.filter(this.traceLocationsParam, function(item){
                     return item.traceLocationType !== "startingPoint";
                 });
@@ -513,13 +557,39 @@ function(declare,
             this.traceLocationsParam = this.traceLocationsParam.concat(newStartArr);
         }
         if(newBarrArr.length > 0) {
-            if(param.traceInfo.useAsBarrier !== "addToExistingResults") {
+            if(param.traceInfo.useAsBarrier === "replaceAllWith" || param.traceInfo.useAsBarrier === "replaceFirst") {
                 let filteredArr = array.filter(this.traceLocationsParam, function(item){
                     return item.traceLocationType !== "barrier";
                 });
                 this.traceLocationsParam = filteredArr;
             }
             this.traceLocationsParam = this.traceLocationsParam.concat(newBarrArr);
+        }
+        if(param.traceInfo.useAsStart === "RemoveFromExisting") {
+          if(param.traceInfo.traceConfig.startLocationLayers.length > 0) {
+            for (let s of param.traceInfo.traceConfig.startLocationLayers) {
+              for (i = 0; i < this.traceLocationsParam.length; i++) {
+                let item = this.traceLocationsParam[i];
+                if (item.traceLocationType === "startingPoint" && item.layerId[0] === s.layerId && parseInt(s.assetGroupCode) === parseInt(item.assetGroupCode) && parseInt(s.assetTypeCode) === parseInt(item.assetTypeCode))  {
+                  this.traceLocationsParam.splice(i,1);
+                  i = 0;
+                }
+              }
+            }
+          }
+        }
+        if(param.traceInfo.useAsBarrier === "RemoveFromExisting") {
+          if(param.traceInfo.traceConfig.barriersLayers.length > 0) {
+            for (let s of param.traceInfo.traceConfig.barriersLayers) {
+              for (i = 0; i < this.traceLocationsParam.length; i++) {
+                let item = this.traceLocationsParam[i];
+                if (item.traceLocationType === "barrier" && item.layerId[0] === s.layerId && parseInt(s.assetGroupCode) === parseInt(item.assetGroupCode) && parseInt(s.assetTypeCode) === parseInt(item.assetTypeCode))  {
+                  this.traceLocationsParam.splice(i,1);
+                  i = 0;
+                }
+              }
+            }
+          }
         }
     },
 
@@ -867,91 +937,95 @@ function(declare,
 
   //************ HANDLE DRAWING FUNCTIONS */
   enableCreateDrawing: function() {
-    var newDraw = new Draw({"view":this.mapView});
-    if(this.selectionMode === "point") {
-      var action = newDraw.create("point");
-      this.mapView.focus();
+    if(this.selectionMode !== "none") {
+      var newDraw = new Draw({"view":this.mapView});
+      if(this.selectionMode === "point") {
+        var action = newDraw.create("point");
+        this.mapView.focus();
 
-      // Add a graphic representing the completed polygon
-      // when user double-clicks on the view or presses the "C" key
-      action.on("draw-complete", lang.hitch(this, function (evt) {
-        this.createDrawGraphic({"vertices":evt, "status":"draw-complete"});
-      }));
+        // Add a graphic representing the completed polygon
+        // when user double-clicks on the view or presses the "C" key
+        action.on("draw-complete", lang.hitch(this, function (evt) {
+          this.createDrawGraphic({"vertices":evt, "status":"draw-complete"});
+        }));
 
-    } else {
-      var action = newDraw.create("polygon");
+      } else {
+        var action = newDraw.create("polygon");
 
-      this.mapView.focus();
-      // listen to vertex-add event on the action
-      action.on("vertex-add", lang.hitch(this, function (evt) {
-        this.createDrawGraphic({"vertices":evt.vertices, "status":"draw-progress"});
-      }));
+        this.mapView.focus();
+        // listen to vertex-add event on the action
+        action.on("vertex-add", lang.hitch(this, function (evt) {
+          this.createDrawGraphic({"vertices":evt.vertices, "status":"draw-progress"});
+        }));
 
-      // listen to cursor-update event on the action
-      action.on("cursor-update", lang.hitch(this, function (evt) {
-        this.createDrawGraphic({"vertices":evt.vertices, "status":"draw-progress"});
-      }));
+        // listen to cursor-update event on the action
+        action.on("cursor-update", lang.hitch(this, function (evt) {
+          this.createDrawGraphic({"vertices":evt.vertices, "status":"draw-progress"});
+        }));
 
-      // listen to vertex-remove event on the action
-      action.on("vertex-remove", lang.hitch(this, function (evt) {
-        this.createDrawGraphic({"vertices":evt.vertices, "status":"draw-progress"});
-      }));
-      // Add a graphic representing the completed polygon
-      // when user double-clicks on the view or presses the "C" key
-      action.on("draw-complete", lang.hitch(this, function (evt) {
-        this.createDrawGraphic({"vertices":evt.vertices, "status":"draw-complete"});
-      }));
+        // listen to vertex-remove event on the action
+        action.on("vertex-remove", lang.hitch(this, function (evt) {
+          this.createDrawGraphic({"vertices":evt.vertices, "status":"draw-progress"});
+        }));
+        // Add a graphic representing the completed polygon
+        // when user double-clicks on the view or presses the "C" key
+        action.on("draw-complete", lang.hitch(this, function (evt) {
+          this.createDrawGraphic({"vertices":evt.vertices, "status":"draw-complete"});
+        }));
+      }
     }
   },
 
   createDrawGraphic: function(param){
-    this.mapView.graphics.removeAll();
-    if(this.selectionMode === "polygon") {
-      var geom = {
-        type: "polygon", // autocasts as Polygon
-        rings: param.vertices,
-        spatialReference: this.mapView.spatialReference
-      };
-      var graphic = new Graphic({
-        geometry: geom,
-        symbol: {
-          type: "simple-fill", // autocasts as SimpleFillSymbol
-          color: "blue",
-          style: "solid",
-          outline: {  // autocasts as SimpleLineSymbol
-            color: "white",
-            width: 1
-          }
-        }
-      });
-    } else {
-      var geom = {
-        type: "point", // autocasts as /Point
-        x: param.vertices.coordinates[0],
-        y: param.vertices.coordinates[1],
-        spatialReference: this.mapView.spatialReference
-      };
-
-      var graphic = new Graphic({
-        geometry: geom,
-        symbol: {
-          type: "simple-marker", // autocasts as SimpleMarkerSymbol
-          style: "square",
-          color: "red",
-          size: "16px",
-          outline: { // autocasts as SimpleLineSymbol
-            color: [255, 255, 0],
-            width: 3
-          }
-        }
-      });
-    }
-
-    this.mapView.graphics.add(graphic);
-
-    if(param.status === "draw-complete") {
+    if(this.selectionMode !== "none") {
       this.mapView.graphics.removeAll();
-      this.mapClick(geom);
+      if(this.selectionMode === "polygon") {
+        var geom = {
+          type: "polygon", // autocasts as Polygon
+          rings: param.vertices,
+          spatialReference: this.mapView.spatialReference
+        };
+        var graphic = new Graphic({
+          geometry: geom,
+          symbol: {
+            type: "simple-fill", // autocasts as SimpleFillSymbol
+            color: "blue",
+            style: "solid",
+            outline: {  // autocasts as SimpleLineSymbol
+              color: "white",
+              width: 1
+            }
+          }
+        });
+      } else {
+        var geom = {
+          type: "point", // autocasts as /Point
+          x: param.vertices.coordinates[0],
+          y: param.vertices.coordinates[1],
+          spatialReference: this.mapView.spatialReference
+        };
+
+        var graphic = new Graphic({
+          geometry: geom,
+          symbol: {
+            type: "simple-marker", // autocasts as SimpleMarkerSymbol
+            style: "square",
+            color: "red",
+            size: "16px",
+            outline: { // autocasts as SimpleLineSymbol
+              color: [255, 255, 0],
+              width: 3
+            }
+          }
+        });
+      }
+
+      this.mapView.graphics.add(graphic);
+
+      if(param.status === "draw-complete") {
+        this.mapView.graphics.removeAll();
+        this.mapClick(geom);
+      }
     }
 
   },

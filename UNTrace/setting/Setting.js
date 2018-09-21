@@ -57,6 +57,8 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
     cmbDomainNetworks: null,
     cmbTiers: null,
 
+    runTraceAmount: null,
+
     postCreate: function(){
 
       this.portalHelper = PortalHelper;
@@ -301,16 +303,19 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
 
       this.own(on(this.userDefinedTraces, "row-select", lang.hitch(this, function(tr) {
         var defaultVal = null;
+        var group = null;
         var existTraceCheck = this.tempTraceConfigs["userTraces"];
         for (var key in existTraceCheck) {
           if (key === tr.userDefinedName.value) {
             var obj = {};
             obj[key] = existTraceCheck[key];
             defaultVal = obj;
+            group = obj[key];
           }
         }
         this._createTraceTypeTable({"predefined":defaultVal});
         this._restoreTraceTypeRows({"tr":tr, "predefined":defaultVal});
+        this._populateRunAmount({"predefined":group});
       })));
 
       this.own(on(this.userDefinedTraces, "row-delete", lang.hitch(this, function(tr) {
@@ -324,11 +329,13 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
           var obj = {};
           obj[key] = existTraceCheck[key];
           this.addRowUserDefined({"predefined":obj});
+          this._populateRunAmount({"predefined":obj[key]});
           newFlag = false;
         }
       }
       if(newFlag) {
         this.addRowUserDefined({"predefined":null});
+        this._populateRunAmount({"predefined":null});
       }
 
 
@@ -520,8 +527,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
 
     _addTraceBarrierSelection: function(param) {
       var td = query('.simple-table-cell', param.tr)[2];
-      var noneOption = [{label: "None", value: ""}];
-      var optionChoice = noneOption.concat(this.interactionList());
+      var optionChoice = this.interactionList();
       var selectionBox = new Select({
         options: optionChoice
       });
@@ -559,6 +565,20 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
       }
     },
 
+    _populateRunAmount: function(param) {
+      domConstruct.empty(this.runTraceAmountHolder);
+      this.runTraceAmount = null;
+      var optionChoice = this.runOptions();
+      var selectionBox = new Select({
+        options: optionChoice
+      });
+      selectionBox.placeAt(this.runTraceAmountHolder);
+      selectionBox.startup();
+      this.runTraceAmount = selectionBox;
+      if(param.predefined !== null) {
+        this.runTraceAmount.set("value", param.predefined.runAmount);
+      }
+    },
 
     storeTempConfig: function(param) {
       var userRowData = this.userDefinedTraces.getSelectedRow();
@@ -578,6 +598,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
                 if(typeof(param) !== "undefined") {
                   trace["traceConfig"] = param.traceConfig;
                 }
+                this.tempTraceConfigs.userTraces[userRowData.userDefinedName.value].runAmount = this.runTraceAmount.value;
                 match = true;
             }
           }));
@@ -592,6 +613,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
               obj["traceConfig"] = param.traceConfig;
             }
             this.tempTraceConfigs.userTraces[userRowData.userDefinedName.value].traces.push(obj);
+            this.tempTraceConfigs.userTraces[userRowData.userDefinedName.value].runAmount = this.runTraceAmount.value;
           }
         } else {
           var obj = {
@@ -603,8 +625,9 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
           if(typeof(param) !== "undefined") {
             obj["traceConfig"] = param.traceConfig;
           }
-          this.tempTraceConfigs.userTraces[userRowData.userDefinedName.value] = {"traces":[]};
+          this.tempTraceConfigs.userTraces[userRowData.userDefinedName.value] = {"traces":[], "runAmount":null};
           this.tempTraceConfigs.userTraces[userRowData.userDefinedName.value].traces.push(obj);
+          this.tempTraceConfigs.userTraces[userRowData.userDefinedName.value].runAmount = this.runTraceAmount.value;
         }
         return userGroupName;
       }
@@ -702,9 +725,19 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
 
     interactionList: function() {
       var userActions = [
-        {label: "User Defined", value: "userDefined"},
-        {label: "A previous trace", value: "previousTrace"},
-        {label: "Add to Existing results", value: "addToExistingResults"}
+        {label: "Use Existing", value: "useExisting"},
+        {label: "Add to Existing", value: "addToExisting"},
+        {label: "Remove from Existing", value: "RemoveFromExisting"},
+        {label: "Replace all with", value: "replaceAllWith"},
+        {label: "Replace with first", value: "replaceFirst"}
+      ];
+      return userActions;
+    },
+
+    runOptions: function() {
+      var userActions = [
+        {label: "Run once", value: "runOnce"},
+        {label: "Until no results", value: "runTillNoResults"}
       ];
       return userActions;
     }
