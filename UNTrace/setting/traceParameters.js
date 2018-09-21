@@ -605,11 +605,11 @@ function (declare,
 
     _restoreIncludesCheckboxesState: function(param) {
       if(typeof(param) !== 'undefined') {
-        if(param.traceConfig.includeContainers) {this.chkContainers.checked = true;}
-        if(param.traceConfig.includeStructLineContent) {this.chkStructLineContent.checked = true;}
-        if(param.traceConfig.includeStructures) {this.chkStructures.checked = true;}
-        if(param.traceConfig.includeBarriers) {this.chkBarrierFeatures.checked = true;}
-        if(param.traceConfig.validateConsistency) {this.chkValidateConsistency.checked = true;}
+        if(param.traceConfig.includeContainers) {this.chkContainers.set("checked", true);}
+        if(param.traceConfig.includeStructLineContent) {this.chkStructLineContent.set("checked", true);}
+        if(param.traceConfig.includeStructures) {this.chkStructures.set("checked", true);}
+        if(param.traceConfig.includeBarriers) {this.chkBarrierFeatures.set("checked", true);}
+        if(param.traceConfig.validateConsistency) {this.chkValidateConsistency.set("checked", true);}
       }
     },
 

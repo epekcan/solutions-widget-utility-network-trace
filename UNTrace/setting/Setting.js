@@ -193,9 +193,8 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
                 }
               });
               this.un.featureServiceUrl = fsUrl;
-              var event = new Event('change');
-              //this.cmbItems.dispatchEvent(event);
-              this.cmbItems.emit("change", this.cmbItems);
+              //this.cmbItems.emit("change", this.cmbItems);
+              this.listDomainNetworks(this.cmbItems.value);
             }
 
             //this._createUserDefinedTraceTable();
@@ -206,6 +205,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
     },
 
     listDomainNetworks: function(e) {
+      console.log(e);
       //this.resetAll();
       var fsUrl = "";
       array.forEach(this.cmbItems.options, function(ops) {
@@ -220,18 +220,19 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
         while (this.cmbDomainNetworks.options.length > 0) this.cmbDomainNetworks.removeOption(this.cmbDomainNetworks.getOptions());
         while (this.cmbTiers.options.length > 0) this.cmbTiers.removeOption(this.cmbTiers.getOptions());
         this.un.dataElement.domainNetworks.forEach(domainNetwork => {
+          if(domainNetwork.domainNetworkName !== "Structure") {
             var dn = document.createElement("option");
             dn.textContent = domainNetwork.domainNetworkName;
             this.cmbDomainNetworks.addOption(dn);
+          }
         });
         if(this.config.domainNetwork !== null) {
           this.cmbDomainNetworks.setAttribute("value", this.config.domainNetwork);
         }
         if (this.un.dataElement.domainNetworks.length > 1) {
-            let event = new Event('change');
             this.cmbDomainNetworks.selectedIndex = 1;
-            //this.cmbDomainNetworks.dispatchEvent(event);
-            this.cmbDomainNetworks.emit("change", this.cmbDomainNetworks);
+            //this.cmbDomainNetworks.emit("change", this.cmbDomainNetworks);
+            this.listTiers(this.cmbDomainNetworks.value);
         } else {
             this.cmbDomainNetworks.selectedIndex = -1;
         }
@@ -368,6 +369,10 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
       userTextbox.placeAt(td);
       userTextbox.startup();
       param.tr.userDefinedName = userTextbox;
+
+      this.own(on(userTextbox, "focus", lang.hitch(this, function() {
+        this.userDefinedTraces.selectRow(param.tr);
+      })));
     },
 
     _createTraceTypeTable: function(param) {
