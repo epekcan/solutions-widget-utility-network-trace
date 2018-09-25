@@ -35,7 +35,7 @@ define(['dojo/_base/declare',
   "./portal",
   "jimu/tokenUtils",
   'jimu/dijit/SimpleTable',
-  'jimu/dijit/Popup',
+  'jimu/dijit/ColorPicker',
   "dijit/form/TextBox",
   "dijit/form/Select",
   "dijit/form/RadioButton",
@@ -46,7 +46,7 @@ function (declare,
   template,
   Evented,
   registry, on, dom, domConstruct, domAttr, domStyle, domClass, query, lang, array, agsPortal, PrivilegeUtil, UtilityNetwork, PortalHelper, tokenUtils,
-  SimpleTable, popup, Textbox, Select, RadioButton, CheckBox
+  SimpleTable, ColorPicker, Textbox, Select, RadioButton, CheckBox
 ) {
   return declare([BaseWidgetSetting, _WidgetsInTemplateMixin, Evented], {
     templateString: template,
@@ -91,6 +91,7 @@ function (declare,
         this._resetInclusionTypes();
         if(typeof(this.existingValues.traceConfig) !== "undefined") {
           this._restoreIncludesCheckboxesState({"traceConfig": this.existingValues.traceConfig});
+          this.colorPickerHolder.setColor(this.existingValues.traceConfig.selectionColor);
         }
         if(typeof(this.existingValues.traceConfig) !== "undefined") {
           if(typeof(this.existingValues.traceConfig.conditionBarriers) !== "undefined") {
@@ -676,6 +677,7 @@ function (declare,
       tempSetting["includeStructures"] = this.chkStructures.checked;
       tempSetting["includeBarriers"] = this.chkBarrierFeatures.checked;
       tempSetting["validateConsistency"] = this.chkValidateConsistency.checked;
+      tempSetting["selectionColor"] = this.colorPickerHolder.getColor();
 
       //get Condition and filter tables
       var processList = [
@@ -695,9 +697,14 @@ function (declare,
               var rowData = item.table.getRowData(row);
               valueInput = rowData.value;
             }
+            if(row.name.options[row.name.value].textContent === "Categeory") {
+              var type = "category";
+            } else {
+              var type = "networkAttribute";
+            }
             objArray.push({
               "name": row.name.options[row.name.value].textContent,
-              "type": "networkAttribute",
+              "type": type,
               "operator": row.operator.value,
               "value": valueInput,
               "combineUsingOr": (typeof(row.combine) !== "undefined") ? row.combine.value : false,

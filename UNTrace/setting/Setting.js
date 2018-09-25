@@ -30,13 +30,12 @@ define([
   './traceParameters',
   "jimu/tokenUtils",
   'jimu/dijit/SimpleTable',
-  'jimu/dijit/Popup',
   "dijit/form/TextBox",
   "dijit/form/Select"
 ],
 function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, lang, array,
   agsPortal, PrivilegeUtil, UtilityNetwork, PortalHelper, traceParameters, tokenUtils,
-  SimpleTable, Popup, Textbox, Select) {
+  SimpleTable, Textbox, Select) {
   return declare([BaseWidgetSetting, _TemplatedMixin], {
     baseClass: 'jimu-widget-untrace-setting',
 
@@ -205,7 +204,6 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
     },
 
     listDomainNetworks: function(e) {
-      console.log(e);
       //this.resetAll();
       var fsUrl = "";
       array.forEach(this.cmbItems.options, function(ops) {

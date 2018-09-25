@@ -30,12 +30,25 @@
           <div data-dojo-attach-point="filterBarriersHolder"></div>
           <div class="dynamicfilterBarriers"></div>
         </div>
+        <div class="filterByNearest">
+          <div class="rowLabel">Filter By Nearest</div>
+          <div class="rowLabel">Count of features returned</div>
+          <div data-dojo-attach-point="txtKNNCountHolder"></div>
+          <div class="rowLabel">Cost Network Attribute</div>
+          <div data-dojo-attach-point="KNNCostNetworkHolder"></div>
+          <div class="rowLabel">Nearest Category</div>
+          <div data-dojo-attach-point="KNNNearestCategoryHolder"></div>
+          <div class="rowLabel">Nearest Asset Groups/Types</div>
+          <div data-dojo-attach-point="KNNNearestAGATHolder"></div>
+        </div>
         <div class="OutputConditions">
           <div class="addOutputCondition" data-dojo-attach-point="addOutputCondition">Output Filter</div>
           <div class="outputFilterHolder" data-dojo-attach-point="outputFilterHolder"></div>
           <div class="addOutputCondition" data-dojo-attach-point="addOutputCondition">Add Output Condition</div>
           <div data-dojo-attach-point="outputConditionsHolder"></div>
         </div>
+        <div class="rowLabel">Choose a Highlight Color:</div>
+        <div data-dojo-attach-point="colorPickerHolder" data-dojo-type="jimu/dijit/ColorPicker" data-dojo-props='color:"{b: 85, g: 85, r: 235, a: 1}"'></div>
       </div>
     </div>
   </div>

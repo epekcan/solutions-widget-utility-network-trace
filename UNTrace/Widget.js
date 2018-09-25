@@ -64,9 +64,11 @@ function(declare,
     token: null,
     traceLocationsParam: [],
     tempRecordSet: null,
+    commulativeRecordSet: [],
     selectionMode: "point",
     runFlag: true,
     initialRun: true,
+    resultHighlightColor: [27,227,251,0.4],
     //config: JSON.parse(Configuration),
 
     postCreate: function() {
@@ -135,6 +137,7 @@ function(declare,
           let userTrace = domConstruct.create("div",{'class':'button_nonactive userTraces', 'innerHTML': key, 'count':this.config.userTraces[key].traces.length}, container);
 
           this.own(on(userTrace, "click", lang.hitch(this, function() {
+            this.mapView.graphics = [];
             this.initialRun = true;
             this.traceCounter = 0;
             this.traceMax = parseInt(domAttr.get(userTrace,'count'));
@@ -207,7 +210,7 @@ function(declare,
           console.log(hitResults.features);  // prints the array of features to the console
           domQuery(".traceLocations").style("display", "block");
 
-          let supportedClasses = ["esriUNFCUTDevice", "esriUNFCUTJunction"] //, "esriUNFCUTLine" ]
+          let supportedClasses = ["esriUNFCUTDevice", "esriUNFCUTJunction", "esriUNFCUTLine"] //, "esriUNFCUTLine" ]
           if (hitResults.features.length) {
               hitResults.features.forEach(g => {
 
@@ -286,10 +289,10 @@ function(declare,
                   traceLocations.appendChild(rowTraceLocation);
 
                   //create graphic on the map
-                  let bufferedGeo =  geometryEngineAsync.buffer(g.geometry, this.config.TRACING_STARTLOCATION_BUFFER)
-                      .then(lang.hitch(this, function(geom){
-                          this.gl.graphics.add(this.getGraphic("polygon", geom, color, rowTraceLocation.globalId));
-                      }));
+                  //let bufferedGeo =  geometryEngineAsync.buffer(g.geometry, this.config.TRACING_STARTLOCATION_BUFFER)
+                  //    .then(lang.hitch(this, function(geom){
+                          this.gl.graphics.add(this.getGraphic("point", event, color, rowTraceLocation.globalId, this.activeTraceLocation));
+                  //    }));
               })
 
 
@@ -363,6 +366,7 @@ function(declare,
           }
 
           let configuration = this.replaceSpecificTraceConfig(param);
+          this.resultHighlightColor = param.traceInfo.traceConfig.selectionColor;
 
           //only attempt to trace when there is at leats one starting point
           if (!this.traceLocationsParam.length) {
@@ -397,26 +401,32 @@ function(declare,
             if(this.traceCounter >= (this.traceMax - 1)) {
               switch(this.runFlag) {
                 case "runOnce":
-                  this.drawTraceResults(this.un, traceResults);
+                  //this.drawTraceResults(this.un, traceResults);
                   this.traceCounter++;
                   break;
                 case "runTillNoResults":
                   if(traceResults.traceResults.elements.length > 0) {
-                    this.traceCounter = 0;
+                    if(!this.checkSameRecord(traceResults.traceResults.elements)) {
+                      this.traceCounter = 0;
+                    } else {
+                      this.traceCounter++;
+                    }
                   } else {
-                    this.drawTraceResults(this.un, traceResults);
+                    //this.drawTraceResults(this.un, traceResults);
                     this.traceCounter++;
                   }
                   break;
                 default:
-                  this.drawTraceResults(this.un, traceResults);
+                  //this.drawTraceResults(this.un, traceResults);
                   this.traceCounter++;
                   break;
               }
             } else {
               this.traceCounter++;
             }
+            this.drawTraceResults(this.un, traceResults, this.resultHighlightColor, false);
             this.tempRecordSet = traceResults;
+            this.commulativeRecordSet = this.commulativeRecordSet.concat(traceResults.traceResults.elements);
           })
         .then(a => {
             this.updateStatus("Done");
@@ -443,6 +453,9 @@ function(declare,
         configuration.filterBarriers = param.traceInfo.traceConfig.filterBarriers;
         configuration.outputFilters = param.traceInfo.traceConfig.outputFilters;
         configuration.outputConditions = param.traceInfo.traceConfig.outputConditions;
+        if(param.traceInfo.traceConfig.nearestNeighbor) {
+          configuration.nearestNeighbor = param.traceInfo.traceConfig.nearestNeighbor;
+        }
         return configuration;
     },
 
@@ -478,7 +491,7 @@ function(declare,
                 this.updateStatus("Subnetline feature not found. Please make sure to update all subnetworks to generate subnetline.");
               else {
                   console.log(rowsJson);
-                let polylineGraphic = this.getGraphic("line", rowsJson.features[0].geometry);
+                let polylineGraphic = this.getGraphic("line", rowsJson.features[0].geometry, this.resultHighlightColor, null, this.activeTraceLocation);
 
                 this.mapView.graphics.add(polylineGraphic);
                 this.mapView.goTo(polylineGraphic.geometry);
@@ -495,6 +508,7 @@ function(declare,
         let newStartArr = [];
         let newBarrArr = [];
         for (let f of param.featuresJson.traceResults.elements) {
+          console.log(f);
             if (f.enabled === false) {
                 //console.log("found one element that is disabled " + f.globalId);
                 continue; //if the element is disabled skip it
@@ -503,25 +517,43 @@ function(declare,
             if (layerObj === undefined) continue;
             let layerId = layerObj.layerId;
             if(param.traceInfo.useAsStart === "addToExisting" || param.traceInfo.useAsStart === "replaceAllWith" || param.traceInfo.useAsStart === "replaceFirst") {
-                for (let s of param.traceInfo.traceConfig.startLocationLayers) {
-                    if(s.layerId === layerId) {
-                        if(parseInt(s.assetGroupCode) === parseInt(f.assetGroupCode) &&
-                        parseInt(s.assetTypeCode) === parseInt(f.assetTypeCode)
-                        ) {
-                            let newObj = {
-                                "assetGroupCode": f.assetGroupCode,
-                                "assetTypeCode": f.assetTypeCode,
-                                "globalId": f.globalId,
-                                "layerId": [layerId],
-                                "terminalId": f.terminalId,
-                                "traceLocationType": "startingPoint"
-                            };
-                            newStartArr.push(newObj);
-                        }
-                    }
-                }
+                if((param.traceInfo.traceConfig.startLocationLayers).length > 0) {
+                  for (let s of param.traceInfo.traceConfig.startLocationLayers) {
+                      if(s.layerId === layerId) {
+                          if(parseInt(s.assetGroupCode) === parseInt(f.assetGroupCode) &&
+                          parseInt(s.assetTypeCode) === parseInt(f.assetTypeCode)
+                          ) {
+                              let newObj = {
+                                  "assetGroupCode": f.assetGroupCode,
+                                  "assetTypeCode": f.assetTypeCode,
+                                  "globalId": f.globalId,
+                                  "layerId": [layerId],
+                                  "terminalId": f.terminalId,
+                                  "traceLocationType": "startingPoint"
+                              };
+                              newStartArr.push(newObj);
+                          }
+                      }
+                  }
+                } else {
+                  let filteredArr = array.some(this.traceLocationsParam, function(item){
+                    return item.globalId === f.globalId;
+                  });
+                  if(!filteredArr) {
+                    let newObj = {
+                      "assetGroupCode": f.assetGroupCode,
+                      "assetTypeCode": f.assetTypeCode,
+                      "globalId": f.globalId,
+                      "layerId": [layerId],
+                      "terminalId": f.terminalId,
+                      "traceLocationType": "startingPoint"
+                    };
+                    newStartArr.push(newObj);
+                  }
+              }
             }
             if(param.traceInfo.useAsBarrier === "addToExisting" || param.traceInfo.useAsBarrier === "replaceAllWith" || param.traceInfo.useAsBarrier === "replaceFirst") {
+              if((param.traceInfo.traceConfig.barriersLayers).length > 0) {
                 for (let s of param.traceInfo.traceConfig.barriersLayers) {
                     if(s.layerId === layerId) {
                         if(parseInt(s.assetGroupCode) === parseInt(f.assetGroupCode) &&
@@ -539,6 +571,17 @@ function(declare,
                         }
                     }
                 }
+              } else {
+                let newObj = {
+                  "assetGroupCode": f.assetGroupCode,
+                  "assetTypeCode": f.assetTypeCode,
+                  "globalId": f.globalId,
+                  "layerId": [layerId],
+                  "terminalId": f.terminalId,
+                  "traceLocationType": "barrier"
+                };
+                newBarrArr.push(newObj);
+              }
             }
             if (param.traceInfo.useAsStart === "replaceFirst" &&  newStartArr.length === 1) {
               break;
@@ -593,6 +636,20 @@ function(declare,
         }
     },
 
+    checkSameRecord: function(param) {
+      if(param.length > 0) {
+        let isSameRecord = false;
+        for (let f of param) {
+          isSameRecord = array.some(this.commulativeRecordSet, function(item){
+            return item.globalId === f.globalId;
+          });
+        }
+        return isSameRecord;
+      } else {
+        return false;
+      }
+    },
+
     buildTraceResults: function(featuresJson) {
       //build the trace results so we group them by layerid
       let traceResults = {};
@@ -619,7 +676,7 @@ function(declare,
       return traceResults;
     },
 
-    drawTraceResults: function(un, traceResults, color = this.config.SELECTION_COLOR, clearGraphics = true) {
+    drawTraceResults: function(un, traceResults, color = this.resultHighlightColor, clearGraphics = false) {
       //console.log(JSON.stringify(traceResults))
       let selectionTraceResult = this.buildTraceResults(traceResults);
 
@@ -640,7 +697,7 @@ function(declare,
               if (featureSet.features != undefined)
                   for (let g of featureSet.features) {
 
-                      let graphic = this.getGraphic(layerObj.type, g.geometry, color);
+                      let graphic = this.getGraphic(layerObj.type, g.geometry, color, null, this.activeTraceLocation);
                       graphics.push(graphic);
                   }
           }
@@ -833,9 +890,10 @@ function(declare,
       return groups;
     },
 
-    getGraphic: function(type, geometry, color = this.config.SELECTION_COLOR, name) {
+    getGraphic: function(type, geometry, color = this.resultHighlightColor, name, flagType) {
       let symbol;
       let geometryObject;
+      console.log(this);
       switch (type) {
           case "point":
               symbol = {
@@ -847,6 +905,12 @@ function(declare,
                       width: 0
                   }
               }
+              if (flagType === this.config.TRACELOCATION_START) {
+                symbol.url = this.folderUrl + "images/startPoint.png";
+              } else {
+                symbol.url = this.folderUrl + "images/barrier.png";
+              }
+
               geometryObject = {
                   type: "point",
                   x: geometry.x,
