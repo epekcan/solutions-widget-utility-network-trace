@@ -30,13 +30,12 @@ define([
   './traceParameters',
   "jimu/tokenUtils",
   'jimu/dijit/SimpleTable',
-  'jimu/dijit/Popup',
   "dijit/form/TextBox",
   "dijit/form/Select"
 ],
 function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, lang, array,
   agsPortal, PrivilegeUtil, UtilityNetwork, PortalHelper, traceParameters, tokenUtils,
-  SimpleTable, Popup, Textbox, Select) {
+  SimpleTable, Textbox, Select) {
   return declare([BaseWidgetSetting, _TemplatedMixin], {
     baseClass: 'jimu-widget-untrace-setting',
 
@@ -56,6 +55,8 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
     cmbItems: null,
     cmbDomainNetworks: null,
     cmbTiers: null,
+
+    runTraceAmount: null,
 
     postCreate: function(){
 
@@ -95,7 +96,6 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
       delete this.config.userTraces[""];
       this.traceConfigParameter.storeTempConfig();
       this.config.service = this.cmbItems.value;
-      this.config.featureServiceItem = this.cmbItems.options[this.cmbItems.selectedIndex].id;
       this.config.domainNetwork = this.cmbDomainNetworks.value;
       this.config.tier = this.cmbTiers.value;
       this.config.subnetLineLayer = this.un.subnetLineLayerId;
@@ -138,7 +138,6 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
       this.servicesTable.startup();
       this.servicesTable.addRow({});
       var rows = this.servicesTable.getRows()[0];
-      console.log(rows);
       var slService = new Select();
       this.cmbItems = slService;
       slService.placeAt(rows.children[0]);
@@ -193,9 +192,8 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
                 }
               });
               this.un.featureServiceUrl = fsUrl;
-              var event = new Event('change');
-              //this.cmbItems.dispatchEvent(event);
-              this.cmbItems.emit("change", this.cmbItems);
+              //this.cmbItems.emit("change", this.cmbItems);
+              this.listDomainNetworks(this.cmbItems.value);
             }
 
             //this._createUserDefinedTraceTable();
@@ -220,18 +218,19 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
         while (this.cmbDomainNetworks.options.length > 0) this.cmbDomainNetworks.removeOption(this.cmbDomainNetworks.getOptions());
         while (this.cmbTiers.options.length > 0) this.cmbTiers.removeOption(this.cmbTiers.getOptions());
         this.un.dataElement.domainNetworks.forEach(domainNetwork => {
+          if(domainNetwork.domainNetworkName !== "Structure") {
             var dn = document.createElement("option");
             dn.textContent = domainNetwork.domainNetworkName;
             this.cmbDomainNetworks.addOption(dn);
+          }
         });
         if(this.config.domainNetwork !== null) {
           this.cmbDomainNetworks.setAttribute("value", this.config.domainNetwork);
         }
         if (this.un.dataElement.domainNetworks.length > 1) {
-            let event = new Event('change');
             this.cmbDomainNetworks.selectedIndex = 1;
-            //this.cmbDomainNetworks.dispatchEvent(event);
-            this.cmbDomainNetworks.emit("change", this.cmbDomainNetworks);
+            //this.cmbDomainNetworks.emit("change", this.cmbDomainNetworks);
+            this.listTiers(this.cmbDomainNetworks.value);
         } else {
             this.cmbDomainNetworks.selectedIndex = -1;
         }
@@ -303,16 +302,19 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
 
       this.own(on(this.userDefinedTraces, "row-select", lang.hitch(this, function(tr) {
         var defaultVal = null;
+        var group = null;
         var existTraceCheck = this.tempTraceConfigs["userTraces"];
         for (var key in existTraceCheck) {
           if (key === tr.userDefinedName.value) {
             var obj = {};
             obj[key] = existTraceCheck[key];
             defaultVal = obj;
+            group = obj[key];
           }
         }
         this._createTraceTypeTable({"predefined":defaultVal});
         this._restoreTraceTypeRows({"tr":tr, "predefined":defaultVal});
+        this._populateRunAmount({"predefined":group});
       })));
 
       this.own(on(this.userDefinedTraces, "row-delete", lang.hitch(this, function(tr) {
@@ -326,11 +328,13 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
           var obj = {};
           obj[key] = existTraceCheck[key];
           this.addRowUserDefined({"predefined":obj});
+          this._populateRunAmount({"predefined":obj[key]});
           newFlag = false;
         }
       }
       if(newFlag) {
         this.addRowUserDefined({"predefined":null});
+        this._populateRunAmount({"predefined":null});
       }
 
 
@@ -363,6 +367,10 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
       userTextbox.placeAt(td);
       userTextbox.startup();
       param.tr.userDefinedName = userTextbox;
+
+      this.own(on(userTextbox, "focus", lang.hitch(this, function() {
+        this.userDefinedTraces.selectRow(param.tr);
+      })));
     },
 
     _createTraceTypeTable: function(param) {
@@ -522,8 +530,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
 
     _addTraceBarrierSelection: function(param) {
       var td = query('.simple-table-cell', param.tr)[2];
-      var noneOption = [{label: "None", value: ""}];
-      var optionChoice = noneOption.concat(this.interactionList());
+      var optionChoice = this.interactionList();
       var selectionBox = new Select({
         options: optionChoice
       });
@@ -561,6 +568,20 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
       }
     },
 
+    _populateRunAmount: function(param) {
+      domConstruct.empty(this.runTraceAmountHolder);
+      this.runTraceAmount = null;
+      var optionChoice = this.runOptions();
+      var selectionBox = new Select({
+        options: optionChoice
+      });
+      selectionBox.placeAt(this.runTraceAmountHolder);
+      selectionBox.startup();
+      this.runTraceAmount = selectionBox;
+      if(param.predefined !== null) {
+        this.runTraceAmount.set("value", param.predefined.runAmount);
+      }
+    },
 
     storeTempConfig: function(param) {
       var userRowData = this.userDefinedTraces.getSelectedRow();
@@ -580,6 +601,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
                 if(typeof(param) !== "undefined") {
                   trace["traceConfig"] = param.traceConfig;
                 }
+                this.tempTraceConfigs.userTraces[userRowData.userDefinedName.value].runAmount = this.runTraceAmount.value;
                 match = true;
             }
           }));
@@ -594,6 +616,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
               obj["traceConfig"] = param.traceConfig;
             }
             this.tempTraceConfigs.userTraces[userRowData.userDefinedName.value].traces.push(obj);
+            this.tempTraceConfigs.userTraces[userRowData.userDefinedName.value].runAmount = this.runTraceAmount.value;
           }
         } else {
           var obj = {
@@ -605,8 +628,9 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
           if(typeof(param) !== "undefined") {
             obj["traceConfig"] = param.traceConfig;
           }
-          this.tempTraceConfigs.userTraces[userRowData.userDefinedName.value] = {"traces":[]};
+          this.tempTraceConfigs.userTraces[userRowData.userDefinedName.value] = {"traces":[], "runAmount":null};
           this.tempTraceConfigs.userTraces[userRowData.userDefinedName.value].traces.push(obj);
+          this.tempTraceConfigs.userTraces[userRowData.userDefinedName.value].runAmount = this.runTraceAmount.value;
         }
         return userGroupName;
       }
@@ -704,9 +728,19 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
 
     interactionList: function() {
       var userActions = [
-        {label: "User Defined", value: "userDefined"},
-        {label: "A previous trace", value: "previousTrace"},
-        {label: "Add to Existing results", value: "addToExistingResults"}
+        {label: "Use Existing", value: "useExisting"},
+        {label: "Add to Existing", value: "addToExisting"},
+        {label: "Remove from Existing", value: "RemoveFromExisting"},
+        {label: "Replace all with", value: "replaceAllWith"},
+        {label: "Replace with first", value: "replaceFirst"}
+      ];
+      return userActions;
+    },
+
+    runOptions: function() {
+      var userActions = [
+        {label: "Run once", value: "runOnce"},
+        {label: "Until no results", value: "runTillNoResults"}
       ];
       return userActions;
     }

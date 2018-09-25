@@ -1,17 +1,16 @@
 {
-    "featureServiceItem": null,
-    "service":null,
-    "domainNetwork": "Water",
-    "tier": "System",
-    "subnetLineLayer": 666,
-    "UNLayerId": 666,
-
+  "service":null,
+  "domainNetwork": null,
+  "tier": null,
+  "subnetLineLayer": 666,
+  "UNLayerId": 666,
+  "FSurl": null,
   "locationId": 0,
   "QUERY_PAGE": 100,
   "SELECTION_COLOR": [27, 227, 251, 0.4],
   "SELECTION_SIZE": 24,
   "CUSTOMER_COLOR": [250, 240, 29, 0.7],
-  "DISABLED_COLOR":  [128, 128, 128, 0.7],    
+  "DISABLED_COLOR":  [128, 128, 128, 0.7],
   "TRACING_STARTLOCATION_BUFFER": 3,
   "TRACING_STARTPOINT_COLOR": [20, 158, 29, 0.7],
   "TRACING_BARRIER_COLOR": [211, 23, 51, 0.7],
@@ -52,33 +51,5 @@
       "outputConditions":[],
       "propagators":[]
   },
-  "userTraces":{},
-  "customerCountTraceConfiguration": {
-      "outputFilters": [
-          {   "networkSourceId":6,
-              "assetGroupCode":12,
-              "assetTypeCode":65
-          },
-          {   "networkSourceId":6,
-              "assetGroupCode":12,
-              "assetTypeCode":61
-          },
-          {   "networkSourceId":6,
-              "assetGroupCode":12,
-              "assetTypeCode":62
-          },
-          {   "networkSourceId":6,
-              "assetGroupCode":12,
-              "assetTypeCode":63
-          },
-          {   "networkSourceId":6,
-              "assetGroupCode":12,
-              "assetTypeCode":64
-          },
-          {   "networkSourceId":6,
-              "assetGroupCode":12,
-              "assetTypeCode":0
-          }
-      ]      
-  }
+  "userTraces":{}
 }
