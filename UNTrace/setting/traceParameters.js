@@ -39,14 +39,15 @@ define(['dojo/_base/declare',
   "dijit/form/TextBox",
   "dijit/form/Select",
   "dijit/form/RadioButton",
-  'dijit/form/CheckBox'],
+  'dijit/form/CheckBox',
+  "jimu/dijit/ColorPicker"],
 function (declare,
   _WidgetsInTemplateMixin,
   BaseWidgetSetting,
   template,
   Evented,
   registry, on, dom, domConstruct, domAttr, domStyle, domClass, query, lang, array, agsPortal, PrivilegeUtil, UtilityNetwork, PortalHelper, tokenUtils,
-  SimpleTable, ColorPicker, Textbox, Select, RadioButton, CheckBox
+  SimpleTable, ColorPicker, Textbox, Select, RadioButton, CheckBox, ColorPicker
 ) {
   return declare([BaseWidgetSetting, _WidgetsInTemplateMixin, Evented], {
     templateString: template,
@@ -66,6 +67,7 @@ function (declare,
     knnCostNA: null,
     knnCategories: [],
     knnAGATCheckboxlist: [],
+    color: null,
 
     constructor: function (/*Object*/args) {
       this.map = args.map;
@@ -91,23 +93,27 @@ function (declare,
         this._createStartList({"value": this.existingValues.useAsStart});
         this._createBarrierList({"value": this.existingValues.useAsBarrier});
         this._createAGATList({"node":this.outputFilterHolder, "type": "output", "predefined":this.existingValues});
-        if(typeof(this.existingValues.traceConfig.nearestNeighbor) !== "undefined") {
-          this._createKNNCountInput({"value": this.existingValues.traceConfig.nearestNeighbor.count});
-          this._createKNNCostNA({"value": this.existingValues.traceConfig.nearestNeighbor.costNetworkAttributeName});
-          this._createCategoryList({"node":this.KNNNearestCategoryHolder, "predefined": this.existingValues.traceConfig.nearestNeighbor.nearestCategories});
-          this._createAGATList({"node":this.KNNNearestAGATHolder, "type": "knn", "predefined":this.existingValues});
-        } else {
-          this._createKNNCountInput({"value": -1});
-          this._createKNNCostNA({"value": null});
-          this._createCategoryList({"node":this.KNNNearestCategoryHolder, "predefined":null});
-          this._createAGATList({"node":this.KNNNearestAGATHolder, "type": "knn", "predefined":null});
-        }
         this._resetInclusionTypes();
         if(typeof(this.existingValues.traceConfig) !== "undefined") {
           this._restoreIncludesCheckboxesState({"traceConfig": this.existingValues.traceConfig});
-          this.colorPickerHolder.setColor(this.existingValues.traceConfig.selectionColor);
-        }
-        if(typeof(this.existingValues.traceConfig) !== "undefined") {
+          var colorPicker = new ColorPicker({
+            color: this.existingValues.traceConfig.selectionColor
+          });
+          colorPicker.placeAt(this.colorPickerHolder);
+          this.color = colorPicker;
+
+          if(typeof(this.existingValues.traceConfig.nearestNeighbor) !== "undefined") {
+            this._createKNNCountInput({"value": this.existingValues.traceConfig.nearestNeighbor.count});
+            this._createKNNCostNA({"value": this.existingValues.traceConfig.nearestNeighbor.costNetworkAttributeName});
+            this._createCategoryList({"node":this.KNNNearestCategoryHolder, "predefined": this.existingValues.traceConfig.nearestNeighbor.nearestCategories});
+            this._createAGATList({"node":this.KNNNearestAGATHolder, "type": "knn", "predefined":this.existingValues});
+          } else {
+            this._createKNNCountInput({"value": -1});
+            this._createKNNCostNA({"value": null});
+            this._createCategoryList({"node":this.KNNNearestCategoryHolder, "predefined":null});
+            this._createAGATList({"node":this.KNNNearestAGATHolder, "type": "knn", "predefined":null});
+          }
+
           if(typeof(this.existingValues.traceConfig.conditionBarriers) !== "undefined") {
             array.forEach(this.existingValues.traceConfig.conditionBarriers, lang.hitch(this, function(cb){
               this.addRowTraverse(this.conditionBarriersTable, cb);
@@ -133,6 +139,11 @@ function (declare,
         this._createKNNCostNA({"value": null});
         this._createCategoryList({"node":this.KNNNearestCategoryHolder, "predefined":null});
         this._resetInclusionTypes();
+        var colorPicker = new ColorPicker({
+          color: {"b": 200, "g": 200, "r": 200,"a": 0.5}
+        });
+        colorPicker.placeAt(this.colorPickerHolder);
+        this.color = colorPicker;
       }
 
       //this.storeTempConfig({"referrer":"start up" + Date()});
@@ -782,7 +793,7 @@ function (declare,
       tempSetting["includeStructures"] = this.chkStructures.checked;
       tempSetting["includeBarriers"] = this.chkBarrierFeatures.checked;
       tempSetting["validateConsistency"] = this.chkValidateConsistency.checked;
-      tempSetting["selectionColor"] = this.colorPickerHolder.getColor();
+      tempSetting["selectionColor"] = this.color.getColor();
 
       //get Condition and filter tables
       var processList = [

@@ -23,13 +23,23 @@
           <hr>
       <div class="barriersGroup">
         <div class="conditionBarriers">
-          <div class="addConditionBarriers" data-dojo-attach-point="addConditionBarriers">Add Condition Barriers</div>
+          <table>
+            <tr>
+              <td><div class="rowLabel">Condition Barriers:</div></td>
+              <td><div class="addIcon" data-dojo-attach-point="addConditionBarriers"></div></td>
+            </tr>
+          </table>
           <div data-dojo-attach-point="conditionBarriersHolder"></div>
           <div class="dynamicconditionBarriers"></div>
         </div>
         <hr>
         <div class="FilterBarriers">
-          <div class="addFilterBarriers" data-dojo-attach-point="addFilterBarriers">Add Filter Barriers</div>
+          <table>
+            <tr>
+              <td><div class="rowLabel">Filter Barriers:</div></td>
+              <td><div class="addIcon" data-dojo-attach-point="addFilterBarriers"></div></td>
+            </tr>
+          </table>
           <div data-dojo-attach-point="filterBarriersHolder"></div>
           <div class="dynamicfilterBarriers"></div>
         </div>
@@ -46,13 +56,20 @@
         </div>
         <hr>
         <div class="OutputConditions">
-          <div class="addOutputCondition" data-dojo-attach-point="addOutputCondition">Output Filter</div>
+          <div class="rowLabel" data-dojo-attach-point="addOutputCondition">Output Filter:</div>
           <div class="outputFilterHolder" data-dojo-attach-point="outputFilterHolder"></div>
-          <div class="addOutputCondition" data-dojo-attach-point="addOutputCondition">Add Output Condition</div>
+          <table>
+              <tr>
+                <td><div class="rowLabel">Output Condition:</div></td>
+                <td><div class="addIcon" data-dojo-attach-point="addOutputCondition"></div></td>
+              </tr>
+            </table>
           <div data-dojo-attach-point="outputConditionsHolder"></div>
         </div>
+        <br>
+        <br>
         <div class="rowLabel">Choose a Highlight Color:</div>
-        <div data-dojo-attach-point="colorPickerHolder" data-dojo-type="jimu/dijit/ColorPicker" data-dojo-props='color:"{b: 85, g: 85, r: 235, a: 1}"'></div>
+        <div data-dojo-attach-point="colorPickerHolder"></div>
       </div>
     </div>
   </div>
