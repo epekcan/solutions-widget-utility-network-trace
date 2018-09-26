@@ -291,7 +291,7 @@ function(declare,
                   //create graphic on the map
                   //let bufferedGeo =  geometryEngineAsync.buffer(g.geometry, this.config.TRACING_STARTLOCATION_BUFFER)
                   //    .then(lang.hitch(this, function(geom){
-                          this.gl.graphics.add(this.getGraphic("point", event, color, rowTraceLocation.globalId, this.activeTraceLocation));
+                          this.gl.graphics.add(this.getGraphic(g.geometry.type, g.geometry, color, rowTraceLocation.globalId, this.activeTraceLocation));
                   //    }));
               })
 
@@ -919,6 +919,7 @@ function(declare,
               }
               break;
           case "line":
+          case "polyline":
               symbol = {
                   type: "simple-line", // autocasts as SimpleLineSymbol()
                   color: color,
