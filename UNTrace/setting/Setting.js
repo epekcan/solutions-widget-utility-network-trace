@@ -416,12 +416,13 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
 
       this.own(on(this.traceTypesTable, "row-select", lang.hitch(this, function(tr) {
         var existingData = null;
-        var rowData = this.userDefinedTraces.getSelectedRow();
+        var userDefinedData = this.userDefinedTraces.getSelectedRow();
+        var rowData = this.traceTypesTable.getRowData(tr);
         for (var key in this.tempTraceConfigs.userTraces) {
-          if(rowData.userDefinedName.value === key) {
+          if(userDefinedData.userDefinedName.value === key) {
             var arrTraces = this.tempTraceConfigs.userTraces[key].traces;
             array.forEach(arrTraces, lang.hitch(this, function(trace) {
-              if(trace.type === tr.traceType.value) {
+              if(trace.type === tr.traceType.value && trace.traceID === rowData.rowID) {
                 existingData = trace;
               }
             }));

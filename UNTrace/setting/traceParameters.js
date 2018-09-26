@@ -380,8 +380,8 @@ function (declare,
       var td = query('.simple-table-cell', param.tr)[0];
       var selectionBox = new Select().placeAt(td);
       var netAtt = this.networkAttributeList();
-      var outlier = {"name": "Category", "domainName": "Category"};
-      netAtt.push(outlier);
+      var outlier = [{"name": "Category", "domainName": "Category"}];
+      netAtt = netAtt.concat(outlier);
       array.forEach(netAtt, function(NAObj, i) {
         var selOption = document.createElement("option");
         selOption.textContent = NAObj.name;
@@ -697,7 +697,7 @@ function (declare,
               var rowData = item.table.getRowData(row);
               valueInput = rowData.value;
             }
-            if(row.name.options[row.name.value].textContent === "Categeory") {
+            if(row.name.options[row.name.value].textContent === "Category") {
               var type = "category";
             } else {
               var type = "networkAttribute";
