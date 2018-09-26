@@ -62,6 +62,10 @@ function (declare,
     barriersLocationCheckboxList: [],
     outputFilterCheckboxlist: [],
     existingValues: null,
+    knnCount: null,
+    knnCostNA: null,
+    knnCategories: [],
+    knnAGATCheckboxlist: [],
 
     constructor: function (/*Object*/args) {
       this.map = args.map;
@@ -81,13 +85,23 @@ function (declare,
 
       this._createTraverseFilterTable("condition");
       this._createTraverseFilterTable("filter");
-
-      this._createAGATList({"node":this.outputFilterHolder, "type": "output", "predefined":this.existingValues});
       this._createTraverseFilterTable("output");
 
       if(this.existingValues !== null) {
         this._createStartList({"value": this.existingValues.useAsStart});
         this._createBarrierList({"value": this.existingValues.useAsBarrier});
+        this._createAGATList({"node":this.outputFilterHolder, "type": "output", "predefined":this.existingValues});
+        if(typeof(this.existingValues.traceConfig.nearestNeighbor) !== "undefined") {
+          this._createKNNCountInput({"value": this.existingValues.traceConfig.nearestNeighbor.count});
+          this._createKNNCostNA({"value": this.existingValues.traceConfig.nearestNeighbor.costNetworkAttributeName});
+          this._createCategoryList({"node":this.KNNNearestCategoryHolder, "predefined": this.existingValues.traceConfig.nearestNeighbor.nearestCategories});
+          this._createAGATList({"node":this.KNNNearestAGATHolder, "type": "knn", "predefined":this.existingValues});
+        } else {
+          this._createKNNCountInput({"value": -1});
+          this._createKNNCostNA({"value": null});
+          this._createCategoryList({"node":this.KNNNearestCategoryHolder, "predefined":null});
+          this._createAGATList({"node":this.KNNNearestAGATHolder, "type": "knn", "predefined":null});
+        }
         this._resetInclusionTypes();
         if(typeof(this.existingValues.traceConfig) !== "undefined") {
           this._restoreIncludesCheckboxesState({"traceConfig": this.existingValues.traceConfig});
@@ -113,6 +127,11 @@ function (declare,
       } else {
         this._createStartList({"value": ""});
         this._createBarrierList({"value": ""});
+        this._createAGATList({"node":this.outputFilterHolder, "type": "output", "predefined":null});
+        this._createAGATList({"node":this.KNNNearestAGATHolder, "type": "knn", "predefined":null});
+        this._createKNNCountInput({"value": -1});
+        this._createKNNCostNA({"value": null});
+        this._createCategoryList({"node":this.KNNNearestCategoryHolder, "predefined":null});
         this._resetInclusionTypes();
       }
 
@@ -201,6 +220,9 @@ function (declare,
         case "output":
           this.outputFilterCheckboxlist = [];
           break;
+        case "knn":
+          this.knnAGATCheckboxlist = [];
+          break;
         default:
           break;
       }
@@ -232,13 +254,23 @@ function (declare,
                         }
                       }));
                     }
-                  } else {
+                  } else if (param.type === "output")  {
                     if((param.predefined.traceConfig.outputFilters).length > 0) {
                       array.forEach(param.predefined.traceConfig.outputFilters, lang.hitch(this, function(item) {
                         if(ag.assetGroupCode === parseInt(item.assetGroupCode) && at.assetTypeCode === parseInt(item.assetTypeCode) && agl.sourceId === parseInt(item.networkSourceId)) {
                           flag = true;
                         }
                       }));
+                    }
+                  } else {
+                    if(typeof((param.predefined.traceConfig.nearestNeighbor) !== "undefined")) {
+                      if((param.predefined.traceConfig.nearestNeighbor.nearestAssets).length > 0) {
+                        array.forEach(param.predefined.traceConfig.nearestNeighbor.nearestAssets, lang.hitch(this, function(item) {
+                          if(ag.assetGroupCode === parseInt(item.assetGroupCode) && at.assetTypeCode === parseInt(item.assetTypeCode) && agl.sourceId === parseInt(item.networkSourceId)) {
+                            flag = true;
+                          }
+                        }));
+                      }
                     }
                   }
                 }
@@ -273,6 +305,8 @@ function (declare,
               case "output":
                 this.outputFilterCheckboxlist.push(checkBox);
                 break;
+              case "knn":
+                this.knnAGATCheckboxlist.push(checkBox);
               default:
                 break;
             }
@@ -281,6 +315,33 @@ function (declare,
         }));
       }));
 
+    },
+
+    _createCategoryList: function(param) {
+      this.knnCategories = [];
+      var flag = false;
+      var catList = this.categoryList();
+      array.forEach(catList, lang.hitch(this,function(cat) {
+        if(param !== null) {
+          array.forEach(param.predefined, function(predefined) {
+            if(predefined === cat.name) {
+              flag = true;
+            }
+          });
+        }
+        var dom = domConstruct.create("div");
+        domConstruct.place(dom, param.node);
+        var checkBox = new CheckBox({
+          name: "cat_" + cat.name,
+          value: cat.name,
+          checked: flag
+        });
+        checkBox.placeAt(dom);
+        var label = domConstruct.create("label", {"innerHTML": " " + cat.name + "<br>", "for":"cat"}, param.node );
+        domConstruct.place(label, dom);
+
+        this.knnCategories.push(checkBox);
+      }));
     },
 
     _createTraverseFilterTable: function(type) {
@@ -604,6 +665,50 @@ function (declare,
       }
     },
 
+    //KNN section
+    _createKNNCountInput: function(param) {
+      var preDefinedValue = -1;
+      if(typeof(param) !== 'undefined') {
+        preDefinedValue = param.value;
+      }
+      var userTextbox = new Textbox({
+        placeHolder: "How many neighbors?",
+        value: preDefinedValue,
+        style: {
+          width: "95%",
+          height: "26px"
+        }
+      });
+      userTextbox.placeAt(this.txtKNNCountHolder);
+      userTextbox.startup();
+      this.knnCount = userTextbox;
+    },
+
+    _createKNNCostNA: function(param) {
+      var flag = "";
+      var domainSelection = new Select().placeAt(this.KNNCostNetworkHolder);
+      var netAtt = this.networkAttributeList();
+      array.forEach(netAtt, function(NAObj, i) {
+        var selOption = document.createElement("option");
+        selOption.textContent = NAObj.name;
+        selOption.value = i;
+        selOption.domainName = NAObj.domainName;
+        if(param.currValues !== null) {
+          if(typeof(param.value) !== 'undefined') {
+            if(NAObj.name === param.value) {
+            flag = i;
+            }
+          }
+        }
+        domainSelection.addOption(selOption);
+      });
+      if(flag !== "") {
+        domainSelection.set("value",flag);
+      }
+      this.knnCostNA = domainSelection;
+    },
+    //End KNN section
+
     _restoreIncludesCheckboxesState: function(param) {
       if(typeof(param) !== 'undefined') {
         if(param.traceConfig.includeContainers) {this.chkContainers.set("checked", true);}
@@ -714,6 +819,39 @@ function (declare,
         }
         tempSetting[item.node] = objArray;
       }));
+
+      //getKNN setting
+      if(this.knnCount.value > 0) {
+        var ChosenAGAT = [];
+        var chosenCategories = [];
+        if(this.knnAGATCheckboxlist.length > 0) {
+          array.forEach(this.knnAGATCheckboxlist, lang.hitch(this, function(agatChk) {
+            if(agatChk.get("checked")) {
+              var splitAGAT = (agatChk.get("value")).split(":");
+              ChosenAGAT.push({
+                "assetGroupCode": splitAGAT[0],
+                "assetTypeCode": splitAGAT[1],
+                "networkSourceId": agatChk.get("sourceId")
+              });
+            }
+          }));
+        }
+        if(this.knnCategories.length > 0) {
+          var filtered = array.filter(this.knnCategories, function(catChk) {
+             return catChk.get("checked") === true;
+          });
+          array.forEach(filtered, function(catChk) {
+            chosenCategories.push(catChk.get("value"));
+          });
+        }
+        tempSetting["nearestNeighbor"] = {
+          "count": this.knnCount.value,
+          "costNetworkAttributeName": this.knnCostNA.options[this.knnCostNA.value].textContent,
+          "nearestCategories": chosenCategories,
+          "nearestAssets": ChosenAGAT
+        };
+      }
+
       //emit that config change so it can saved
       this.emit("config-change", tempSetting);
 
