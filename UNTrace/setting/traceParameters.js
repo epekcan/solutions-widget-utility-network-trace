@@ -33,6 +33,7 @@ define(['dojo/_base/declare',
   "./PrivilegeUtil",
   "./utilitynetwork",
   "./portal",
+  './flagParameters',
   "jimu/tokenUtils",
   'jimu/dijit/SimpleTable',
   'jimu/dijit/ColorPicker',
@@ -46,7 +47,7 @@ function (declare,
   BaseWidgetSetting,
   template,
   Evented,
-  registry, on, dom, domConstruct, domAttr, domStyle, domClass, query, lang, array, agsPortal, PrivilegeUtil, UtilityNetwork, PortalHelper, tokenUtils,
+  registry, on, dom, domConstruct, domAttr, domStyle, domClass, query, lang, array, agsPortal, PrivilegeUtil, UtilityNetwork, PortalHelper, flagParameters, tokenUtils,
   SimpleTable, ColorPicker, Textbox, Select, RadioButton, CheckBox, ColorPicker
 ) {
   return declare([BaseWidgetSetting, _WidgetsInTemplateMixin, Evented], {
@@ -58,20 +59,14 @@ function (declare,
     conditionBarriersTable: null,
     filterBarriersTable: null,
     outputConditionsTable: null,
+    outputFilterTable: null,
     row: null,
-    startLocationCheckboxList: [],
-    barriersLocationCheckboxList: [],
     outputFilterCheckboxlist: [],
     existingValues: null,
     knnCount: null,
     knnCostNA: null,
     knnCategories: [],
     knnAGATCheckboxlist: [],
-    color: null,
-
-    constructor: function (/*Object*/args) {
-      this.map = args.map;
-    },
 
     postMixInProperties: function () {
       this.inherited(arguments);
@@ -79,40 +74,36 @@ function (declare,
     },
 
     postCreate: function () {
-      this.un;
+      console.log(this);
       this.inherited(arguments);
+      this.startup();
     },
 
     startup: function () {
-
       this._createTraverseFilterTable("condition");
       this._createTraverseFilterTable("filter");
       this._createTraverseFilterTable("output");
 
       if(this.existingValues !== null) {
-        this._createStartList({"value": this.existingValues.useAsStart});
-        this._createBarrierList({"value": this.existingValues.useAsBarrier});
-        this._createAGATList({"node":this.outputFilterHolder, "type": "output", "predefined":this.existingValues});
         this._resetInclusionTypes();
         if(typeof(this.existingValues.traceConfig) !== "undefined") {
           this._restoreIncludesCheckboxesState({"traceConfig": this.existingValues.traceConfig});
-          var colorPicker = new ColorPicker({
-            color: this.existingValues.traceConfig.selectionColor
-          });
-          colorPicker.placeAt(this.colorPickerHolder);
-          this.color = colorPicker;
+          this.launchFlagParameters({
+            flagtype: "Output Filter",
+            flagUsage: "outputFilters",
+            assetHolder: "outputFilters",
+            parent: "outputFilter"
+          },this.outputFilterHolder);
 
-          if(typeof(this.existingValues.traceConfig.nearestNeighbor) !== "undefined") {
-            this._createKNNCountInput({"value": this.existingValues.traceConfig.nearestNeighbor.count});
-            this._createKNNCostNA({"value": this.existingValues.traceConfig.nearestNeighbor.costNetworkAttributeName});
-            this._createCategoryList({"node":this.KNNNearestCategoryHolder, "predefined": this.existingValues.traceConfig.nearestNeighbor.nearestCategories});
-            this._createAGATList({"node":this.KNNNearestAGATHolder, "type": "knn", "predefined":this.existingValues});
-          } else {
-            this._createKNNCountInput({"value": -1});
-            this._createKNNCostNA({"value": null});
-            this._createCategoryList({"node":this.KNNNearestCategoryHolder, "predefined":null});
-            this._createAGATList({"node":this.KNNNearestAGATHolder, "type": "knn", "predefined":null});
-          }
+          this._createKNNCountInput({"value": this.existingValues.traceConfig.nearestNeighbor.count});
+          this._createKNNCostNA({"value": this.existingValues.traceConfig.nearestNeighbor.costNetworkAttributeName});
+          this._createCategoryList({"node":this.KNNNearestCategoryHolder, "predefined": this.existingValues.traceConfig.nearestNeighbor.nearestCategories});
+          this.launchFlagParameters({
+            flagtype: "Nearest Asset Groups/Types",
+            flagUsage: "nearestAssets",
+            assetHolder: "nearestAssets",
+            parent: "KNN"
+          },this.KNNNearestAGATHolder);
 
           if(typeof(this.existingValues.traceConfig.conditionBarriers) !== "undefined") {
             array.forEach(this.existingValues.traceConfig.conditionBarriers, lang.hitch(this, function(cb){
@@ -131,22 +122,15 @@ function (declare,
           }
         }
       } else {
-        this._createStartList({"value": ""});
-        this._createBarrierList({"value": ""});
+        /*
         this._createAGATList({"node":this.outputFilterHolder, "type": "output", "predefined":null});
         this._createAGATList({"node":this.KNNNearestAGATHolder, "type": "knn", "predefined":null});
         this._createKNNCountInput({"value": -1});
         this._createKNNCostNA({"value": null});
         this._createCategoryList({"node":this.KNNNearestCategoryHolder, "predefined":null});
         this._resetInclusionTypes();
-        var colorPicker = new ColorPicker({
-          color: {"b": 200, "g": 200, "r": 200,"a": 0.5}
-        });
-        colorPicker.placeAt(this.colorPickerHolder);
-        this.color = colorPicker;
+        */
       }
-
-      //this.storeTempConfig({"referrer":"start up" + Date()});
 
       this.own(on(this.addConditionBarriers, "click", lang.hitch(this, function() {
         this.addRowTraverse(this.conditionBarriersTable, this.existingValues);
@@ -160,66 +144,9 @@ function (declare,
         this.addRowTraverse(this.outputConditionsTable, this.existingValues);
       })));
 
-      this.own(on(this.chkContainers, "change", lang.hitch(this, function() {
-        this.storeTempConfig();
-      })));
-      this.own(on(this.chkStructLineContent, "change", lang.hitch(this, function() {
-        this.storeTempConfig();
-      })));
-      this.own(on(this.chkStructures, "change", lang.hitch(this, function() {
-        this.storeTempConfig();
-      })));
-      this.own(on(this.chkBarrierFeatures, "change", lang.hitch(this, function() {
-        this.storeTempConfig();
-      })));
-      this.own(on(this.chkValidateConsistency, "change", lang.hitch(this, function() {
-        this.storeTempConfig();
-      })));
-
     },
 
-    _createStartList: function(param) {
-      if(typeof(param.value) !== "undefined") {
-        if(param.value === 'useExisting' || param.value === "") {
-          this.startLocationCheckboxList = [];
-          domConstruct.empty(this.startFeatureHolder);
-          query(".startFeatureGroup").style("display", "none");
-          //domStyle.set(query(".startFeatureGroup")[0], "display", "none");
-        } else {
-          domConstruct.empty(this.startFeatureHolder);
-          //domStyle.set(query(".startFeatureGroup")[0], "display", "block");
-          query(".startFeatureGroup").style("display", "block");
-          this._createAGATList({"node":this.startFeatureHolder, "type": "start", "predefined":this.existingValues});
-        }
-      } else {
-        if(query(".startFeatureGroup").length > 0) {
-          query(".startFeatureGroup").style("display", "none");
-          //domStyle.set(query(".startFeatureGroup")[0], "display", "none");
-        }
-      }
-    },
-
-    _createBarrierList: function(param) {
-      if(typeof(param.value) !== "undefined") {
-          if(param.value === 'useExisting' || param.value === "") {
-            this.barriersLocationCheckboxList = [];
-            domConstruct.empty(this.barrierFeatureHolder);
-            query(".barrierFeatureGroup").style("display", "none");
-            //domStyle.set(query(".barrierFeatureGroup")[0], "display", "none");
-          } else {
-            domConstruct.empty(this.barrierFeatureHolder);
-            query(".barrierFeatureGroup").style("display", "block");
-            //domStyle.set(query(".barrierFeatureGroup")[0], "display", "block");
-            this._createAGATList({"node":this.barrierFeatureHolder, "type": "barrier", "predefined":this.existingValues});
-          }
-      } else {
-        if(query(".barrierFeatureGroup").length > 0) {
-          query(".barrierFeatureGroup").style("display", "none");
-          //domStyle.set(query(".barrierFeatureGroup")[0], "display", "none");
-        }
-      }
-    },
-
+    /*
     _createAGATList: function(param) {
       switch(param.type) {
         case "start":
@@ -302,10 +229,6 @@ function (declare,
             var label = domConstruct.create("label", {"innerHTML": " " + ag.assetGroupName + " - " + at.assetTypeName + "<br>", "for":"AGAT"}, param.node );
             domConstruct.place(label, dom);
 
-            this.own(on(checkBox, "change", lang.hitch(this, function(val) {
-              this.storeTempConfig();
-            })));
-
             switch(param.type) {
               case "start":
                 this.startLocationCheckboxList.push(checkBox);
@@ -327,7 +250,7 @@ function (declare,
       }));
 
     },
-
+*/
     _createCategoryList: function(param) {
       this.knnCategories = [];
       var flag = false;
@@ -413,7 +336,7 @@ function (declare,
       }];
       var args = {
         fields: fields,
-        selectable: true
+        selectable: false
       };
 
       switch(type) {
@@ -613,7 +536,6 @@ function (declare,
               }
               categorySelection.addOption(selOption);
             });
-            this.own(on(categorySelection, "change", lang.hitch(this, function() {this.storeTempConfig()})));
             if(flag !== "") {
               categorySelection.set("value",flag);
             }
@@ -637,7 +559,6 @@ function (declare,
                 }));
               }
             }));
-            this.own(on(fbValueSelection, "change", lang.hitch(this, function() {this.storeTempConfig()})));
             if(flag !== "") {
               fbValueSelection.set("value", flag);
             }
@@ -650,7 +571,6 @@ function (declare,
               textbox.set("value", param.currValues.value);
             }
           }
-          this.own(on(textbox, "blur", lang.hitch(this, function() {this.storeTempConfig()})));
         }
       } else {
         var domainSelection = new Select().placeAt(td);
@@ -672,7 +592,6 @@ function (declare,
         if(flag !== "") {
           domainSelection.set("value",flag);
         }
-        this.own(on(domainSelection, "change", lang.hitch(this, function() {this.storeTempConfig()})));
       }
     },
 
@@ -738,62 +657,31 @@ function (declare,
       this.chkValidateConsistency.checked = false;
     },
 
+    launchFlagParameters: function(param, domHolder) {
+      //var tr = this.traceTypesTable.selectRow(param.tr);
+        domConstruct.empty(domHolder);
+        var flags = new flagParameters({
+          nls: this.nls,
+          un: this.un,
+          cmbDomainNetworks: this.cmbDomainNetworks,
+          existingValues: this.existingValues,
+          flagTypeAssetHolder: param.assetHolder,
+          flagType: param.flagtype,
+          flagUsage: param.flagUsage,
+          flagTableHolder: domHolder,
+          parent: param.parent,
+          addRowOnNew: false
+        }).placeAt(domHolder);
+        flags.startup();
+    },
+
     storeTempConfig: function() {
-      var tempSetting = {};
-      //Starts and barriers
-      var layerAsStart = [];
-      var layerAsBarrier = [];
-      var layerAsOutputFilters = [];
-
-      if(this.startLocationCheckboxList.length > 0) {
-        array.forEach(this.startLocationCheckboxList, lang.hitch(this, function(startChk) {
-          if(startChk.get("checked")) {
-            var splitAGAT = (startChk.get("value")).split(":");
-            layerAsStart.push({
-              "assetGroupCode": splitAGAT[0],
-              "assetTypeCode": splitAGAT[1],
-              "layerId": startChk.get("layerId")
-            });
-          }
-        }));
-      }
-      tempSetting["startLocationLayers"] = layerAsStart;
-
-      if(this.barriersLocationCheckboxList.length > 0) {
-        array.forEach(this.barriersLocationCheckboxList, lang.hitch(this, function(barrierChk) {
-          if(barrierChk.get("checked")) {
-            var splitAGAT = (barrierChk.get("value")).split(":");
-            layerAsBarrier.push({
-              "assetGroupCode": splitAGAT[0],
-              "assetTypeCode": splitAGAT[1],
-              "layerId": barrierChk.get("layerId")
-            });
-          }
-        }));
-      }
-      tempSetting["barriersLayers"] = layerAsBarrier;
-
-      if(this.outputFilterCheckboxlist.length > 0) {
-        array.forEach(this.outputFilterCheckboxlist, lang.hitch(this, function(outputChk) {
-          if(outputChk.get("checked")) {
-            var splitAGAT = (outputChk.get("value")).split(":");
-            layerAsOutputFilters.push({
-              "assetGroupCode": splitAGAT[0],
-              "assetTypeCode": splitAGAT[1],
-              "networkSourceId": outputChk.get("sourceId")
-            });
-          }
-        }));
-      }
-      tempSetting["outputFilters"] = layerAsOutputFilters;
-
       //includes and checkboxes
-      tempSetting["includeContainers"] = this.chkContainers.checked;
-      tempSetting["includeStructLineContent"] = this.chkStructLineContent.checked;
-      tempSetting["includeStructures"] = this.chkStructures.checked;
-      tempSetting["includeBarriers"] = this.chkBarrierFeatures.checked;
-      tempSetting["validateConsistency"] = this.chkValidateConsistency.checked;
-      tempSetting["selectionColor"] = this.color.getColor();
+      this.existingValues.traceConfig["includeContainers"] = this.chkContainers.checked;
+      this.existingValues.traceConfig["includeStructLineContent"] = this.chkStructLineContent.checked;
+      this.existingValues.traceConfig["includeStructures"] = this.chkStructures.checked;
+      this.existingValues.traceConfig["includeBarriers"] = this.chkBarrierFeatures.checked;
+      this.existingValues.traceConfig["validateConsistency"] = this.chkValidateConsistency.checked;
 
       //get Condition and filter tables
       var processList = [
@@ -828,25 +716,12 @@ function (declare,
             });
           }));
         }
-        tempSetting[item.node] = objArray;
+        this.existingValues.traceConfig[item.node] = objArray;
       }));
 
       //getKNN setting
       if(this.knnCount.value > 0) {
-        var ChosenAGAT = [];
         var chosenCategories = [];
-        if(this.knnAGATCheckboxlist.length > 0) {
-          array.forEach(this.knnAGATCheckboxlist, lang.hitch(this, function(agatChk) {
-            if(agatChk.get("checked")) {
-              var splitAGAT = (agatChk.get("value")).split(":");
-              ChosenAGAT.push({
-                "assetGroupCode": splitAGAT[0],
-                "assetTypeCode": splitAGAT[1],
-                "networkSourceId": agatChk.get("sourceId")
-              });
-            }
-          }));
-        }
         if(this.knnCategories.length > 0) {
           var filtered = array.filter(this.knnCategories, function(catChk) {
              return catChk.get("checked") === true;
@@ -855,16 +730,15 @@ function (declare,
             chosenCategories.push(catChk.get("value"));
           });
         }
-        tempSetting["nearestNeighbor"] = {
+        this.existingValues.traceConfig["nearestNeighbor"] = {
           "count": this.knnCount.value,
           "costNetworkAttributeName": this.knnCostNA.options[this.knnCostNA.value].textContent,
-          "nearestCategories": chosenCategories,
-          "nearestAssets": ChosenAGAT
+          "nearestCategories": chosenCategories
         };
       }
 
       //emit that config change so it can saved
-      this.emit("config-change", tempSetting);
+      //this.emit("config-change", tempSetting);
 
     },
 

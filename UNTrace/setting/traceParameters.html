@@ -1,14 +1,5 @@
 <div>
   <div class="traceConfigBlock">
-      <div class="startFeatureGroup">
-          Select template to use for starting locations<br>
-          <div class="startFeatureHolder" data-dojo-attach-point="startFeatureHolder"></div>
-      </div>
-      <div class="barrierFeatureGroup">
-          Select template to use for barriers<br>
-          <div class="barrierFeatureHolder" data-dojo-attach-point="barrierFeatureHolder"></div>
-      </div>
-      <hr>
       <div class="traceConfigBlock-inner">
           <div class="includeParameters">
               Include parameters for trace and results<br>
@@ -20,7 +11,7 @@
                 <input type="checkbox" data-dojo-attach-point="chkValidateConsistency" value="true" data-dojo-type="dijit/form/CheckBox"> Validate Consistency<br>
               </div>
           </div>
-          <hr>
+          <div class="spacerLarge"></div>
       <div class="barriersGroup">
         <div class="conditionBarriers">
           <table>
@@ -32,7 +23,7 @@
           <div data-dojo-attach-point="conditionBarriersHolder"></div>
           <div class="dynamicconditionBarriers"></div>
         </div>
-        <hr>
+        <div class="spacerLarge"></div>
         <div class="FilterBarriers">
           <table>
             <tr>
@@ -43,6 +34,7 @@
           <div data-dojo-attach-point="filterBarriersHolder"></div>
           <div class="dynamicfilterBarriers"></div>
         </div>
+        <div class="spacerLarge"></div>
         <div class="filterByNearest">
           <div class="rowLabel">Filter By Nearest</div>
           <div class="rowLabel">Count of features returned</div>
@@ -51,12 +43,10 @@
           <div data-dojo-attach-point="KNNCostNetworkHolder"></div>
           <div class="rowLabel">Nearest Category</div>
           <div class="knnHolder" data-dojo-attach-point="KNNNearestCategoryHolder"></div>
-          <div class="rowLabel">Nearest Asset Groups/Types</div>
           <div class="knnHolder" data-dojo-attach-point="KNNNearestAGATHolder"></div>
         </div>
-        <hr>
+        <div class="spacerLarge"></div>
         <div class="OutputConditions">
-          <div class="rowLabel" data-dojo-attach-point="addOutputCondition">Output Filter:</div>
           <div class="outputFilterHolder" data-dojo-attach-point="outputFilterHolder"></div>
           <table>
               <tr>
@@ -66,10 +56,6 @@
             </table>
           <div data-dojo-attach-point="outputConditionsHolder"></div>
         </div>
-        <br>
-        <br>
-        <div class="rowLabel">Choose a Highlight Color:</div>
-        <div data-dojo-attach-point="colorPickerHolder"></div>
       </div>
     </div>
   </div>

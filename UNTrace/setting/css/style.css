@@ -28,7 +28,7 @@
   display: block;
   margin-left: auto;
   margin-right: auto;
-  width: 63%;
+  width: 64%;
   padding-bottom: 10px;
   position: absolute;
   right: 0px;
@@ -47,6 +47,7 @@
 .traceConfigBlock-inner {
   padding-left: 5px;
   overflow-y: auto;
+  width: 100%;
 }
 
 .traceConfigBlock-advance {
@@ -109,23 +110,11 @@
 }
 
 .knnHolder {
-  width: 95%;
-  min-height: 50px;
-  max-height: 125px;
-  padding-left: 5px;
-  overflow-x: hidden;
-  overflow-y: auto;
-  border: 1px solid #c1c1c1;
+  width: 100%;
 }
 
 .outputFilterHolder {
-  width: 95%;
-  min-height: 50px;
-  max-height: 125px;
-  padding-left: 5px;
-  overflow-x: hidden;
-  overflow-y: auto;
-  border: 1px solid #c1c1c1;
+  width: 100%;
 }
 
 .includeParametersHolder {
@@ -156,12 +145,22 @@
   padding-bottom: 15px;
 }
 
+.filterByNearest {
+  padding-top: 5px;
+  padding-bottom: 15px;
+}
+
 .spacer {
   width: 95%;
   height: 1px;
   border-bottom: 1px solid black;
   padding-bottom: 15px;
   padding-top: 5px;
+}
+
+.spacerLarge {
+  width: 100%;
+  height: 25px;
 }
 
 .addConditionBarriers {
@@ -174,4 +173,8 @@
 
 .addOutputCondition {
   font-weight: bold;
+}
+
+.flagOptions {
+  width: 200px;
 }
