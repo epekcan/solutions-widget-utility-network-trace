@@ -12,24 +12,20 @@
     -->
 		<div class="userTraceBlock">
 			<div class="traceTypes">
-				<div class="rowLabel">USER DEFINED TRACE GROUP:</div>
-				<div class="addUserTraces" data-dojo-attach-point="addUserTraces">Add Trace Group</div>
+        <table>
+          <tr>
+            <td width="100%"><div class="rowLabel">User Defined Trace Group:</div></td>
+            <td><div class="addIcon" data-dojo-attach-point="addUserTraces"></div></td>
+          </tr>
+        </table>
         <div data-dojo-attach-point="dynamicUserTraces"></div>
         <br>
         <div class="rowLabel">Run this group:</div>
-        <div class="runTraceAmountHolder" data-dojo-attach-point="runTraceAmountHolder">
-        </div>
+        <div class="runTraceAmountHolder" data-dojo-attach-point="runTraceAmountHolder"></div>
 			</div>
 		</div>
 		<!-- Trace Configs -->
-		<div class="traceTypeBlock">
-			<div class="traceConfigBlock-inner">
-				<div class="rowLabel">TRACES:</div>
-				<div class="addTraceType" data-dojo-attach-point="addTraceType">Add a Trace</div>
-				<div data-dojo-attach-point="traceTypesTableHolder"></div>
-      </div>
-			<div class="traceConfigBlock-advance"  data-dojo-attach-point="traceConfigHolder"></div>
-		</div>
+		<div class="traceTypeBlock" data-dojo-attach-point="traceGroupHolder"></div>
 	</div>
 
 </div>

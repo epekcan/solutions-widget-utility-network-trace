@@ -291,7 +291,7 @@ function(declare,
                   //create graphic on the map
                   //let bufferedGeo =  geometryEngineAsync.buffer(g.geometry, this.config.TRACING_STARTLOCATION_BUFFER)
                   //    .then(lang.hitch(this, function(geom){
-                          this.gl.graphics.add(this.getGraphic("point", event, color, rowTraceLocation.globalId, this.activeTraceLocation));
+                          this.gl.graphics.add(this.getGraphic(g.geometry.type, g.geometry, color, rowTraceLocation.globalId, this.activeTraceLocation));
                   //    }));
               })
 
@@ -366,7 +366,7 @@ function(declare,
           }
 
           let configuration = this.replaceSpecificTraceConfig(param);
-          this.resultHighlightColor = param.traceInfo.traceConfig.selectionColor;
+          this.resultHighlightColor = param.traceInfo.traceColor;
 
           //only attempt to trace when there is at leats one starting point
           if (!this.traceLocationsParam.length) {
@@ -517,8 +517,8 @@ function(declare,
             if (layerObj === undefined) continue;
             let layerId = layerObj.layerId;
             if(param.traceInfo.useAsStart === "addToExisting" || param.traceInfo.useAsStart === "replaceAllWith" || param.traceInfo.useAsStart === "replaceFirst") {
-                if((param.traceInfo.traceConfig.startLocationLayers).length > 0) {
-                  for (let s of param.traceInfo.traceConfig.startLocationLayers) {
+                if((param.traceInfo.startLocationLayers).length > 0) {
+                  for (let s of param.traceInfo.startLocationLayers) {
                       if(s.layerId === layerId) {
                           if(parseInt(s.assetGroupCode) === parseInt(f.assetGroupCode) &&
                           parseInt(s.assetTypeCode) === parseInt(f.assetTypeCode)
@@ -553,8 +553,8 @@ function(declare,
               }
             }
             if(param.traceInfo.useAsBarrier === "addToExisting" || param.traceInfo.useAsBarrier === "replaceAllWith" || param.traceInfo.useAsBarrier === "replaceFirst") {
-              if((param.traceInfo.traceConfig.barriersLayers).length > 0) {
-                for (let s of param.traceInfo.traceConfig.barriersLayers) {
+              if((param.traceInfo.barriersLayers).length > 0) {
+                for (let s of param.traceInfo.barriersLayers) {
                     if(s.layerId === layerId) {
                         if(parseInt(s.assetGroupCode) === parseInt(f.assetGroupCode) &&
                         parseInt(s.assetTypeCode) === parseInt(f.assetTypeCode)
@@ -609,8 +609,8 @@ function(declare,
             this.traceLocationsParam = this.traceLocationsParam.concat(newBarrArr);
         }
         if(param.traceInfo.useAsStart === "RemoveFromExisting") {
-          if(param.traceInfo.traceConfig.startLocationLayers.length > 0) {
-            for (let s of param.traceInfo.traceConfig.startLocationLayers) {
+          if(param.traceInfo.startLocationLayers.length > 0) {
+            for (let s of param.traceInfo.startLocationLayers) {
               for (i = 0; i < this.traceLocationsParam.length; i++) {
                 let item = this.traceLocationsParam[i];
                 if (item.traceLocationType === "startingPoint" && item.layerId[0] === s.layerId && parseInt(s.assetGroupCode) === parseInt(item.assetGroupCode) && parseInt(s.assetTypeCode) === parseInt(item.assetTypeCode))  {
@@ -622,8 +622,8 @@ function(declare,
           }
         }
         if(param.traceInfo.useAsBarrier === "RemoveFromExisting") {
-          if(param.traceInfo.traceConfig.barriersLayers.length > 0) {
-            for (let s of param.traceInfo.traceConfig.barriersLayers) {
+          if(param.traceInfo.barriersLayers.length > 0) {
+            for (let s of param.traceInfo.barriersLayers) {
               for (i = 0; i < this.traceLocationsParam.length; i++) {
                 let item = this.traceLocationsParam[i];
                 if (item.traceLocationType === "barrier" && item.layerId[0] === s.layerId && parseInt(s.assetGroupCode) === parseInt(item.assetGroupCode) && parseInt(s.assetTypeCode) === parseInt(item.assetTypeCode))  {
@@ -919,6 +919,7 @@ function(declare,
               }
               break;
           case "line":
+          case "polyline":
               symbol = {
                   type: "simple-line", // autocasts as SimpleLineSymbol()
                   color: color,

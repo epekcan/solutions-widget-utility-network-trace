@@ -33,20 +33,22 @@ define(['dojo/_base/declare',
   "./PrivilegeUtil",
   "./utilitynetwork",
   "./portal",
+  './flagParameters',
   "jimu/tokenUtils",
   'jimu/dijit/SimpleTable',
   'jimu/dijit/ColorPicker',
   "dijit/form/TextBox",
   "dijit/form/Select",
   "dijit/form/RadioButton",
-  'dijit/form/CheckBox'],
+  'dijit/form/CheckBox',
+  "jimu/dijit/ColorPicker"],
 function (declare,
   _WidgetsInTemplateMixin,
   BaseWidgetSetting,
   template,
   Evented,
-  registry, on, dom, domConstruct, domAttr, domStyle, domClass, query, lang, array, agsPortal, PrivilegeUtil, UtilityNetwork, PortalHelper, tokenUtils,
-  SimpleTable, ColorPicker, Textbox, Select, RadioButton, CheckBox
+  registry, on, dom, domConstruct, domAttr, domStyle, domClass, query, lang, array, agsPortal, PrivilegeUtil, UtilityNetwork, PortalHelper, flagParameters, tokenUtils,
+  SimpleTable, ColorPicker, Textbox, Select, RadioButton, CheckBox, ColorPicker
 ) {
   return declare([BaseWidgetSetting, _WidgetsInTemplateMixin, Evented], {
     templateString: template,
@@ -57,15 +59,14 @@ function (declare,
     conditionBarriersTable: null,
     filterBarriersTable: null,
     outputConditionsTable: null,
+    outputFilterTable: null,
     row: null,
-    startLocationCheckboxList: [],
-    barriersLocationCheckboxList: [],
     outputFilterCheckboxlist: [],
     existingValues: null,
-
-    constructor: function (/*Object*/args) {
-      this.map = args.map;
-    },
+    knnCount: null,
+    knnCostNA: null,
+    knnCategories: [],
+    knnAGATCheckboxlist: [],
 
     postMixInProperties: function () {
       this.inherited(arguments);
@@ -73,27 +74,38 @@ function (declare,
     },
 
     postCreate: function () {
-      this.un;
       this.inherited(arguments);
+
+      this.wireupEvents();
+      this.startup();
     },
 
     startup: function () {
-
       this._createTraverseFilterTable("condition");
       this._createTraverseFilterTable("filter");
-
-      this._createAGATList({"node":this.outputFilterHolder, "type": "output", "predefined":this.existingValues});
       this._createTraverseFilterTable("output");
 
       if(this.existingValues !== null) {
-        this._createStartList({"value": this.existingValues.useAsStart});
-        this._createBarrierList({"value": this.existingValues.useAsBarrier});
         this._resetInclusionTypes();
         if(typeof(this.existingValues.traceConfig) !== "undefined") {
           this._restoreIncludesCheckboxesState({"traceConfig": this.existingValues.traceConfig});
-          this.colorPickerHolder.setColor(this.existingValues.traceConfig.selectionColor);
-        }
-        if(typeof(this.existingValues.traceConfig) !== "undefined") {
+          this.launchFlagParameters({
+            flagtype: "Output Filter",
+            flagUsage: "outputFilters",
+            assetHolder: "outputFilters",
+            parent: "outputFilter"
+          },this.outputFilterHolder);
+
+          this._createKNNCountInput({"value": this.existingValues.traceConfig.nearestNeighbor.count});
+          this._createKNNCostNA({"value": this.existingValues.traceConfig.nearestNeighbor.costNetworkAttributeName});
+          this._createCategoryList({"node":this.KNNNearestCategoryHolder, "predefined": this.existingValues.traceConfig.nearestNeighbor.nearestCategories});
+          this.launchFlagParameters({
+            flagtype: "Nearest Asset Groups/Types",
+            flagUsage: "nearestAssets",
+            assetHolder: "nearestAssets",
+            parent: "KNN"
+          },this.KNNNearestAGATHolder);
+
           if(typeof(this.existingValues.traceConfig.conditionBarriers) !== "undefined") {
             array.forEach(this.existingValues.traceConfig.conditionBarriers, lang.hitch(this, function(cb){
               this.addRowTraverse(this.conditionBarriersTable, cb);
@@ -111,12 +123,8 @@ function (declare,
           }
         }
       } else {
-        this._createStartList({"value": ""});
-        this._createBarrierList({"value": ""});
-        this._resetInclusionTypes();
-      }
 
-      //this.storeTempConfig({"referrer":"start up" + Date()});
+      }
 
       this.own(on(this.addConditionBarriers, "click", lang.hitch(this, function() {
         this.addRowTraverse(this.conditionBarriersTable, this.existingValues);
@@ -130,157 +138,33 @@ function (declare,
         this.addRowTraverse(this.outputConditionsTable, this.existingValues);
       })));
 
-      this.own(on(this.chkContainers, "change", lang.hitch(this, function() {
-        this.storeTempConfig();
-      })));
-      this.own(on(this.chkStructLineContent, "change", lang.hitch(this, function() {
-        this.storeTempConfig();
-      })));
-      this.own(on(this.chkStructures, "change", lang.hitch(this, function() {
-        this.storeTempConfig();
-      })));
-      this.own(on(this.chkBarrierFeatures, "change", lang.hitch(this, function() {
-        this.storeTempConfig();
-      })));
-      this.own(on(this.chkValidateConsistency, "change", lang.hitch(this, function() {
-        this.storeTempConfig();
-      })));
-
     },
 
-    _createStartList: function(param) {
-      if(typeof(param.value) !== "undefined") {
-        if(param.value === 'useExisting' || param.value === "") {
-          this.startLocationCheckboxList = [];
-          domConstruct.empty(this.startFeatureHolder);
-          query(".startFeatureGroup").style("display", "none");
-          //domStyle.set(query(".startFeatureGroup")[0], "display", "none");
-        } else {
-          domConstruct.empty(this.startFeatureHolder);
-          //domStyle.set(query(".startFeatureGroup")[0], "display", "block");
-          query(".startFeatureGroup").style("display", "block");
-          this._createAGATList({"node":this.startFeatureHolder, "type": "start", "predefined":this.existingValues});
-        }
-      } else {
-        if(query(".startFeatureGroup").length > 0) {
-          query(".startFeatureGroup").style("display", "none");
-          //domStyle.set(query(".startFeatureGroup")[0], "display", "none");
-        }
-      }
-    },
-
-    _createBarrierList: function(param) {
-      if(typeof(param.value) !== "undefined") {
-          if(param.value === 'useExisting' || param.value === "") {
-            this.barriersLocationCheckboxList = [];
-            domConstruct.empty(this.barrierFeatureHolder);
-            query(".barrierFeatureGroup").style("display", "none");
-            //domStyle.set(query(".barrierFeatureGroup")[0], "display", "none");
-          } else {
-            domConstruct.empty(this.barrierFeatureHolder);
-            query(".barrierFeatureGroup").style("display", "block");
-            //domStyle.set(query(".barrierFeatureGroup")[0], "display", "block");
-            this._createAGATList({"node":this.barrierFeatureHolder, "type": "barrier", "predefined":this.existingValues});
-          }
-      } else {
-        if(query(".barrierFeatureGroup").length > 0) {
-          query(".barrierFeatureGroup").style("display", "none");
-          //domStyle.set(query(".barrierFeatureGroup")[0], "display", "none");
-        }
-      }
-    },
-
-    _createAGATList: function(param) {
-      switch(param.type) {
-        case "start":
-          this.startLocationCheckboxList = [];
-          break;
-        case "barrier":
-          this.barriersLocationCheckboxList = [];
-          break;
-        case "output":
-          this.outputFilterCheckboxlist = [];
-          break;
-        default:
-          break;
-      }
-      var deviceList = this.un.getAGByDevice(this.cmbDomainNetworks.value);
-      var junctionList = this.un.getAGByJunction(this.cmbDomainNetworks.value);
-      var assetGroupList = deviceList.concat(junctionList);
-      array.forEach(assetGroupList, lang.hitch(this, function(agl) {
-        agl.assetGroup.sort((a,b) => (a.assetGroupName > b.assetGroupName) ? 1 : ((b.assetGroupName > a.assetGroupName) ? -1 : 0));
-        array.forEach(agl.assetGroup, lang.hitch(this, function(ag) {
-          array.forEach(ag.assetTypes, lang.hitch(this, function(at) {
-            //Check for exisitng values, and check box if it exist
-            var flag = false;
-            if(typeof(param.predefined) !== "undefined") {
-              if (param.predefined !== null) {
-                if(typeof(param.predefined.traceConfig) !== "undefined") {
-                  if(param.type === "start") {
-                    if((param.predefined.traceConfig.startLocationLayers).length > 0) {
-                      array.forEach(param.predefined.traceConfig.startLocationLayers, lang.hitch(this, function(item) {
-                        if(ag.assetGroupCode === parseInt(item.assetGroupCode) && at.assetTypeCode === parseInt(item.assetTypeCode) && agl.layerId === parseInt(item.layerId)) {
-                          flag = true;
-                        }
-                      }));
-                    }
-                  } else if (param.type === "barrier")  {
-                    if((param.predefined.traceConfig.barriersLayers).length > 0) {
-                      array.forEach(param.predefined.traceConfig.barriersLayers, lang.hitch(this, function(item) {
-                        if(ag.assetGroupCode === parseInt(item.assetGroupCode) && at.assetTypeCode === parseInt(item.assetTypeCode) && agl.layerId === parseInt(item.layerId)) {
-                          flag = true;
-                        }
-                      }));
-                    }
-                  } else {
-                    if((param.predefined.traceConfig.outputFilters).length > 0) {
-                      array.forEach(param.predefined.traceConfig.outputFilters, lang.hitch(this, function(item) {
-                        if(ag.assetGroupCode === parseInt(item.assetGroupCode) && at.assetTypeCode === parseInt(item.assetTypeCode) && agl.sourceId === parseInt(item.networkSourceId)) {
-                          flag = true;
-                        }
-                      }));
-                    }
-                  }
-                }
-              }
+    _createCategoryList: function(param) {
+      this.knnCategories = [];
+      var flag = false;
+      var catList = this.categoryList();
+      array.forEach(catList, lang.hitch(this,function(cat) {
+        if(param !== null) {
+          array.forEach(param.predefined, function(predefined) {
+            if(predefined === cat.name) {
+              flag = true;
             }
+          });
+        }
+        var dom = domConstruct.create("div");
+        domConstruct.place(dom, param.node);
+        var checkBox = new CheckBox({
+          name: "cat_" + cat.name,
+          value: cat.name,
+          checked: flag
+        });
+        checkBox.placeAt(dom);
+        var label = domConstruct.create("label", {"innerHTML": " " + cat.name + "<br>", "for":"cat"}, param.node );
+        domConstruct.place(label, dom);
 
-            var dom = domConstruct.create("div");
-            domConstruct.place(dom, param.node);
-            var checkBox = new CheckBox({
-              name: "AGAT_" + param.type,
-              value: ag.assetGroupCode + ":" + at.assetTypeCode + ":",
-              checked: flag,
-              "layerId": agl.layerId,
-              "sourceId": agl.sourceId
-
-            });
-            checkBox.placeAt(dom);
-            var label = domConstruct.create("label", {"innerHTML": " " + ag.assetGroupName + " - " + at.assetTypeName + "<br>", "for":"AGAT"}, param.node );
-            domConstruct.place(label, dom);
-
-            this.own(on(checkBox, "change", lang.hitch(this, function(val) {
-              this.storeTempConfig();
-            })));
-
-            switch(param.type) {
-              case "start":
-                this.startLocationCheckboxList.push(checkBox);
-                break;
-              case "barrier":
-                this.barriersLocationCheckboxList.push(checkBox);
-                break;
-              case "output":
-                this.outputFilterCheckboxlist.push(checkBox);
-                break;
-              default:
-                break;
-            }
-
-          }));
-        }));
+        this.knnCategories.push(checkBox);
       }));
-
     },
 
     _createTraverseFilterTable: function(type) {
@@ -341,7 +225,7 @@ function (declare,
       }];
       var args = {
         fields: fields,
-        selectable: true
+        selectable: false
       };
 
       switch(type) {
@@ -380,8 +264,8 @@ function (declare,
       var td = query('.simple-table-cell', param.tr)[0];
       var selectionBox = new Select().placeAt(td);
       var netAtt = this.networkAttributeList();
-      var outlier = {"name": "Category", "domainName": "Category"};
-      netAtt.push(outlier);
+      var outlier = [{"name": "Category", "domainName": "Category"}];
+      netAtt = netAtt.concat(outlier);
       array.forEach(netAtt, function(NAObj, i) {
         var selOption = document.createElement("option");
         selOption.textContent = NAObj.name;
@@ -494,7 +378,7 @@ function (declare,
     },
 
     _addTraverseCombineSelection: function(param) {
-      var flag = "false";
+      var flag = false;
       var td = query('.simple-table-cell', param.tr)[4];
       var selectionBox = new Select().placeAt(td);
       var combineList = this.createCombineUsingList();
@@ -504,10 +388,9 @@ function (declare,
          selOption.value = combineItem.value;
          selectionBox.addOption(selOption);
       });
-      flag = "";
       if(param.predefinedValues !== null) {
         if(typeof(param.predefinedValues.combineUsingOr) !== 'undefined') {
-          if(param.predefinedValues.combineUsingOr === "true") {
+          if(param.predefinedValues.combineUsingOr === true || param.predefinedValues.combineUsingOr === "true") {
             flag = "true";
           } else {
             flag = "false";
@@ -541,7 +424,6 @@ function (declare,
               }
               categorySelection.addOption(selOption);
             });
-            this.own(on(categorySelection, "change", lang.hitch(this, function() {this.storeTempConfig()})));
             if(flag !== "") {
               categorySelection.set("value",flag);
             }
@@ -565,7 +447,6 @@ function (declare,
                 }));
               }
             }));
-            this.own(on(fbValueSelection, "change", lang.hitch(this, function() {this.storeTempConfig()})));
             if(flag !== "") {
               fbValueSelection.set("value", flag);
             }
@@ -578,7 +459,6 @@ function (declare,
               textbox.set("value", param.currValues.value);
             }
           }
-          this.own(on(textbox, "blur", lang.hitch(this, function() {this.storeTempConfig()})));
         }
       } else {
         var domainSelection = new Select().placeAt(td);
@@ -600,9 +480,52 @@ function (declare,
         if(flag !== "") {
           domainSelection.set("value",flag);
         }
-        this.own(on(domainSelection, "change", lang.hitch(this, function() {this.storeTempConfig()})));
       }
     },
+
+    //KNN section
+    _createKNNCountInput: function(param) {
+      var preDefinedValue = -1;
+      if(typeof(param) !== 'undefined') {
+        preDefinedValue = param.value;
+      }
+      var userTextbox = new Textbox({
+        placeHolder: "How many neighbors?",
+        value: preDefinedValue,
+        style: {
+          width: "95%",
+          height: "26px"
+        }
+      });
+      userTextbox.placeAt(this.txtKNNCountHolder);
+      userTextbox.startup();
+      this.knnCount = userTextbox;
+    },
+
+    _createKNNCostNA: function(param) {
+      var flag = "";
+      var domainSelection = new Select().placeAt(this.KNNCostNetworkHolder);
+      var netAtt = this.networkAttributeList();
+      array.forEach(netAtt, function(NAObj, i) {
+        var selOption = document.createElement("option");
+        selOption.textContent = NAObj.name;
+        selOption.value = i;
+        selOption.domainName = NAObj.domainName;
+        if(param.currValues !== null) {
+          if(typeof(param.value) !== 'undefined') {
+            if(NAObj.name === param.value) {
+            flag = i;
+            }
+          }
+        }
+        domainSelection.addOption(selOption);
+      });
+      if(flag !== "") {
+        domainSelection.set("value",flag);
+      }
+      this.knnCostNA = domainSelection;
+    },
+    //End KNN section
 
     _restoreIncludesCheckboxesState: function(param) {
       if(typeof(param) !== 'undefined') {
@@ -622,62 +545,31 @@ function (declare,
       this.chkValidateConsistency.checked = false;
     },
 
+    launchFlagParameters: function(param, domHolder) {
+      //var tr = this.traceTypesTable.selectRow(param.tr);
+        domConstruct.empty(domHolder);
+        var flags = new flagParameters({
+          nls: this.nls,
+          un: this.un,
+          cmbDomainNetworks: this.cmbDomainNetworks,
+          existingValues: this.existingValues,
+          flagTypeAssetHolder: param.assetHolder,
+          flagType: param.flagtype,
+          flagUsage: param.flagUsage,
+          flagTableHolder: domHolder,
+          parent: param.parent,
+          addRowOnNew: false
+        }).placeAt(domHolder);
+        flags.startup();
+    },
+
     storeTempConfig: function() {
-      var tempSetting = {};
-      //Starts and barriers
-      var layerAsStart = [];
-      var layerAsBarrier = [];
-      var layerAsOutputFilters = [];
-
-      if(this.startLocationCheckboxList.length > 0) {
-        array.forEach(this.startLocationCheckboxList, lang.hitch(this, function(startChk) {
-          if(startChk.get("checked")) {
-            var splitAGAT = (startChk.get("value")).split(":");
-            layerAsStart.push({
-              "assetGroupCode": splitAGAT[0],
-              "assetTypeCode": splitAGAT[1],
-              "layerId": startChk.get("layerId")
-            });
-          }
-        }));
-      }
-      tempSetting["startLocationLayers"] = layerAsStart;
-
-      if(this.barriersLocationCheckboxList.length > 0) {
-        array.forEach(this.barriersLocationCheckboxList, lang.hitch(this, function(barrierChk) {
-          if(barrierChk.get("checked")) {
-            var splitAGAT = (barrierChk.get("value")).split(":");
-            layerAsBarrier.push({
-              "assetGroupCode": splitAGAT[0],
-              "assetTypeCode": splitAGAT[1],
-              "layerId": barrierChk.get("layerId")
-            });
-          }
-        }));
-      }
-      tempSetting["barriersLayers"] = layerAsBarrier;
-
-      if(this.outputFilterCheckboxlist.length > 0) {
-        array.forEach(this.outputFilterCheckboxlist, lang.hitch(this, function(outputChk) {
-          if(outputChk.get("checked")) {
-            var splitAGAT = (outputChk.get("value")).split(":");
-            layerAsOutputFilters.push({
-              "assetGroupCode": splitAGAT[0],
-              "assetTypeCode": splitAGAT[1],
-              "networkSourceId": outputChk.get("sourceId")
-            });
-          }
-        }));
-      }
-      tempSetting["outputFilters"] = layerAsOutputFilters;
-
       //includes and checkboxes
-      tempSetting["includeContainers"] = this.chkContainers.checked;
-      tempSetting["includeStructLineContent"] = this.chkStructLineContent.checked;
-      tempSetting["includeStructures"] = this.chkStructures.checked;
-      tempSetting["includeBarriers"] = this.chkBarrierFeatures.checked;
-      tempSetting["validateConsistency"] = this.chkValidateConsistency.checked;
-      tempSetting["selectionColor"] = this.colorPickerHolder.getColor();
+      this.existingValues.traceConfig["includeContainers"] = this.chkContainers.checked;
+      this.existingValues.traceConfig["includeStructLineContent"] = this.chkStructLineContent.checked;
+      this.existingValues.traceConfig["includeStructures"] = this.chkStructures.checked;
+      this.existingValues.traceConfig["includeBarriers"] = this.chkBarrierFeatures.checked;
+      this.existingValues.traceConfig["validateConsistency"] = this.chkValidateConsistency.checked;
 
       //get Condition and filter tables
       var processList = [
@@ -697,7 +589,7 @@ function (declare,
               var rowData = item.table.getRowData(row);
               valueInput = rowData.value;
             }
-            if(row.name.options[row.name.value].textContent === "Categeory") {
+            if(row.name.options[row.name.value].textContent === "Category") {
               var type = "category";
             } else {
               var type = "networkAttribute";
@@ -712,14 +604,53 @@ function (declare,
             });
           }));
         }
-        tempSetting[item.node] = objArray;
+        this.existingValues.traceConfig[item.node] = objArray;
       }));
+
+      //getKNN setting
+      if(this.knnCount.value > 0) {
+        var chosenCategories = [];
+        if(this.knnCategories.length > 0) {
+          var filtered = array.filter(this.knnCategories, function(catChk) {
+             return catChk.get("checked") === true;
+          });
+          array.forEach(filtered, function(catChk) {
+            chosenCategories.push(catChk.get("value"));
+          });
+        }
+        this.existingValues.traceConfig["nearestNeighbor"] = {
+          "count": this.knnCount.value,
+          "costNetworkAttributeName": this.knnCostNA.options[this.knnCostNA.value].textContent,
+          "nearestCategories": chosenCategories
+        };
+      }
+
       //emit that config change so it can saved
-      this.emit("config-change", tempSetting);
+      //this.emit("config-change", tempSetting);
 
     },
 
-
+    //Wire Up Events
+    wireupEvents: function() {
+      this.own(on(this.includeHeaders, "click", lang.hitch(this, function() {
+        this.hideShowSection(this.includeParametersHolder);
+      })));
+      this.own(on(this.CBHeader, "click", lang.hitch(this, function() {
+        this.hideShowSection(this.conditionBarriersHolder);
+      })));
+      this.own(on(this.FBHeader, "click", lang.hitch(this, function() {
+        this.hideShowSection(this.filterBarriersHolder);
+      })));
+      this.own(on(this.knnHeader, "click", lang.hitch(this, function() {
+        this.hideShowSection(this.knnHolder);
+      })));
+      this.own(on(this.outputFilterHeader, "click", lang.hitch(this, function() {
+        this.hideShowSection(this.outputFilterHolder);
+      })));
+      this.own(on(this.OCHeader, "click", lang.hitch(this, function() {
+        this.hideShowSection(this.outputConditionsHolder);
+      })));
+    },
 
     //support functions
     categoryList: function() {
@@ -758,11 +689,11 @@ function (declare,
     createOperatorList: function() {
       var validOperators = [
         {display: "Is equal to", value: "equal"},
-        {display: "Does not equal", value: "doesNotEqual"},
-        {display: "Is greater than", value: "isGreaterThan"},
-        {display: "Is greater than or equal to", value: "isGreaterThanOrEqualTo"},
-        {display: "Is less than", value: "isLessThan"},
-        {display: "Is less than or equal to", value: "isLessThanOrEqualTo"},
+        {display: "Does not equal", value: "notEqual"},
+        {display: "Is greater than", value: "greaterThan"},
+        {display: "Is greater than or equal to", value: "greaterThanEqual"},
+        {display: "Is less than", value: "lessThan"},
+        {display: "Is less than or equal to", value: "lessThanEqual"},
         {display: "Includes the values", value: "includesTheValues"},
         {display: "Does not include the values", value: "doesNotIncludeTheValues"},
         {display: "Includes any", value: "includesAny"},
@@ -785,6 +716,15 @@ function (declare,
         {display: "Or", value: true}
       ];
       return combineList;
+    },
+
+    hideShowSection: function(param) {
+      var display = domStyle.get(param, "display");
+      if(display === "block") {
+        domStyle.set(param, "display", "none");
+      } else {
+        domStyle.set(param, "display", "block");
+      }
     },
 
     destroy: function () {

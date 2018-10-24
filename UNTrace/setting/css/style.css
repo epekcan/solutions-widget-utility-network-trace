@@ -28,7 +28,7 @@
   display: block;
   margin-left: auto;
   margin-right: auto;
-  width: 63%;
+  width: 64%;
   padding-bottom: 10px;
   position: absolute;
   right: 0px;
@@ -39,14 +39,14 @@
   display: block;
   margin-left: auto;
   margin-right: auto;
-  width: 98%;
-  border: 1px solid black;
-  padding-bottom: 10px;
+  width: 100%;
+  padding-bottom: 5px;
 }
 
 .traceConfigBlock-inner {
   padding-left: 5px;
   overflow-y: auto;
+  width: 100%;
 }
 
 .traceConfigBlock-advance {
@@ -56,6 +56,22 @@
 
 .traceTypes {
   padding-bottom: 10px;
+}
+
+.addIcon {
+  width: 24px;
+  height: 24px;
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url(../images/add.png);
+}
+
+.importIcon {
+  width: 24px;
+  height: 24px;
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url(../images/copy.png);
 }
 
 .startFeatureGroup {
@@ -100,14 +116,12 @@
   border: 1px solid #c1c1c1;
 }
 
+.knnHolder {
+  width: 100%;
+}
+
 .outputFilterHolder {
-  width: 95%;
-  min-height: 50px;
-  max-height: 125px;
-  padding-left: 5px;
-  overflow-x: hidden;
-  overflow-y: auto;
-  border: 1px solid #c1c1c1;
+  width: 100%;
 }
 
 .includeParametersHolder {
@@ -117,23 +131,38 @@
   overflow-x: hidden;
   overflow-y: auto;
   border: 1px solid #c1c1c1;
+  display: none;
 }
 
-.barriersGroup {
-  padding-top: 25px;
+.hideDisplay {
+  display: none;
 }
 
-.dynamicconditionBarriers {
-  padding-top: 5px;
-  padding-bottom: 15px;
-}
-
-.dynamicfilterBarriers {
+.includeParameters {
   padding-top: 3px;
   padding-bottom: 15px;
 }
 
-.dynamicoutputConditions {
+.conditionBarriers {
+  padding-top: 3px;
+  padding-bottom: 15px;
+}
+.FilterBarriers {
+  padding-top: 3px;
+  padding-bottom: 15px;
+}
+
+.knnSection {
+  padding-top: 3px;
+  padding-bottom: 15px;
+}
+
+.OutputFilters {
+  padding-top: 3px;
+  padding-bottom: 15px;
+}
+
+.OutputConditions {
   padding-top: 3px;
   padding-bottom: 15px;
 }
@@ -146,6 +175,11 @@
   padding-top: 5px;
 }
 
+.spacerLarge {
+  width: 100%;
+  height: 25px;
+}
+
 .addConditionBarriers {
   font-weight: bold;
 }
@@ -156,4 +190,14 @@
 
 .addOutputCondition {
   font-weight: bold;
+}
+
+.flagOptions {
+  width: 200px;
+}
+
+.parametersHeader {
+  width: 100%;
+  height: 30px;
+  background-color: #efefef;
 }
