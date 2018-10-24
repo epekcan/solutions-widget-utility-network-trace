@@ -74,8 +74,9 @@ function (declare,
     },
 
     postCreate: function () {
-      console.log(this);
       this.inherited(arguments);
+
+      this.wireupEvents();
       this.startup();
     },
 
@@ -122,14 +123,7 @@ function (declare,
           }
         }
       } else {
-        /*
-        this._createAGATList({"node":this.outputFilterHolder, "type": "output", "predefined":null});
-        this._createAGATList({"node":this.KNNNearestAGATHolder, "type": "knn", "predefined":null});
-        this._createKNNCountInput({"value": -1});
-        this._createKNNCostNA({"value": null});
-        this._createCategoryList({"node":this.KNNNearestCategoryHolder, "predefined":null});
-        this._resetInclusionTypes();
-        */
+
       }
 
       this.own(on(this.addConditionBarriers, "click", lang.hitch(this, function() {
@@ -146,111 +140,6 @@ function (declare,
 
     },
 
-    /*
-    _createAGATList: function(param) {
-      switch(param.type) {
-        case "start":
-          this.startLocationCheckboxList = [];
-          break;
-        case "barrier":
-          this.barriersLocationCheckboxList = [];
-          break;
-        case "output":
-          this.outputFilterCheckboxlist = [];
-          break;
-        case "knn":
-          this.knnAGATCheckboxlist = [];
-          break;
-        default:
-          break;
-      }
-      var deviceList = this.un.getAGByDevice(this.cmbDomainNetworks.value);
-      var junctionList = this.un.getAGByJunction(this.cmbDomainNetworks.value);
-      var assetGroupList = deviceList.concat(junctionList);
-      array.forEach(assetGroupList, lang.hitch(this, function(agl) {
-        agl.assetGroup.sort((a,b) => (a.assetGroupName > b.assetGroupName) ? 1 : ((b.assetGroupName > a.assetGroupName) ? -1 : 0));
-        array.forEach(agl.assetGroup, lang.hitch(this, function(ag) {
-          array.forEach(ag.assetTypes, lang.hitch(this, function(at) {
-            //Check for exisitng values, and check box if it exist
-            var flag = false;
-            if(typeof(param.predefined) !== "undefined") {
-              if (param.predefined !== null) {
-                if(typeof(param.predefined.traceConfig) !== "undefined") {
-                  if(param.type === "start") {
-                    if((param.predefined.traceConfig.startLocationLayers).length > 0) {
-                      array.forEach(param.predefined.traceConfig.startLocationLayers, lang.hitch(this, function(item) {
-                        if(ag.assetGroupCode === parseInt(item.assetGroupCode) && at.assetTypeCode === parseInt(item.assetTypeCode) && agl.layerId === parseInt(item.layerId)) {
-                          flag = true;
-                        }
-                      }));
-                    }
-                  } else if (param.type === "barrier")  {
-                    if((param.predefined.traceConfig.barriersLayers).length > 0) {
-                      array.forEach(param.predefined.traceConfig.barriersLayers, lang.hitch(this, function(item) {
-                        if(ag.assetGroupCode === parseInt(item.assetGroupCode) && at.assetTypeCode === parseInt(item.assetTypeCode) && agl.layerId === parseInt(item.layerId)) {
-                          flag = true;
-                        }
-                      }));
-                    }
-                  } else if (param.type === "output")  {
-                    if((param.predefined.traceConfig.outputFilters).length > 0) {
-                      array.forEach(param.predefined.traceConfig.outputFilters, lang.hitch(this, function(item) {
-                        if(ag.assetGroupCode === parseInt(item.assetGroupCode) && at.assetTypeCode === parseInt(item.assetTypeCode) && agl.sourceId === parseInt(item.networkSourceId)) {
-                          flag = true;
-                        }
-                      }));
-                    }
-                  } else {
-                    if(typeof((param.predefined.traceConfig.nearestNeighbor) !== "undefined")) {
-                      if((param.predefined.traceConfig.nearestNeighbor.nearestAssets).length > 0) {
-                        array.forEach(param.predefined.traceConfig.nearestNeighbor.nearestAssets, lang.hitch(this, function(item) {
-                          if(ag.assetGroupCode === parseInt(item.assetGroupCode) && at.assetTypeCode === parseInt(item.assetTypeCode) && agl.sourceId === parseInt(item.networkSourceId)) {
-                            flag = true;
-                          }
-                        }));
-                      }
-                    }
-                  }
-                }
-              }
-            }
-
-            var dom = domConstruct.create("div");
-            domConstruct.place(dom, param.node);
-            var checkBox = new CheckBox({
-              name: "AGAT_" + param.type,
-              value: ag.assetGroupCode + ":" + at.assetTypeCode + ":",
-              checked: flag,
-              "layerId": agl.layerId,
-              "sourceId": agl.sourceId
-
-            });
-            checkBox.placeAt(dom);
-            var label = domConstruct.create("label", {"innerHTML": " " + ag.assetGroupName + " - " + at.assetTypeName + "<br>", "for":"AGAT"}, param.node );
-            domConstruct.place(label, dom);
-
-            switch(param.type) {
-              case "start":
-                this.startLocationCheckboxList.push(checkBox);
-                break;
-              case "barrier":
-                this.barriersLocationCheckboxList.push(checkBox);
-                break;
-              case "output":
-                this.outputFilterCheckboxlist.push(checkBox);
-                break;
-              case "knn":
-                this.knnAGATCheckboxlist.push(checkBox);
-              default:
-                break;
-            }
-
-          }));
-        }));
-      }));
-
-    },
-*/
     _createCategoryList: function(param) {
       this.knnCategories = [];
       var flag = false;
@@ -489,7 +378,7 @@ function (declare,
     },
 
     _addTraverseCombineSelection: function(param) {
-      var flag = "false";
+      var flag = false;
       var td = query('.simple-table-cell', param.tr)[4];
       var selectionBox = new Select().placeAt(td);
       var combineList = this.createCombineUsingList();
@@ -499,10 +388,9 @@ function (declare,
          selOption.value = combineItem.value;
          selectionBox.addOption(selOption);
       });
-      flag = "";
       if(param.predefinedValues !== null) {
         if(typeof(param.predefinedValues.combineUsingOr) !== 'undefined') {
-          if(param.predefinedValues.combineUsingOr === "true") {
+          if(param.predefinedValues.combineUsingOr === true || param.predefinedValues.combineUsingOr === "true") {
             flag = "true";
           } else {
             flag = "false";
@@ -742,7 +630,27 @@ function (declare,
 
     },
 
-
+    //Wire Up Events
+    wireupEvents: function() {
+      this.own(on(this.includeHeaders, "click", lang.hitch(this, function() {
+        this.hideShowSection(this.includeParametersHolder);
+      })));
+      this.own(on(this.CBHeader, "click", lang.hitch(this, function() {
+        this.hideShowSection(this.conditionBarriersHolder);
+      })));
+      this.own(on(this.FBHeader, "click", lang.hitch(this, function() {
+        this.hideShowSection(this.filterBarriersHolder);
+      })));
+      this.own(on(this.knnHeader, "click", lang.hitch(this, function() {
+        this.hideShowSection(this.knnHolder);
+      })));
+      this.own(on(this.outputFilterHeader, "click", lang.hitch(this, function() {
+        this.hideShowSection(this.outputFilterHolder);
+      })));
+      this.own(on(this.OCHeader, "click", lang.hitch(this, function() {
+        this.hideShowSection(this.outputConditionsHolder);
+      })));
+    },
 
     //support functions
     categoryList: function() {
@@ -781,11 +689,11 @@ function (declare,
     createOperatorList: function() {
       var validOperators = [
         {display: "Is equal to", value: "equal"},
-        {display: "Does not equal", value: "doesNotEqual"},
-        {display: "Is greater than", value: "isGreaterThan"},
-        {display: "Is greater than or equal to", value: "isGreaterThanOrEqualTo"},
-        {display: "Is less than", value: "isLessThan"},
-        {display: "Is less than or equal to", value: "isLessThanOrEqualTo"},
+        {display: "Does not equal", value: "notEqual"},
+        {display: "Is greater than", value: "greaterThan"},
+        {display: "Is greater than or equal to", value: "greaterThanEqual"},
+        {display: "Is less than", value: "lessThan"},
+        {display: "Is less than or equal to", value: "lessThanEqual"},
         {display: "Includes the values", value: "includesTheValues"},
         {display: "Does not include the values", value: "doesNotIncludeTheValues"},
         {display: "Includes any", value: "includesAny"},
@@ -808,6 +716,15 @@ function (declare,
         {display: "Or", value: true}
       ];
       return combineList;
+    },
+
+    hideShowSection: function(param) {
+      var display = domStyle.get(param, "display");
+      if(display === "block") {
+        domStyle.set(param, "display", "none");
+      } else {
+        domStyle.set(param, "display", "block");
+      }
     },
 
     destroy: function () {

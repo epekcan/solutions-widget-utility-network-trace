@@ -31,6 +31,7 @@ define([
   "./portal",
   './traceParameters',
   './flagParameters',
+  './importUtils',
   "jimu/tokenUtils",
   'jimu/dijit/SimpleTable',
   'jimu/dijit/Popup',
@@ -39,7 +40,7 @@ define([
   "jimu/dijit/ColorPicker"
 ],
 function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, domConstruct, query, lang, array, domStyle,
-  agsPortal, PrivilegeUtil, UtilityNetwork, PortalHelper, traceParameters, flagParameters, tokenUtils,
+  agsPortal, PrivilegeUtil, UtilityNetwork, PortalHelper, traceParameters, flagParameters, importUtils, tokenUtils,
   SimpleTable, Popup, Textbox, Select, ColorPicker) {
   return declare([BaseWidgetSetting, _TemplatedMixin], {
     templateString: template,
@@ -65,6 +66,19 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, domConstruct
         this.addRowTraceType({"predefined":null});
       })));
 
+      this.own(on(this.importTrace, "click", lang.hitch(this, function() {
+        this.launchImportUtils({"predefined":null});
+      })));
+
+      this._initialize();
+
+      this.storeTempConfig();
+
+      this._wireEventHandlers();
+
+    },
+
+    _initialize: function() {
       //if this is reloaded, check if existing values is populate, then loop. otherwise just add a new row
       if(this.existingValues !== null) {
         if(this.existingValues.traces.length > 0) {
@@ -78,10 +92,9 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, domConstruct
         this.addRowTraceType({"predefined":null});
       }
 
-      this.storeTempConfig();
+      //this.storeTempConfig();
 
-      this._wireEventHandlers();
-
+     // this._wireEventHandlers();
     },
 
     _createTraceTypeTable: function() {
@@ -153,17 +166,19 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, domConstruct
         "useAsBarrier": defaultUseAsBarrier
       });
 
+      this._addTraceTypeColor({"tr":addRowResult.tr, "predefined":param.predefined});
+      this._addTraceTypeSelection({"tr":addRowResult.tr, "predefined":param.predefined});
+      this._addTraceStartSelection({"tr":addRowResult.tr, "predefined":param.predefined});
+      this._addTraceBarrierSelection({"tr":addRowResult.tr, "predefined":param.predefined});
+      this.traceTypesTable.selectRow(addRowResult.tr);
+
       var deleteBtn = query(".jimu-icon-delete", addRowResult.tr);
       if(deleteBtn.length > 0) {
         this.own(on(deleteBtn[0], "click", lang.hitch(this, function() {
           this.deleteTraceType();
         })));
       }
-      this._addTraceTypeColor({"tr":addRowResult.tr, "predefined":param.predefined});
-      this._addTraceTypeSelection({"tr":addRowResult.tr, "predefined":param.predefined});
-      this._addTraceStartSelection({"tr":addRowResult.tr, "predefined":param.predefined});
-      this._addTraceBarrierSelection({"tr":addRowResult.tr, "predefined":param.predefined});
-      this.traceTypesTable.selectRow(addRowResult.tr);
+
       return addRowResult;
     },
 
@@ -326,33 +341,31 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, domConstruct
       }
     },
 
-    deleteTraceType: function(tr, data) {
-      var userRowData = this.userDefinedTraces.getSelectedRow();
+    deleteTraceType: function(tr, rowdata) {
       var rows = this.traceTypesTable.getRows();
-      var spliceValue = -1;
       var found = false;
-      if(userRowData) {
-          var counter = 0;
-          array.forEach(this.tempTraceConfigs.userTraces[userRowData.userDefinedName.value].traces, lang.hitch(this, function(trace) {
-            if(typeof(trace) !== "undefined") {
-              array.some(rows, lang.hitch(this, function(row) {
-                var rowData = this.traceTypesTable.getRowData(row);
-                if(trace.traceID === rowData.rowID) {
-                  found = true;
-                  //(this.tempTraceConfigs.userTraces[userRowData.userDefinedName.value].traces).splice(counter, 1);
-                }
-              }));
-            }
-            if(!found) {
-              (this.tempTraceConfigs.userTraces[userRowData.userDefinedName.value].traces).splice(counter, 1);
-            }
-            found = false;
-            counter++;
-          }));
+      var counter = -1;
+      array.forEach(this.existingValues.traces, lang.hitch(this, function(trace, i) {
+        found = false;
+        array.forEach(rows, lang.hitch(this, function(row) {
+          var rowData = this.traceTypesTable.getRowData(row);
+          if(trace.traceID === rowData.rowID) {
+            found = true;
+          }
+        }));
+        if(!found) {
+          counter = i;
+        }
+      }));
+      if(counter > -1) {
+        (this.existingValues.traces).splice(counter, 1);
+        this.storeTempConfig();
       }
-
+      rows = this.traceTypesTable.getRows();
       if(rows.length > 0) {
         this.traceTypesTable.selectRow(rows[rows.length-1]);
+      } else {
+        this.storeTempConfig();
       }
     },
 
@@ -421,6 +434,44 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, domConstruct
       });
     },
 
+    launchImportUtils: function(param) {
+      var importConfig = new importUtils({
+        nls: this.nls,
+        un: this.un,
+        cmbDomainNetworks: this.cmbDomainNetworks,
+        domainValueListHelper: this.domainValueListHelper,
+        existingValues: this.existingValues
+      });
+      var popup = new Popup({
+        width: 850,
+        height: 650,
+        content: importConfig,
+        titleLabel: "Import Trace",
+        onClose: lang.hitch(this, function () {
+          importConfig.destroy();
+        }),
+        buttons: [{
+          label: "OK",
+          onClick: lang.hitch(this, function () {
+            if(importConfig.validInput) {
+              this.traceTypesTable.clear();
+              this.existingValues.traces.push(importConfig.importTrace);
+              this._initialize();
+              popup.close();
+            } else {
+              alert("Invalid Import");
+            }
+          })
+        }, {
+          label: "Cancel",
+          classNames: ['jimu-btn-vacation'],
+          onClick: lang.hitch(this, function () {
+            popup.close();
+          })
+        }]
+      });
+    },
+
     //*************************
     //**** START GLOBAL EVENT HANDLERS
     _wireEventHandlers: function() {
@@ -446,6 +497,9 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, domConstruct
       })));
 
       this.own(on(this.traceTypesTable, 'actions-edit', lang.hitch(this, this.launchTraceConfig)));
+      //this.own(on(this.traceTypesTable, 'row-delete', lang.hitch(this, function(tr, rowdata){
+      //  this.deleteTraceType(tr, rowdata);
+      //})));
     },
     //**** END GLOBAL EVENT HANDLERS
     //*************************

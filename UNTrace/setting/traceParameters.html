@@ -2,8 +2,8 @@
   <div class="traceConfigBlock">
       <div class="traceConfigBlock-inner">
           <div class="includeParameters">
-              Include parameters for trace and results<br>
-              <div class="includeParametersHolder">
+              <div class="parametersHeader"  data-dojo-attach-point="includeHeaders">Include parameters for trace and results</div>
+              <div class="includeParametersHolder" data-dojo-attach-point="includeParametersHolder">
                 <input type="checkbox" data-dojo-attach-point="chkContainers" value="true" data-dojo-type="dijit/form/CheckBox"> Include Containers<br>
                 <input type="checkbox" data-dojo-attach-point="chkStructLineContent" value="true" data-dojo-type="dijit/form/CheckBox"> Include Structure Line/Junction Container Content<br>
                 <input type="checkbox" data-dojo-attach-point="chkStructures" value="true" data-dojo-type="dijit/form/CheckBox"> Include Structures<br>
@@ -11,50 +11,54 @@
                 <input type="checkbox" data-dojo-attach-point="chkValidateConsistency" value="true" data-dojo-type="dijit/form/CheckBox"> Validate Consistency<br>
               </div>
           </div>
-          <div class="spacerLarge"></div>
+
       <div class="barriersGroup">
         <div class="conditionBarriers">
-          <table>
-            <tr>
-              <td><div class="rowLabel">Condition Barriers:</div></td>
+          <table width="100%" cellspacing="0" cellpadding="0">
+            <tr class="parametersHeader">
+              <td width="100%"><div class="conditionBarriersHeader" data-dojo-attach-point="CBHeader">Condition Barriers:</div></td>
               <td><div class="addIcon" data-dojo-attach-point="addConditionBarriers"></div></td>
             </tr>
           </table>
-          <div data-dojo-attach-point="conditionBarriersHolder"></div>
-          <div class="dynamicconditionBarriers"></div>
+          <div  class="hideDisplay" data-dojo-attach-point="conditionBarriersHolder"></div>
         </div>
-        <div class="spacerLarge"></div>
+
         <div class="FilterBarriers">
-          <table>
-            <tr>
-              <td><div class="rowLabel">Filter Barriers:</div></td>
+          <table width="100%" cellspacing="0" cellpadding="0">
+            <tr class="parametersHeader">
+              <td width="100%"><div class="filterBarriersHeader" data-dojo-attach-point="FBHeader">Filter Barriers:</div></td>
               <td><div class="addIcon" data-dojo-attach-point="addFilterBarriers"></div></td>
             </tr>
           </table>
-          <div data-dojo-attach-point="filterBarriersHolder"></div>
-          <div class="dynamicfilterBarriers"></div>
+          <div class="hideDisplay" data-dojo-attach-point="filterBarriersHolder"></div>
         </div>
-        <div class="spacerLarge"></div>
-        <div class="filterByNearest">
-          <div class="rowLabel">Filter By Nearest</div>
-          <div class="rowLabel">Count of features returned</div>
-          <div data-dojo-attach-point="txtKNNCountHolder"></div>
-          <div class="rowLabel">Cost Network Attribute</div>
-          <div data-dojo-attach-point="KNNCostNetworkHolder"></div>
-          <div class="rowLabel">Nearest Category</div>
-          <div class="knnHolder" data-dojo-attach-point="KNNNearestCategoryHolder"></div>
-          <div class="knnHolder" data-dojo-attach-point="KNNNearestAGATHolder"></div>
+
+        <div class="knnSection">
+          <div class="parametersHeader" data-dojo-attach-point="knnHeader">Nearest Neighbor</div>
+          <div class="hideDisplay" data-dojo-attach-point="knnHolder">
+            <div class="rowLabel">Filter By Nearest</div>
+            <div class="rowLabel">Count of features returned</div>
+            <div data-dojo-attach-point="txtKNNCountHolder"></div>
+            <div class="rowLabel">Cost Network Attribute</div>
+            <div data-dojo-attach-point="KNNCostNetworkHolder"></div>
+            <div class="rowLabel">Nearest Category</div>
+            <div class="knnHolder" data-dojo-attach-point="KNNNearestCategoryHolder"></div>
+            <div class="knnHolder" data-dojo-attach-point="KNNNearestAGATHolder"></div>
+          </div>
         </div>
-        <div class="spacerLarge"></div>
+
+        <div class="OutputFilters">
+          <div class="parametersHeader"  data-dojo-attach-point="outputFilterHeader">Output Filters</div>
+          <div class="hideDisplay" data-dojo-attach-point="outputFilterHolder"></div>
+        </div>
         <div class="OutputConditions">
-          <div class="outputFilterHolder" data-dojo-attach-point="outputFilterHolder"></div>
-          <table>
-              <tr>
-                <td><div class="rowLabel">Output Condition:</div></td>
+          <table cellspacing="0" cellpadding="0">
+              <tr class="parametersHeader">
+                <td width="100%"><div class="rowLabel" data-dojo-attach-point="OCHeader">Output Condition:</div></td>
                 <td><div class="addIcon" data-dojo-attach-point="addOutputCondition"></div></td>
               </tr>
             </table>
-          <div data-dojo-attach-point="outputConditionsHolder"></div>
+          <div  class="hideDisplay" data-dojo-attach-point="outputConditionsHolder"></div>
         </div>
       </div>
     </div>

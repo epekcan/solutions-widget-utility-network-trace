@@ -92,7 +92,7 @@ function (declare,
     },
 
     startup: function () {
-      console.log(this);
+      //console.log(this);
       if(this.currentTrace !== null) {
         this._showAssetHolder({"useType": this.flagUsage});
       } else {
@@ -171,7 +171,8 @@ function (declare,
       var td = query('.simple-table-cell', param.tr)[0];
       var deviceList = this.un.getAGByDevice(this.cmbDomainNetworks);
       var junctionList = this.un.getAGByJunction(this.cmbDomainNetworks);
-      var assetGroupList = deviceList.concat(junctionList);
+      var lineList = this.un.getAGByLine(this.cmbDomainNetworks);
+      var assetGroupList = deviceList.concat(junctionList, lineList);
       var optionList = [];
       //optionList.push({ label: "All Features", value: "All" });
       array.forEach(assetGroupList, lang.hitch(this, function(agl) {
@@ -231,9 +232,7 @@ function (declare,
             });
           }
         }));
-        console.log(this.currentTrace[this.flagTypeAssetHolder]);
         this.currentTrace[this.flagTypeAssetHolder] = assetList;
-        console.log(this.currentTrace[this.flagTypeAssetHolder]);
       }
       return true;
       //emit that config change so it can saved
@@ -270,9 +269,12 @@ function (declare,
     _createAddNewRowButton: function() {
       var table = domConstruct.create("table");
       domConstruct.place(table, this.flagTableHolder);
+      domStyle.set(table, "width", "100%");
       var row = table.insertRow(0);
       var cellDesc = row.insertCell(0);
       var cellAction = row.insertCell(1);
+      domStyle.set(cellAction, "width", "35px");
+      domStyle.set(cellDesc, "width", "95%");
       cellDesc.innerHTML = "Add a "+ this.flagType +": ";
       domClass.add(cellAction, 'addIcon');
       this.own(on(cellAction, "click", lang.hitch(this, function() {

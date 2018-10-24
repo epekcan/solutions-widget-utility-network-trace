@@ -70,18 +70,8 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
       this.setConfig(this.config);
       this.portalConnect();
 
-      //the config object is passed in
-      //this.own(on(this.cmbItems, "change", lang.hitch(this,function(){
-      //  this.listDomainNetworks();
-      //})));
-      //this.own(on(this.cmbDomainNetworks, "change", lang.hitch(this,function(){
-      //  this.listTiers();
-      //})));
-      //this.own(on(this.cmbTiers, "change", lang.hitch(this,this.resetAll)));
-
       this.own(on(this.addUserTraces, "click", lang.hitch(this, function() {
         this.groupNamePopup();
-        //this.addRowUserDefined({"predefined":null});
       })));
 
     },
@@ -91,7 +81,6 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
     },
 
     getConfig: function(){
-      console.log(this.tempTraceConfigs);
       if(this.userDefinedTraces !== null)
       {
         var rows = this.userDefinedTraces.getRows();
@@ -228,7 +217,6 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
       });
       this.un.featureServiceUrl = fsUrl;
       this.un.load().then(lang.hitch(this, function() {
-        console.log(this.un);
         //populate tiers, clear list first
         while (this.cmbDomainNetworks.options.length > 0) this.cmbDomainNetworks.removeOption(this.cmbDomainNetworks.getOptions());
         while (this.cmbTiers.options.length > 0) this.cmbTiers.removeOption(this.cmbTiers.getOptions());
@@ -249,11 +237,6 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
         } else {
             this.cmbDomainNetworks.selectedIndex = -1;
         }
-
-        //this.deleteConfigurationTable(this.userDefinedTraces, this.dynamicUserTraces);
-        //this.deleteConfigurationTable(this.traceTypesTable, this.traceTypesTableHolder);
-
-        //this._createUserDefinedTraceTable();
 
       }));
     },
@@ -370,6 +353,8 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
       this.own(on(userTextbox, "focus", lang.hitch(this, function() {
         this.userDefinedTraces.selectRow(param.tr);
       })));
+
+
     },
     // ******* End user defined group management
     //*****************************************
@@ -508,16 +493,19 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
         buttons: [{
           label: "OK",
           onClick: lang.hitch(this, function () {
-            if(this.userDefinedTraces !== null) {
-              this.addRowUserDefined({"predefined":userTextbox.value});
-              this.storeTempConfig();
-            } else {
-              this._createUserDefinedTraceTable();
-              this._populateRunAmount({"predefined":null});
-              this._wireEventHandlers();
-              this.addRowUserDefined({"predefined":userTextbox.value});
+            var valid = this.verifyUserNameInput(userTextbox.value);
+            if(valid) {
+              if(this.userDefinedTraces !== null) {
+                this.addRowUserDefined({"predefined":userTextbox.value});
+                this.storeTempConfig();
+              } else {
+                this._createUserDefinedTraceTable();
+                this._populateRunAmount({"predefined":null});
+                this._wireEventHandlers();
+                this.addRowUserDefined({"predefined":userTextbox.value});
+              }
+              popup.close();
             }
-            popup.close();
           })
         }, {
           label: "Cancel",
@@ -569,6 +557,16 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
         {label: "Until no results", value: "runTillNoResults"}
       ];
       return userActions;
+    },
+
+    verifyUserNameInput: function(param) {
+      var regex = /^[a-zA-Z ]*$/;
+      if (regex.test(param)) {
+          return true;
+      } else {
+          alert("Only Alphbet Characters and Spaces Only");
+          return false;
+      }
     }
 
 
