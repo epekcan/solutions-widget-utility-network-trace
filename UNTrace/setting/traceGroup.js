@@ -25,23 +25,17 @@ define([
   "dojo/_base/lang",
   "dojo/_base/array",
   "dojo/dom-style",
-  "esri/arcgis/Portal",
-  "./PrivilegeUtil",
-  "./utilitynetwork",
-  "./portal",
   './traceParameters',
   './flagParameters',
   './importUtils',
-  "jimu/tokenUtils",
   'jimu/dijit/SimpleTable',
   'jimu/dijit/Popup',
-  "dijit/form/TextBox",
   "dijit/form/Select",
   "jimu/dijit/ColorPicker"
 ],
 function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, domConstruct, query, lang, array, domStyle,
-  agsPortal, PrivilegeUtil, UtilityNetwork, PortalHelper, traceParameters, flagParameters, importUtils, tokenUtils,
-  SimpleTable, Popup, Textbox, Select, ColorPicker) {
+  traceParameters, flagParameters, importUtils,
+  SimpleTable, Popup, Select, ColorPicker) {
   return declare([BaseWidgetSetting, _TemplatedMixin], {
     templateString: template,
     baseClass: 'jimu-widget-untrace-setting',

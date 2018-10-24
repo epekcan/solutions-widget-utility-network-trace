@@ -6,7 +6,7 @@
   "version": "2.9",
   "wabVersion": "2.9",
   "author": "Esri R&D Center Beijing",
-  "description": "This is the widget used in developer guide",
+  "description": "Widget configures and executes ArcGIS Server Utility Network Management Extension traces",
   "copyright": "",
   "license": "http://www.apache.org/licenses/LICENSE-2.0",
   "properties": {

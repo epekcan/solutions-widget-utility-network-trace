@@ -15,15 +15,9 @@
 ///////////////////////////////////////////////////////////////////////////
 
 define([
-  'esri/request',
-  'esri/geometry/geometryEngine',
-  'dojo/Deferred',
   'dojo/_base/lang',
   'dojo/_base/array'
 ], function (
-  esriRequest,
-  geometryEngine,
-  Deferred,
   lang,
   array
 ) {
