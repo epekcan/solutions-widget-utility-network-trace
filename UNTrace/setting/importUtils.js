@@ -83,6 +83,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, lang, array,
             this.validInput = this.parseIncludes({value: stringSigArr[10], node:"includeStructLineContent"});
             this.validInput = this.parseIncludes({value: stringSigArr[11], node:"includeStructures"});
             this.validInput = this.parseIncludes({value: stringSigArr[12], node:"includeBarriers"});
+            this.validInput = this.parseIncludes({value: stringSigArr[13], node:"validateConsistency"});
           }
           if(this.validInput) {
             this.validInput = this.parseBarriersFilters({value: stringSigArr[14], node:"conditionBarriers"});
@@ -155,10 +156,10 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, lang, array,
     parseIncludes: function(param) {
       param.value = (param.value).trim();
       if(param.value !== "None") {
-          if(param.value.indexOf("INCLUDE") > -1) {
-            this.importTrace.traceConfig[param.node] = true;
-          } else {
+          if(param.value.indexOf("EXCLUDE") > -1 || param.value.indexOf("DO_NOT") > -1) {
             this.importTrace.traceConfig[param.node] = false;
+          } else {
+            this.importTrace.traceConfig[param.node] = true;
           }
         return true;
       } else {
