@@ -90,6 +90,11 @@ function(declare,
       console.log('postCreate');
       this.mapView = this.sceneView;
 
+      //load flag images
+      domAttr.set(this.btnClearTraceLocations, "src", this.folderUrl + "/images/delete.png" );
+      domAttr.set(this.btnStartingPoint, "src", this.folderUrl + "/images/add.png" );
+      domAttr.set(this.btnBarriers, "src", this.folderUrl + "/images/add-barriers-select.png" );
+
       this.un = UtilityNetwork;
       this.token = this.generateToken();
 
@@ -163,6 +168,7 @@ function(declare,
       this.un.token = this.token;
       this.un.featureServiceUrl = this.config.FSurl;
       this.un.emptyTraceConfiguration = this.config.emptyTraceConfiguration;
+      this.un.configuredDomain = this.config.domainNetwork;
       this.un.load().then(lang.hitch(this, function() {
         this.loadGraphicLayer();
         this._populateSubnetWorkDropdown();
@@ -500,7 +506,6 @@ function(declare,
               if (rowsJson.features.length === 0)
                 this.updateStatus("Subnetline feature not found. Please make sure to update all subnetworks to generate subnetline.");
               else {
-                  console.log(rowsJson);
                 let polylineGraphic = this.getGraphic("line", rowsJson.features[0].geometry, this.resultHighlightColor, null, this.activeTraceLocation);
 
                 this.mapView.graphics.add(polylineGraphic);
@@ -518,7 +523,6 @@ function(declare,
         let newStartArr = [];
         let newBarrArr = [];
         for (let f of param.featuresJson.traceResults.elements) {
-          console.log(f);
             if (f.enabled === false) {
                 //console.log("found one element that is disabled " + f.globalId);
                 continue; //if the element is disabled skip it
@@ -744,7 +748,6 @@ function(declare,
     getGraphic: function(type, geometry, color = this.resultHighlightColor, name, flagType) {
       let symbol;
       let geometryObject;
-      console.log(this);
       switch (type) {
           case "point":
               symbol = {

@@ -24,6 +24,7 @@ define([
   mo.featureServiceUrl = null;
   mo.token = null;
   mo.emptyTraceConfiguration = null;
+  mo.configuredDomain = null;
 
   mo.load = function()
   {
@@ -184,7 +185,6 @@ define([
 
             let domainNetworks = this.dataElement.domainNetworks;
             let layerObj = undefined;
-
             for (let i = 0; i < domainNetworks.length; i ++)
             {
                 let domainNetwork = domainNetworks[i];
@@ -230,19 +230,21 @@ define([
                   for (let i = 0; i < domainNetworks.length; i ++)
                   {
                       let domainNetwork = domainNetworks[i];
-
-                      for (let j = 0; j < domainNetwork.junctionSources.length; j ++)
-                          if (domainNetwork.junctionSources[j].utilityNetworkFeatureClassUsageType === utilityNetworkUsageType)
-                              layers.push(domainNetwork.junctionSources[j].layerId);
+                      if(domainNetwork.domainNetworkName === this.configuredDomain) {
+                        for (let j = 0; j < domainNetwork.junctionSources.length; j ++)
+                            if (domainNetwork.junctionSources[j].utilityNetworkFeatureClassUsageType === utilityNetworkUsageType)
+                                layers.push(domainNetwork.junctionSources[j].layerId);
+                      }
                   }
 
                   for (let i = 0; i < domainNetworks.length; i ++)
                   {
                       let domainNetwork = domainNetworks[i];
-
-                      for (let j = 0; j < domainNetwork.edgeSources.length; j ++)
-                          if (domainNetwork.edgeSources[j].utilityNetworkFeatureClassUsageType === utilityNetworkUsageType)
-                              layers.push(domainNetwork.edgeSources[j].layerId)
+                      if(domainNetwork.domainNetworkName === this.configuredDomain) {
+                        for (let j = 0; j < domainNetwork.edgeSources.length; j ++)
+                            if (domainNetwork.edgeSources[j].utilityNetworkFeatureClassUsageType === utilityNetworkUsageType)
+                                layers.push(domainNetwork.edgeSources[j].layerId);
+                      }
                   }
 
                   return layers;
