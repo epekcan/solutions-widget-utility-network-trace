@@ -73,10 +73,10 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, lang, array,
         var stringSigArr = stringSig.split(",");
         if(stringSigArr.length >= 30) {
           //get the trace type part
-          this.validInput = this.parseNode({value: stringSigArr[1], node:"type", preNode:""});
+          this.validInput = this.parseTraceType({value: stringSigArr[1], node:"type", preNode:""});
           //set the target tier
           if(this.validInput) {
-            this.validInput = this.parseNode({value: stringSigArr[6], node:"targetTier", preNode:"traceConfig"});
+            this.validInput = this.parseTier({value: stringSigArr[6], node:"targetTier", preNode:"traceConfig"});
           }
           if(this.validInput) {
             this.validInput = this.parseIncludes({value: stringSigArr[9], node:"includeContainers"});
@@ -116,7 +116,8 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, lang, array,
       }
     },
 
-    parseNode: function(param) {
+    parseTraceType: function(param) {
+      param.value = (param.value).trim();
       if(param.value !== "None") {
         if(param.preNode === "") {
           this.importTrace[param.node] = ((param.value.replace(/"/g, '')).trim()).toLowerCase();
@@ -125,10 +126,34 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, lang, array,
         }
         return true;
       } else {
-        return false;
+        if(param.preNode === "") {
+          this.importTrace[param.node] = "connected";
+        } else {
+          this.importTrace.traceConfig[param.node] = "connected";
+        }
+        return true;
+      }
+    },
+    parseTier: function(param) {
+      param.value = (param.value).trim();
+      if(param.value !== "None") {
+        if(param.preNode === "") {
+          this.importTrace[param.node] = ((param.value.replace(/"/g, '')).trim()).toLowerCase();
+        } else {
+          this.importTrace.traceConfig[param.node] = ((param.value.replace(/"/g, '')).trim()).toLowerCase();
+        }
+        return true;
+      } else {
+        if(param.preNode === "") {
+          this.importTrace[param.node] = "";
+        } else {
+          this.importTrace.traceConfig[param.node] = "";
+        }
+        return true;
       }
     },
     parseIncludes: function(param) {
+      param.value = (param.value).trim();
       if(param.value !== "None") {
           if(param.value.indexOf("INCLUDE") > -1) {
             this.importTrace.traceConfig[param.node] = true;
@@ -137,10 +162,12 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, lang, array,
           }
         return true;
       } else {
+        this.importTrace.traceConfig[param.node] = false;
         return false;
       }
     },
     parseBarriersFilters: function(param) {
+      param.value = (param.value).trim();
       if(param.value !== "None") {
         var cleanStr = (param.value).trim();
         this.importTrace.traceConfig[param.node] = [];
@@ -164,6 +191,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, lang, array,
       }
     },
     parseKNN: function(param) {
+      param.useNearest = (param.useNearest).trim();
       if(param.useNearest !== "None") {
         cleanUseNearest = (param.useNearest.replace(/"/g, "")).trim();
         if(cleanUseNearest !== "DO_NOT_FILTER") {
@@ -184,10 +212,17 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, lang, array,
         }
         return true;
       } else {
+        this.importTrace.traceConfig[param.node] = {
+          "count": -1,
+          "costNetworkAttributeName": "",
+          "nearestCategories": [],
+          "nearestAssets": []
+        };
         return false;
       }
     },
     parseAssetList: function(param) {
+      param.value = (param.value).trim();
       if(param.value !== "None") {
         var assetList = this._createAGATList();
         var cleanStr = (param.value.replace(/["']/g, "")).trim();
@@ -225,7 +260,12 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, lang, array,
         }
         return true;
       } else {
-        return false;
+        if(typeof(param.preNode) !== "undefined") {
+          this.importTrace.traceConfig[param.preNode][param.node] = [];
+        } else {
+          this.importTrace.traceConfig[param.node] = [];
+        }
+        return true;
       }
     },
     //support functions
@@ -251,14 +291,18 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, lang, array,
       });
     },
     handleNamewithSpace: function(param) {
-      var inputArr = param.match(/'([^']+)'/g);
-      if(inputArr !== null) {
-        if(inputArr.length > 0) {
-          for(var i=0;i<inputArr.length;i++) {
-            replaceVal = inputArr[i].replace(/ /g, "$");
-            param = param.replace(inputArr[i], replaceVal);
+      if(param.indexOf("'") > -1) {
+        var inputArr = param.match(/'([^']+)'/g);
+        if(inputArr !== null) {
+          if(inputArr.length > 0) {
+            for(var i=0;i<inputArr.length;i++) {
+              replaceVal = inputArr[i].replace(/ /g, "$");
+              param = param.replace(inputArr[i], replaceVal);
+            }
+            return param;
+          } else {
+            return param;
           }
-          return param;
         } else {
           return param;
         }

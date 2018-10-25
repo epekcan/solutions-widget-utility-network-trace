@@ -405,9 +405,9 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
       }
     },
 
-    deleteUserGroup: function(param) {
-      if(this.tempTraceConfigs.userTraces.hasOwnProperty(param.userDefinedName)) {
-        delete this.tempTraceConfigs.userTraces[param.userDefinedName];
+    deleteUserGroup: function(tr, rowdata) {
+      if(this.tempTraceConfigs.userTraces.hasOwnProperty(rowdata.userDefinedName)) {
+        delete this.tempTraceConfigs.userTraces[rowdata.userDefinedName];
       }
       var rows = this.userDefinedTraces.getRows();
       if (rows.length > 0) {
@@ -461,8 +461,8 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
         this.launchTraceGroup({tr:tr});
       })));
 
-      this.own(on(this.userDefinedTraces, "row-delete", lang.hitch(this, function(tr) {
-        this.deleteUserGroup(tr);
+      this.own(on(this.userDefinedTraces, "row-delete", lang.hitch(this, function(tr, rowdata) {
+        this.deleteUserGroup(tr, rowdata);
       })));
     },
 
