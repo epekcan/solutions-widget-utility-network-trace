@@ -218,6 +218,8 @@ function (declare,
           }
         }));
         this.currentTrace[this.flagTypeAssetHolder] = assetList;
+      } else {
+        this.currentTrace[this.flagTypeAssetHolder] = [];
       }
       return true;
       //emit that config change so it can saved
