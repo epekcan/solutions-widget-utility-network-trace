@@ -445,6 +445,7 @@ function (declare,
               textbox.set("value", param.currValues.value);
             }
           }
+          param.tr.value = textbox;
         }
       } else {
         var domainSelection = new Select().placeAt(td);
