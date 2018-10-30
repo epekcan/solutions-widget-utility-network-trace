@@ -472,6 +472,15 @@ function(declare,
         if(param.traceInfo.traceConfig.nearestNeighbor) {
           configuration.nearestNeighbor = param.traceInfo.traceConfig.nearestNeighbor;
         }
+        if(param.traceInfo.traceConfig.functions) {
+          configuration.functions = param.traceInfo.traceConfig.functions;
+        }
+        if(param.traceInfo.traceConfig.functionBarriers) {
+          configuration.functionBarriers = param.traceInfo.traceConfig.functionBarriers;
+        }
+        if(param.traceInfo.traceConfig.filterFunctionBarriers) {
+          configuration.filterFunctionBarriers = param.traceInfo.traceConfig.filterFunctionBarriers;
+        }
         return configuration;
     },
 

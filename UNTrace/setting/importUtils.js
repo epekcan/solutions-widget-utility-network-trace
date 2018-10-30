@@ -86,13 +86,22 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, lang, array,
             this.validInput = this.parseIncludes({value: stringSigArr[13], node:"validateConsistency"});
           }
           if(this.validInput) {
-            this.validInput = this.parseBarriersFilters({value: stringSigArr[14], node:"conditionBarriers"});
+            this.validInput = this.parseBarriersFiltersFunctions({value: stringSigArr[14], node:"conditionBarriers"});
           }
           if(this.validInput) {
-            this.validInput = this.parseBarriersFilters({value: stringSigArr[17], node:"filterBarriers"});
+            this.validInput = this.parseBarriersFiltersFunctions({value: stringSigArr[15], node:"functionBarriers"});
           }
           if(this.validInput) {
-            this.validInput = this.parseBarriersFilters({value: stringSigArr[29], node:"outputConditions"});
+            this.validInput = this.parseBarriersFiltersFunctions({value: stringSigArr[17], node:"filterBarriers"});
+          }
+          if(this.validInput) {
+            this.validInput = this.parseBarriersFiltersFunctions({value: stringSigArr[18], node:"filterFunctionBarriers"});
+          }
+          if(this.validInput) {
+            this.validInput = this.parseBarriersFiltersFunctions({value: stringSigArr[29], node:"outputConditions"});
+          }
+          if(this.validInput) {
+            this.validInput = this.parseBarriersFiltersFunctions({value: stringSigArr[26], node:"functions"});
           }
           if(this.validInput) {
             this.validInput = this.parseAssetList({value: stringSigArr[28], node:"outputFilters"});
@@ -167,7 +176,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, lang, array,
         return false;
       }
     },
-    parseBarriersFilters: function(param) {
+    parseBarriersFiltersFunctions: function(param) {
       param.value = (param.value).trim();
       if(param.value !== "None") {
         var cleanStr = (param.value).trim();
@@ -178,12 +187,34 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, lang, array,
             objList[i] = this.handleNamewithSpace(objList[i]);
             var objItems = objList[i].split(" "); //after split, the params are separted by a space. split to make them array
             //notice that if isSpecificValue is true, the type is networkAttribute. it's what is sent to rest.
-            this.filterHandler({values: objItems, node:param.node});
+            switch(param.node) {
+              case "functions":
+                this.functionHandler({values: objItems, node:param.node});
+                break;
+              case "functionBarriers":
+              case "filterFunctionBarriers":
+                this.functionBarrierHandler({values: objItems, node:param.node});
+                break;
+              default:
+                this.filterHandler({values: objItems, node:param.node});
+                break;
+            }
           }
         } else {
+          cleanStr = this.handleNamewithSpace(cleanStr);
           var objItems = cleanStr.split(" "); //after split, the params are separted by a space. split to make them array
-          objItems = this.handleNamewithSpace(objItems);
-          this.filterHandler({values: objItems, node:param.node});
+          switch(param.node) {
+            case "functions":
+              this.functionHandler({values: objItems, node:param.node});
+              break;
+            case "functionBarriers":
+            case "filterFunctionBarriers":
+              this.functionBarrierHandler({values: objItems, node:param.node});
+              break;
+            default:
+              this.filterHandler({values: objItems, node:param.node});
+              break;
+          }
         }
         return true;
       } else {
@@ -283,12 +314,52 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, lang, array,
       }
 
       this.importTrace.traceConfig[param.node].push({
-        "name": (param.values[0].replace(/["']/g, "")).replace(/[$]/g, " "),
+        "name": ((param.values[0].replace(/["']/g, "")).replace(/[$]/g, " ")).trim(),
         "type": typeHandler,
         "operator": this._enumMapper(param.values[1]),
         "value": (param.values[3].replace(/["']/g, "")).replace(/[$]/g, " "),
         "combineUsingOr": (param.values[4] === "OR")? true : false,
         "isSpecificValue": (param.values[2] === "SPECIFIC_VALUE")? true : false
+      });
+    },
+    functionHandler: function(param) {
+      var typeHandler = "specificValue";
+      if((param.values[2].replace(/["']/g, "")).replace(/[$]/g, " ") === "Category") {
+        typeHandler = "category";
+      } else {
+        if(param.values[4] === "SPECIFIC_VALUE") {
+          typeHandler = "networkAttribute";
+        } else {
+          typeHandler = this._enumMapper(param.values[2]);
+        }
+      }
+      var functionObj = {
+        "functionType": (((param.values[0].replace(/["']/g, "")).replace(/[$]/g, " ")).trim()).toLowerCase(),
+        "networkAttributeName": ((param.values[1].replace(/["']/g, "")).replace(/[$]/g, " ")).trim(),
+        "summaryAttributeName": "",
+        "conditions": []
+      };
+      if((param.values[2].replace(/["']/g, "")).replace(/[$]/g, " ") !== "None") {
+        var value = ((param.values[5].replace(/["']/g, "")).replace(/[$]/g, " ")).trim();
+        functionObj["conditions"].push({
+          "name": (param.values[2].replace(/["']/g, "")).replace(/[$]/g, " "),
+          "type": typeHandler,
+          "operator": this._enumMapper(param.values[3]),
+          "value": (isNaN(value))? value : Number(value),
+          "combineUsingOr": false,
+          "isSpecificValue": (param.values[4] === "SPECIFIC_VALUE")? true : false
+        });
+      }
+      this.importTrace.traceConfig[param.node].push(functionObj);
+    },
+    functionBarrierHandler: function(param) {
+      var value = ((param.values[3].replace(/["']/g, "")).replace(/[$]/g, " ")).trim();
+      this.importTrace.traceConfig[param.node].push({
+        "functionType": (((param.values[0].replace(/["']/g, "")).replace(/[$]/g, " ")).trim()).toLowerCase(),
+        "networkAttributeName": ((param.values[1].replace(/["']/g, "")).replace(/[$]/g, " ")).trim(),
+        "operator": this._enumMapper(param.values[2]),
+        "value": (isNaN(value))? value : Number(value),
+        "useLocalValues": (param.values[4] === "true" || param.values[4] === true)? true : false
       });
     },
     handleNamewithSpace: function(param) {
