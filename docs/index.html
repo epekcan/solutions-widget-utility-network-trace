@@ -1,0 +1,214 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=utf-8">
+	<STYLE TYPE="text/css">
+	<!--
+		@page { size: 8.5in 11in; margin: 1in }
+		P { margin-bottom: 0.08in; direction: ltr; widows: 2; orphans: 2 }
+		A:link { color: #0563c1; so-language: zxx }
+	-->
+	</STYLE>
+</HEAD>
+<BODY LANG="en-US" LINK="#0563c1" DIR="LTR">
+<P STYLE="margin-bottom: 0.11in"><FONT SIZE=5><B>Configuring the
+ArcGIS Utility Network Management Extension Web AppBuilder widget to
+perform a trace.</B></FONT></P>
+<P STYLE="margin-bottom: 0.11in">This article assumes you have a
+published an utility network in your ArcGIS Enterprise and are
+familiar with <A HREF="https://pro.arcgis.com/en/pro-app/help/data/utility-network/about-tracing-utility-networks.htm">Tracing</A>.</P>
+<P STYLE="margin-bottom: 0.11in">This article assumes you have an
+understanding of setting up ArcGIS Web AppBuilder.</P>
+<P STYLE="margin-bottom: 0.11in"><FONT SIZE=4><B>Getting the widget
+and map ready</B></FONT></P>
+<P STYLE="margin-bottom: 0.11in">In your ArcGIS Enterprise, create a
+webscene and adding a service that represents your utility network
+data.  If you are using the utility network configurations provided
+on solutions.arcgis.com, you would use the Simple Network map
+service. Download ArcGIS Web AppBuilder Developer Edition and add a
+<A HREF="https://developers.arcgis.com/web-appbuilder/guide/deploy-custom-widget-and-theme.htm">custom
+widget</A> or use the ArcGIS Enterprise version of ArcGIS Web
+AppBuilder if you are familiar with how to <A HREF="http://enterprise.arcgis.com/en/portal/latest/use/add-custom-widgets.htm">deploy
+a custom widget</A>.</P>
+<P STYLE="margin-bottom: 0.11in"><BR><BR>
+</P>
+<P STYLE="margin-bottom: 0.11in">Launch Web AppBuilder and create a
+new 3D application.  The widget has been developed using the 4.x api
+which is only available in the 3D applications in Web AppBuilder</P>
+<P STYLE="margin-bottom: 0.11in">Once the settings page is load, go
+to the scene tab.  Choose the webscene that you authored in your
+portal.</P>
+<P STYLE="margin-bottom: 0.11in">Go to the Widget tab and click the
+arrow next to the Header Controller to get to the widget slots. Click
+the empty slot and add the UNTrace widget.</P>
+<P STYLE="margin-bottom: 0.11in"><FONT SIZE=4><B>Configuring the
+UNTrace widget</B></FONT></P>
+<P STYLE="margin-bottom: 0.11in">Hover over the widget icon and click
+on the pencil in the lower right corner of the icon.</P>
+<P STYLE="margin-bottom: 0.11in">A configuration dialogue is
+displayed.  Select the <B>Service</B>, <B>Domain</B>, and <B>Tier</B>
+you want to create.  If your utility network service is not visible,
+ensure it is register as an item in the user you are logged into Web
+AppBuilder with.  
+</P>
+<P STYLE="margin-bottom: 0.11in"><IMG SRC="UNTraceWidgetPrimer_html_323c821f.png" NAME="Picture 1" ALIGN=BOTTOM WIDTH=689 HEIGHT=331 BORDER=0></P>
+<P STYLE="margin-bottom: 0.11in">Click the blue plus circle next to
+<B>User Defined Trace Group</B>.  A prompt will display asking you to
+give this next trace grouping a name.  A trace group allows you to
+preform multiple trace operations with a single click.<BR>After you
+give the group a name, you should see a new row in the table
+underneath User Defined Trace Group.  A default Connected trace is
+added to the configuration panel for new groups.  You can configure
+this trace or delete it.  There is an optional “<B>Run this group”</B>
+parameter on the bottom left side of the configuration panel that
+allows you to run one trace a number of times or until a certain
+condition is reached.</P>
+<P STYLE="margin-bottom: 0.11in"><IMG SRC="UNTraceWidgetPrimer_html_45a95a8f.png" NAME="Picture 18" ALIGN=BOTTOM WIDTH=685 HEIGHT=311 BORDER=0></P>
+<P STYLE="margin-bottom: 0.11in">The trace configuration panel allows
+you to control the inputs, the output colors and the trace
+parameters.  Currently the widget support four trace types,
+connected, upstream, downstream, and subnetwork.  For the Start
+Locations(flags) and Barriers you can select to use the values
+defined by the user(<B>Use Existing</B>) or load them from a previous
+trace(<B>Replace All With</B>, <B>Add/Remove from Existing)</B> in
+the same group.  You can define the trace parameters manually by
+opening the trace parameter button using the pencil icon in the
+actions or click the import button in the top right to load a python
+snippet. 
+</P>
+<P STYLE="margin-bottom: 0.11in">For the remainder of the overview,
+an isolation trace for a water network will be used to review the
+steps required to set up the widget.</P>
+<P STYLE="margin-bottom: 0.11in">Set the type of trace to an <B>Upstream</B>
+and leave the defaults of <B>Use Existing</B> for both Start
+Locations and Barriers.</P>
+<P STYLE="margin-bottom: 0.11in">Hover over the <B>Actions</B> column
+and click on the <B>pencil</B> icon. This will launch the trace
+configuration dialog.  You do not need to configure any of these
+settings to make a trace run, these setting further refine the
+traversability or output of the trace.</P>
+<P STYLE="margin-bottom: 0.11in"><IMG SRC="UNTraceWidgetPrimer_html_19f2d163.png" NAME="Picture 3" ALIGN=BOTTOM WIDTH=624 HEIGHT=259 BORDER=0></P>
+<P STYLE="margin-bottom: 0.11in"><B>Include parameters</B> define
+whether you want your result set to include containers, content,
+barriers and validate the consistency of the network.  Check all the
+checkboxes except Validate Consistency.</P>
+<P STYLE="margin-bottom: 0.11in"><IMG SRC="UNTraceWidgetPrimer_html_800ed3ca.png" NAME="Picture 2" ALIGN=BOTTOM WIDTH=811 HEIGHT=152 BORDER=0></P>
+<P STYLE="margin-bottom: 0.11in"><B>Condition Barriers</B> filters
+the traversability and stops a trace once the conditions are met. For
+this example, add two clauses.  For the clauses, fill them out
+accordingly.</P>
+<P STYLE="margin-bottom: 0.11in"><B>Name</B>: Pipe Device
+Status<BR><B>Operator</B>: Is equal to<BR><B>Type</B>: Specific
+value<BR><B>Value</B>: Closed<BR><B>Combine</B> <B>Using</B>: Or</P>
+<P STYLE="margin-bottom: 0.11in"><B>Name</B>: Lifecyle
+Status<BR><B>Operator</B>: Does not include any<BR><B>Type</B>:
+Specific value<BR><B>Value</B>: In Service and To Be Retired<BR><B>Combine</B>
+<B>Using</B>: And</P>
+<P STYLE="margin-bottom: 0.11in">Once completed, this section should
+look like the following.</P>
+<P STYLE="margin-bottom: 0.11in"><IMG SRC="UNTraceWidgetPrimer_html_43bf80c.png" NAME="Picture 6" ALIGN=BOTTOM WIDTH=624 HEIGHT=108 BORDER=0></P>
+<P STYLE="margin-bottom: 0.11in"><B>Filter Barriers</B> specifies
+when the trace should stop based on the valid paths found using the
+condition barriers.  For this example, we want to stop at devices
+categorizes as isolating.  Define a filter barrier and fill it out
+accordingly.</P>
+<P STYLE="margin-bottom: 0.11in"><B>Name</B>: Category<BR><B>Operator</B>:
+is equal to<BR><B>Type</B>: Specific value<BR><B>Value</B>:
+Isolating<BR><B>Combine</B> <B>Using</B>: Or</P>
+<P STYLE="margin-bottom: 0.11in">Once completed, Filter Barriers
+section should look like below.<BR><IMG SRC="UNTraceWidgetPrimer_html_c140c0f9.png" NAME="Picture 16" ALIGN=BOTTOM WIDTH=794 HEIGHT=111 BORDER=0></P>
+<P STYLE="margin-bottom: 0.11in"><B>Nearest Neighbor</B> returns a
+number of features of a certain type within a given distance by using
+the k-nearest neighbors algorithm. In this example, do not define
+anything for this section.</P>
+<P STYLE="margin-bottom: 0.11in"><B>Output Filters</B> and <B>Output
+Condition</B> filter the data included in the results.  <B>Output
+Filters</B> allow you to define by Asset Group or Asset Type where
+<B>Output Condition</B> allow you to filter the results by a category
+or network attribute.  For this example, you will not define any
+<B>Output Filters</B>, and define one <B>Output Condition</B></P>
+<P STYLE="margin-bottom: 0.11in"><B>Name</B>: Category<BR><B>Operator</B>:
+is equal to<BR><B>Type</B>: Specific value<BR><B>Value</B>:
+Isolating<BR><B>Combine</B> <B>Using</B>: And</P>
+<P STYLE="margin-bottom: 0.11in">Output condition should look like
+the following once completed.<BR><IMG SRC="UNTraceWidgetPrimer_html_60bdc10d.png" NAME="Picture 17" ALIGN=BOTTOM WIDTH=799 HEIGHT=107 BORDER=0></P>
+<P STYLE="margin-bottom: 0.11in">Once all these parameters are set,
+press <B>OK</B> in the dialog to close save and close the dialog.</P>
+<P STYLE="margin-bottom: 0.11in">The first trace has been configured
+and is ready to run.  This will trace the network and return to you
+all valve upstream from a leak location.  To get a list of affected
+customers, walk through the next section to add a second trace to the
+group.</P>
+<P STYLE="margin-bottom: 0.11in">Instead of stepping through the
+configuration for this trace, you the import feature of this widget
+we be highlighted.  The import feature can take a python trace result
+in your ArcGIS Pro geoprocessing history and fill out all the
+parameters automatically for you.</P>
+<P STYLE="margin-bottom: 0.11in">To get to the python result in
+ArcGIS Pro, open the Trace Geoprocessing tools, fill out the
+parameters and run a trace.  After it has completed, click on the
+<B>Analysis</B> tab on the top ribbon.  Click on <B>History</B>.<BR><IMG SRC="UNTraceWidgetPrimer_html_539c300a.png" NAME="Picture 10" ALIGN=BOTTOM WIDTH=361 HEIGHT=104 BORDER=0></P>
+<P STYLE="margin-bottom: 0.11in">You will be presented with a list of
+all your geoprocessing tools that have been ran. <B>Right click a
+trace</B> and select<B> Copy Python Command</B>.  This will copy the
+python signature into your clipboard.  For purposes of this example,
+the python code is provided below.</P>
+<P STYLE="margin-bottom: 0.11in">Go back to ArcGIS Web AppBuilder and
+your widget configuration. On the right side of the <B>Traces in the
+Group </B>section, click on the <B>square with down arrow</B>.  This
+will open up the import dialog.  Paste the python code into the
+dialog.<BR><B>arcpy.un.Trace(&quot;L950Water_Utility_Network Utility
+Network&quot;, &quot;CONNECTED&quot;, r&quot;UN_Temp_Starting_Points&quot;,
+r&quot; UN_Temp_Barriers&quot;, &quot;Water&quot;, &quot;System&quot;,
+None, None, None, &quot;INCLUDE_CONTAINERS&quot;, &quot;INCLUDE_CONTENT&quot;,
+&quot;INCLUDE_STRUCTURES&quot;, &quot;INCLUDE_BARRIERS&quot;,
+&quot;DO_NOT_VALIDATE_CONSISTENCY&quot;, &quot;'Pipe Device Status'
+IS_EQUAL_TO SPECIFIC_VALUE 0 OR;'Lifecycle Status'
+DOES_NOT_INCLUDE_ANY SPECIFIC_VALUE 24 #&quot;, None,
+&quot;BOTH_JUNCTIONS_AND_EDGES&quot;, None, None,
+&quot;BOTH_JUNCTIONS_AND_EDGES&quot;, None, &quot;DO_NOT_FILTER&quot;,
+None, None, None, None, None, None, &quot;'Water Device/Service
+Connection/Commercial';'Water Device/Service Connection/Fire';'Water
+Device/Service Connection/Fire';'Water Device/Service
+Connection/Industrial';'Water Device/Service
+Connection/Irrigation';'Water Device/Service
+Connection/Residential'&quot;, None)</B></P>
+<P STYLE="margin-bottom: 0.11in">Press <B>Ok</B>.  If the python code
+is not valid you will get an import warning.  If it Imports
+successfully, the dialog will close and you will see 2 traces in the
+group now. 
+</P>
+<P STYLE="margin-bottom: 0.11in">Change the <B>color</B> for the
+result of each of the traces.  Your configuration should look like
+below.<BR><IMG SRC="UNTraceWidgetPrimer_html_9de5e954.png" NAME="Picture 12" ALIGN=BOTTOM WIDTH=624 HEIGHT=137 BORDER=0></P>
+<P STYLE="margin-bottom: 0.11in">One last step is to tie the 2 traces
+together.  The result of the Upstream trace will need to be Barriers
+for the Connected trace to confine the trace area to determine which
+service connections will be impacted.</P>
+<P STYLE="margin-bottom: 0.11in">On the <B>Connected</B> trace row,
+in the <B>Barriers</B> column, select <B>Replace all with</B>.  You
+will see a new section appear to show you with asset types to replace
+the existing barriers. If it is not visible, ensure the row is
+selected.  Add the controllable valves as shown in the image..  The
+final configuration of the widget should look like below.</P>
+<P STYLE="margin-bottom: 0.11in"><IMG SRC="UNTraceWidgetPrimer_html_19cd78cf.png" NAME="Picture 20" ALIGN=BOTTOM WIDTH=629 HEIGHT=267 BORDER=0></P>
+<P STYLE="margin-bottom: 0.11in">Press <B>OK</B> to save the
+configuration of the widget.</P>
+<P STYLE="margin-bottom: 0.11in"><FONT SIZE=4><B>Run the Widget and
+Execute the Trace.</B></FONT></P>
+<P STYLE="margin-bottom: 0.11in">Launch Web AppBuilder.  Once the
+application loads, click on the Trace Widget icon on the top right
+side of the application. The widget will load.<BR><IMG SRC="UNTraceWidgetPrimer_html_365f42da.png" NAME="Picture 21" ALIGN=BOTTOM WIDTH=369 HEIGHT=243 BORDER=0></P>
+<P STYLE="margin-bottom: 0.11in">Click on the <B>starting location
+icon</B> (pin) and click on any asset on the map. This is represent a
+leak or broken device.  Click on the <B>Isolation</B> button on the
+widget.  This will execute the trace and show the <B>controllerable
+system valves</B> in orange and the impacted <B>service connections</B>
+in red. Your trace result will look like the image below.</P>
+<P STYLE="margin-bottom: 0.11in"><A NAME="_GoBack"></A><IMG SRC="UNTraceWidgetPrimer_html_1ecfe64b.png" NAME="Picture 4" ALIGN=BOTTOM WIDTH=813 HEIGHT=476 BORDER=0></P>
+<P STYLE="margin-bottom: 0.11in">This article showed you how to setup
+your ArcGIS Web AppBuilder environment to use a custom widget to
+perform a trace against the ArcGIS Server Utility Network Management
+Extension.</P>
+</BODY>
+</HTML>
