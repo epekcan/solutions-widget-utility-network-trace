@@ -398,7 +398,7 @@ function(declare,
               var traceObj = this.un.upstreamTrace(this.traceLocationsParam, this.config.domainNetwork, this.config.tier, "", configuration);
               break;
             case 'downstream':
-              var traceObj = this.un.downstream(this.traceLocationsParam, this.config.domainNetwork, this.config.tier, "", configuration);
+              var traceObj = this.un.downstreamTrace(this.traceLocationsParam, this.config.domainNetwork, this.config.tier, "", configuration);
               break;
             case 'subnetwork':
               if (this.cmbSubnetworks.options[this.cmbSubnetworks.selectedIndex] != undefined) {
