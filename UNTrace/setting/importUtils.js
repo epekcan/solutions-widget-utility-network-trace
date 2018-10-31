@@ -302,7 +302,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, lang, array,
     },
     //support functions
     filterHandler: function(param) {
-      var typeHandler = "specificValue";
+      var typeHandler = "networkAttribute";
       if((param.values[0].replace(/["']/g, "")).replace(/[$]/g, " ") === "Category") {
         typeHandler = "category";
       } else {
@@ -323,14 +323,14 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, lang, array,
       });
     },
     functionHandler: function(param) {
-      var typeHandler = "specificValue";
+      var typeHandler = "networkAttribute";
       if((param.values[2].replace(/["']/g, "")).replace(/[$]/g, " ") === "Category") {
         typeHandler = "category";
       } else {
         if(param.values[4] === "SPECIFIC_VALUE") {
           typeHandler = "networkAttribute";
         } else {
-          typeHandler = this._enumMapper(param.values[2]);
+          typeHandler = this._enumMapper(param.values[4]);
         }
       }
       var functionObj = {
