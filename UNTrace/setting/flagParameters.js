@@ -95,7 +95,11 @@ function (declare,
           this._createFlagTable();
           if(this.currentTrace[this.flagTypeAssetHolder].length > 0) {
             array.forEach(this.currentTrace[this.flagTypeAssetHolder], lang.hitch(this, function(asset) {
-              this.flagTableAddRow({"predefined":asset.assetGroupCode + ":" + asset.assetTypeCode + ":" + asset.layerId + ":" + asset.networkSourceId});
+              if(this.parent === "flags") {
+                this.flagTableAddRow({"predefined":asset.assetGroupCode + ":" + asset.assetTypeCode + ":" + asset.layerId});
+              } else {
+                this.flagTableAddRow({"predefined":asset.assetGroupCode + ":" + asset.assetTypeCode + ":" + asset.networkSourceId});
+              }
             }));
           } else {
             if(this.addRowOnNew) {
@@ -168,12 +172,21 @@ function (declare,
         agl.assetGroup.sort((a,b) => (a.assetGroupName > b.assetGroupName) ? 1 : ((b.assetGroupName > a.assetGroupName) ? -1 : 0));
         array.forEach(agl.assetGroup, lang.hitch(this, function(ag) {
           array.forEach(ag.assetTypes, lang.hitch(this, function(at) {
-            optionList.push({
-              label: ag.assetGroupName + " - " + at.assetTypeName,
-              value: ag.assetGroupCode + ":" + at.assetTypeCode + ":" + agl.layerId + ":" + agl.sourceId,
-              layerId: agl.layerId,
-              sourceId: agl.sourceId
-            });
+            if(this.parent === "flags") {
+              optionList.push({
+                label: ag.assetGroupName + " - " + at.assetTypeName,
+                value: ag.assetGroupCode + ":" + at.assetTypeCode + ":" + agl.layerId,
+                layerId: agl.layerId,
+                sourceId: agl.sourceId
+              });
+            } else {
+              optionList.push({
+                label: ag.assetGroupName + " - " + at.assetTypeName,
+                value: ag.assetGroupCode + ":" + at.assetTypeCode + ":" + agl.sourceId,
+                layerId: agl.layerId,
+                sourceId: agl.sourceId
+              });
+            }
           }));
         }));
       }));
@@ -185,6 +198,7 @@ function (declare,
       selectionBox.startup();
 
       if(rowData.hiddenValue !== null) {
+        console.log(rowData.hiddenValue);
         selectionBox.set("value", rowData.hiddenValue);
       }
 
@@ -212,15 +226,13 @@ function (declare,
             assetList.push({
               "assetGroupCode": splitAGAT[0],
               "assetTypeCode": splitAGAT[1],
-              "layerId": splitAGAT[2],
-              "networkSourceId": splitAGAT[3]
+              "layerId": splitAGAT[2]
             });
           } else {
             assetList.push({
               "assetGroupCode": splitAGAT[0],
               "assetTypeCode": splitAGAT[1],
-              "layerId": splitAGAT[2],
-              "networkSourceId": splitAGAT[3]
+              "networkSourceId": splitAGAT[2]
             });
           }
         }));

@@ -239,6 +239,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, domConstruct
           flagtype: "Start",
           flagUsage: "useAsStart",
           assetHolder: "startLocationLayers",
+          parent: "flags"
         },this.traceTypesStartFlagHolder);
       })));
     },
@@ -265,6 +266,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, domConstruct
           flagtype: "Barrier",
           flagUsage: "useAsBarrier",
           assetHolder: "barriersLayers",
+          parent: "flags"
         },this.traceTypesBarrierFlagHolder);
       })));
 
