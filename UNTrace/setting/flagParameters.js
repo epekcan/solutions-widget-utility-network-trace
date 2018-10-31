@@ -95,7 +95,7 @@ function (declare,
           this._createFlagTable();
           if(this.currentTrace[this.flagTypeAssetHolder].length > 0) {
             array.forEach(this.currentTrace[this.flagTypeAssetHolder], lang.hitch(this, function(asset) {
-              this.flagTableAddRow({"predefined":asset.assetGroupCode + ":" + asset.assetTypeCode});
+              this.flagTableAddRow({"predefined":asset.assetGroupCode + ":" + asset.assetTypeCode + ":" + asset.layerId + ":" + asset.networkSourceId});
             }));
           } else {
             if(this.addRowOnNew) {
@@ -142,6 +142,10 @@ function (declare,
         this._createAGATList({tr:tr});
         this.storeTempConfig();
       })));
+
+      this.own(on(this.flagTable, "row-delete", lang.hitch(this, function(tr) {
+        this.storeTempConfig();
+      })));
     },
 
     flagTableAddRow: function(param) {
@@ -166,7 +170,7 @@ function (declare,
           array.forEach(ag.assetTypes, lang.hitch(this, function(at) {
             optionList.push({
               label: ag.assetGroupName + " - " + at.assetTypeName,
-              value: ag.assetGroupCode + ":" + at.assetTypeCode,
+              value: ag.assetGroupCode + ":" + at.assetTypeCode + ":" + agl.layerId + ":" + agl.sourceId,
               layerId: agl.layerId,
               sourceId: agl.sourceId
             });
@@ -204,16 +208,19 @@ function (declare,
             if (row.flags.options[i].selected) {indx = i;}
           }
           if(this.parent === "flags") {
+            //row.flags.options[indx].layerId
             assetList.push({
               "assetGroupCode": splitAGAT[0],
               "assetTypeCode": splitAGAT[1],
-              "layerId": row.flags.options[indx].layerId
+              "layerId": splitAGAT[2],
+              "networkSourceId": splitAGAT[3]
             });
           } else {
             assetList.push({
               "assetGroupCode": splitAGAT[0],
               "assetTypeCode": splitAGAT[1],
-              "networkSourceId": row.flags.options[indx].sourceId
+              "layerId": splitAGAT[2],
+              "networkSourceId": splitAGAT[3]
             });
           }
         }));

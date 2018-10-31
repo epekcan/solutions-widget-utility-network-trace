@@ -390,6 +390,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, domConstruct
         }).placeAt(holder)
       } else {
         currentTrace[param.flagUsage] = (this.interactionList())[0].value;
+        currentTrace[param.assetHolder] = [];
         domConstruct.empty(holder);
       }
     },
