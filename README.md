@@ -2,6 +2,9 @@ solutions-widget-utility-network-trace
 
 A widget to perform tracing for the ArcGIS Utility Network Management Extension
 
+Read a step by step primer [here](https://esri.github.io/solutions-widget-utility-network-trace/)
+
+
 ## Features
 * An ArcGIS Web AppBuilder Widget
 * Configure a trace in the web without the need for ArcGIS Pro
