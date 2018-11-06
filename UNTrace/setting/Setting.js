@@ -122,6 +122,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
         on(this.portal, "load", lang.hitch(this, function() {
           var currUser = cred.getUser().username;
           var params = {
+            token: this.token,
             q:'owner:' + currUser,
             num:100
           };

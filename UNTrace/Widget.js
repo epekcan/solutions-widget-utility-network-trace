@@ -220,7 +220,7 @@ function(declare,
       query.outSpatialReference = { wkid: 102100 };
       query.returnGeometry = true;
       query.outFields = [ "*" ];
-      query.distance = 2;
+      query.distance = 0.2;// previous 2 returned too much features
       query.geometry = event;
       fl.queryFeatures(query).then(lang.hitch(this, function(hitResults){
           console.log(hitResults.features);  // prints the array of features to the console
