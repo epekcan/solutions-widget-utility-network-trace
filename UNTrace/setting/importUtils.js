@@ -33,9 +33,9 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, lang, array,
     un: null,
     cmbDomainNetworks: null,
     domainValueListHelper: [],
-    importTrace: {
+    traceTemplate: {
       "type": "",
-      "traceID": ((new Date()).getTime()).toString(),
+      "traceID": 0,
       "useAsStart": "useExisting",
       "useAsBarrier": "useExisting",
       "startLocationLayers": [],
@@ -48,6 +48,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, lang, array,
       },
       "traceConfig":{}
     },
+    importTrace: null,
     textInput: null,
     validInput: true,
 
@@ -60,6 +61,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, lang, array,
       this.textInput.startup();
 
       this.own(on(this.textInput, "change", lang.hitch(this, function(val) {
+        this.importTrace = lang.clone(this.traceTemplate);
         this.validateString({pycode: val});
       })));
     },
@@ -134,6 +136,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, lang, array,
         } else {
           this.importTrace.traceConfig[param.node] = ((param.value.replace(/"/g, '')).trim()).toLowerCase();
         }
+        this.importTrace["traceID"] = ((new Date()).getTime()).toString();
         return true;
       } else {
         if(param.preNode === "") {
@@ -141,6 +144,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, lang, array,
         } else {
           this.importTrace.traceConfig[param.node] = "connected";
         }
+        this.importTrace["traceID"] = ((new Date()).getTime()).toString();
         return true;
       }
     },
