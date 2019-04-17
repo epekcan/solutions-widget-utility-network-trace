@@ -160,6 +160,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
               });
               this.un.featureServiceUrl = fsUrl;
               //this.cmbItems.emit("change", this.cmbItems);
+              this.own(on(this.cmbItems, "change", lang.hitch(this,this.listDomainNetworks)));
               this.listDomainNetworks(this.cmbItems.value);
             }
 
@@ -270,7 +271,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
         this.cmbTiers.selectedIndex = -1;
       }
 
-      this.own(on(this.cmbItems, "change", lang.hitch(this,this.listDomainNetworks)));
+      //this.own(on(this.cmbItems, "change", lang.hitch(this,this.listDomainNetworks)));
       this.own(on(this.cmbDomainNetworks, "change", lang.hitch(this,this.listTiers)));
 
       this.deleteConfigurationTable(this.userDefinedTraces, this.dynamicUserTraces);
