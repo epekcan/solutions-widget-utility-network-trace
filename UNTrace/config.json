@@ -1,7 +1,7 @@
 {
   "service":null,
-  "domainNetwork": null,
-  "tier": null,
+  "domainNetwork": "Water",
+  "tier": "System",
   "subnetLineLayer": 666,
   "UNLayerId": 666,
   "FSurl": null,
@@ -26,6 +26,7 @@
       "includeStructures":false,
       "includeBarriers":true,
       "validateConsistency":false,
+      "includeIsolated": false,
       "domainNetworkName":"",
       "tierName":"",
       "targetTierName":"",
