@@ -196,9 +196,36 @@ function (declare,
                 }
               }));
             }));
+            t.validDevices.map(lang.hitch(this, function(vd){
+              vd.assetTypes.map(lang.hitch(this, function(at){
+                var currVal = vd.assetGroupCode + ":" + at.assetTypeCode + ":" + vd.layerId;
+                var check = optionList.find(lang.hitch(this, function(ol) {
+                  return this._checkDupe(ol, currVal);
+                }));
+                if(typeof(check) === "undefined") {
+                  if(this.parent === "flags") {
+                    optionList.push({
+                      label: vd.assetGroupName + " - " + at.assetTypeName,
+                      value: vd.assetGroupCode + ":" + at.assetTypeCode + ":" + vd.layerId,
+                      layerId: vd.layerId,
+                      sourceId: vd.sourceId
+                    });
+                  } else {
+                    optionList.push({
+                      label: vd.assetGroupName + " - " + at.assetTypeName,
+                      value: vd.assetGroupCode + ":" + at.assetTypeCode + ":" + vd.sourceId,
+                      layerId: vd.layerId,
+                      sourceId: vd.sourceId
+                    });
+                  }
+                }
+              }));
+            }));
           }));
         }));
       }
+
+      optionList.sort(this._compare("label"));
 
       var selectionBox = new Select({
         options: optionList,
@@ -280,6 +307,17 @@ function (declare,
       })));
     },
 
+    _compare: function(prop) {
+      return function(a,b) {
+        let comparison = 0;
+        if (a[prop] > b[prop]) {
+          comparison = 1;
+        } else if (a[prop] < b[prop]) {
+          comparison = -1;
+        }
+        return comparison;
+      }
+    },
 
     destroy: function () {
     }
