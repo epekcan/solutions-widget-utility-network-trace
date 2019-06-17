@@ -131,7 +131,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, domConstruct
         type: 'actions',
         width: '75px',
         'class': 'actions',
-        actions: ['up','down','delete']//'up','down',
+        actions: ['delete']//'up','down',
       }];
       var args = {
         fields: fields,

@@ -225,7 +225,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, registry, on, Deferred, do
         title: "Actions",
         type: 'actions',
         'class': 'actions',
-        actions: ['up','down','delete']//'up','down',
+        actions: ['delete']//'up','down',
       }];
       var args = {
         fields: fields,
