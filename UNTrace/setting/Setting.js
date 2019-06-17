@@ -142,43 +142,6 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, registry, on, Deferred, do
       return tokenTool.getPortalCredential(this.appConfig.portalUrl).token;
     },
 
-    /*
-    portalConnect: async function() {
-
-      var cred = new PrivilegeUtil(this.appConfig.portalUrl);
-      await cred.loadPrivileges(this.appConfig.portalUrl).then(lang.hitch(this, function() {
-        this.portal = new agsPortal.Portal(this.appConfig.portalUrl);
-        on(this.portal, "load", lang.hitch(this, function() {
-          var currUser = cred.getUser().username;
-          var params = {
-            token: this.token,
-            q:'owner:' + currUser,
-            num:100
-          };
-          var portalItemCount = 0;
-          this.portal.queryItems(params).then(lang.hitch(this, function(results){
-            var defList = [];
-            var resultDef = new Deferred();
-            array.forEach(results.results, lang.hitch(this, function(a) {
-              if (a.type === "Feature Service") {
-                defList.push(this.requestData({method: 'POST', url: a.url+"/queryDataElements", params: {f : "json", token: this.token}}));
-              }
-            }));
-            all(defList).then(lang.hitch(this, function (allResult) {
-              this.unItems = allResult.filter(function(ar) {
-                return (!ar.hasOwnProperty("error"));
-              });
-              console.log(this.unItems);
-              resultDef.resolve(true);
-            }));
-            return resultDef.promise;
-          }));
-        }));
-      }));
-    },
-    */
-
-
     _listDefaultDomainNetworks: function(params) {
       var optionChoice = [];
       params.domainNetworks.forEach(lang.hitch(this, function(domainNetwork) {
@@ -417,6 +380,15 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, registry, on, Deferred, do
         this.launchTraceGroup({tr:tr});
       })));
 
+      this.own(on(this.userDefinedTraces, "row-down", lang.hitch(this, function(tr) {
+        this.reorderTraceGroup();
+        this.storeTempConfig();
+      })));
+      this.own(on(this.userDefinedTraces, "row-up", lang.hitch(this, function(tr) {
+        this.reorderTraceGroup();
+        this.storeTempConfig();
+      })));
+
       this.own(on(this.userDefinedTraces, "row-delete", lang.hitch(this, function(tr, rowdata) {
         this.deleteUserGroup(tr, rowdata);
       })));
@@ -515,8 +487,6 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, registry, on, Deferred, do
       });
     },
 
-
-    //support functions
     groupNamePopup: function() {
       var dom = domConstruct.create("div");
       var userTextbox = new Textbox({
@@ -540,14 +510,18 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, registry, on, Deferred, do
         buttons: [{
           label: "OK",
           onClick: lang.hitch(this, function () {
-            var valid = this.verifyUserNameInput(userTextbox.value);
-            if(valid) {
-              if(this.userDefinedTraces !== null) {
-                this.addRowUserDefined({"predefined":userTextbox.value});
-                //this._populateRunAmount({"predefined":null});
-                this.storeTempConfig();
+            if(userTextbox.value !== "") {
+              var valid = this.verifyUserNameInput(userTextbox.value);
+              if(valid) {
+                if(this.userDefinedTraces !== null) {
+                  this.addRowUserDefined({"predefined":userTextbox.value});
+                  //this._populateRunAmount({"predefined":null});
+                  this.storeTempConfig();
+                }
+                popup.close();
               }
-              popup.close();
+            } else {
+              alert("Provide a name for this group");
             }
           })
         }, {
@@ -560,31 +534,22 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, registry, on, Deferred, do
       });
     },
 
-    /*
-    pullDomainValueList: async function() {
-      this.domainValueListHelper = [];
-      this.un.token = this.token;
-      var dupeFlag = false;
-      await this.un.getDeviceInfo().then(lang.hitch(this,function(devInf) {
-        array.forEach(devInf, lang.hitch(this, function(info) {
-          array.forEach(info.dataElement.fields.fieldArray, lang.hitch(this, function(fieldObj) {
-            dupeFlag = false;
-            if(typeof(fieldObj.domain) !== "undefined") {
-              for (var i = 0; i < this.domainValueListHelper.length; i++) {
-                if (this.domainValueListHelper[i]["domainName"] === fieldObj.domain.domainName) {
-                    dupeFlag = true;
-                }
-              }
-              if(!dupeFlag) {
-                this.domainValueListHelper.push(fieldObj.domain);
-              }
-            }
-          }));
+    reorderTraceGroup: function(param) {
+      console.log("here");
+      var newState = {}
+      var rows = this.userDefinedTraces.getRows();
+      if (rows.length > 0) {
+        rows.map(lang.hitch(this, function(row,i) {
+          var td = this.userDefinedTraces.getRowData(row);
+          if(this.tempTraceConfigs["userTraces"].hasOwnProperty(td.userDefinedName)) {
+            newState[td.userDefinedName] = this.tempTraceConfigs.userTraces[td.userDefinedName];
+          }
         }));
-      }));
+      }
+      this.tempTraceConfigs["userTraces"] = newState;
     },
-    */
 
+    //support functions
     interactionList: function() {
       var userActions = [
         {label: "Use Existing", value: "useExisting"},
