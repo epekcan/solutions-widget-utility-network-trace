@@ -39,6 +39,7 @@ define([
   "esri/Color",
   'jimu/tokenUtils',
   'jimu/CSVUtils',
+  'jimu/MapManager',
   "./utilitynetwork",
   'dijit/form/TextBox',
   'dijit/form/Select'
@@ -67,6 +68,7 @@ function(declare,
   Color,
   tokenUtils,
   CSVUtils,
+  MapManager,
   UtilityNetwork
 ) {
   //To create a widget, you need to derive from BaseWidget.
@@ -378,6 +380,7 @@ function(declare,
                       }
 
                       console.log(this.map.graphics.graphics);
+                      this.enableWebMapPopup();
                     //this.map.graphics.add(this.getGraphic(g.geometry.type, g.geometry, color, rowTraceLocation.globalId, this.activeTraceLocation, false));
                     //    }));
                 })
@@ -914,6 +917,7 @@ function(declare,
     //************ HANDLE DRAWING FUNCTIONS */
     enableCreateDrawing: function() {
       if(this.selectionMode !== "none") {
+        this.disableWebMapPopup();
         var newDraw = new Draw(this.map);
         if(this.selectionMode === "point") {
           newDraw.activate(Draw.POINT);
@@ -1068,15 +1072,27 @@ function(declare,
       return result;
     },
 
+    disableWebMapPopup: function () {
+      var mapManager = MapManager.getInstance();
+      mapManager.disableWebMapPopup();
+    },
+    enableWebMapPopup: function () {
+      var mapManager = MapManager.getInstance();
+      mapManager.enableWebMapPopup();
+    },
+
+
     onOpen: function(){
       console.log('onOpen');
     },
 
     onClose: function(){
+      this.enableWebMapPopup();
       console.log('onClose');
     },
 
     onMinimize: function(){
+      this.enableWebMapPopup();
       console.log('onMinimize');
     },
 
