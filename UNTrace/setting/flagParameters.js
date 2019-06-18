@@ -164,38 +164,26 @@ function (declare,
       var td = query('.simple-table-cell', param.tr)[0];
       var optionList = [];
 
-      var justCommod = this.validAssets.filter(function(va) {
-        return va.domain !== "Structure";
-      });
+      var justCommod = this.validAssets.filter(lang.hitch(this, function(va) {
+        if(this.currentTrace.traceConfig.domainNetwork !== "") {
+          return va.domain.toLowerCase() === this.currentTrace.traceConfig.domainNetwork.toLowerCase();
+        } else {
+          return va.domain !== "Structure";
+        }
+      }));
 
       if(justCommod.length > 0) {
+        var justTiers = justCommod[0].tiers.filter(lang.hitch(this, function(t) {
+          if(this.currentTrace.traceConfig.tier !== "") {
+            return t.tier.toLowerCase() === this.currentTrace.traceConfig.tier.toLowerCase();
+          }
+        }));
+        if(justTiers.length > 0) {
+          justCommod[0].tiers = justTiers;
+        }
+
         justCommod.map(lang.hitch(this, function(jc) {
           jc.tiers.map(lang.hitch(this, function(t) {
-            t.validDevices.map(lang.hitch(this, function(vd){
-              vd.assetTypes.map(lang.hitch(this, function(at){
-                var currVal = vd.assetGroupCode + ":" + at.assetTypeCode + ":" + vd.layerId;
-                var check = optionList.find(lang.hitch(this, function(ol) {
-                  return this._checkDupe(ol, currVal);
-                }));
-                if(typeof(check) === "undefined") {
-                  if(this.parent === "flags") {
-                    optionList.push({
-                      label: vd.assetGroupName + " - " + at.assetTypeName,
-                      value: vd.assetGroupCode + ":" + at.assetTypeCode + ":" + vd.layerId,
-                      layerId: vd.layerId,
-                      sourceId: vd.sourceId
-                    });
-                  } else {
-                    optionList.push({
-                      label: vd.assetGroupName + " - " + at.assetTypeName,
-                      value: vd.assetGroupCode + ":" + at.assetTypeCode + ":" + vd.sourceId,
-                      layerId: vd.layerId,
-                      sourceId: vd.sourceId
-                    });
-                  }
-                }
-              }));
-            }));
             t.validDevices.map(lang.hitch(this, function(vd){
               vd.assetTypes.map(lang.hitch(this, function(at){
                 var currVal = vd.assetGroupCode + ":" + at.assetTypeCode + ":" + vd.layerId;
