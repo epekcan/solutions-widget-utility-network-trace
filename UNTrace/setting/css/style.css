@@ -1,3 +1,8 @@
+.rootClass {
+  height: 100%;
+  width: 100%
+}
+
 .jimu-widget-untrace-setting input{
   margin-left: 10px;
 }
@@ -7,32 +12,21 @@
   margin-left: auto;
   margin-right: auto;
   width: 100%;
-  padding-bottom: 10px;
   position: absolute;
   left: 0px;
-  top: 0px;
+  bottom: 50;
 }
 
 .userTraceBlock {
   display: block;
-  margin-left: auto;
-  margin-right: auto;
-  width: 35%;
-  padding-bottom: 10px;
-  position: absolute;
-  left: 0px;
-  top: 100px;
+  width: 40%;
+  float: left;
 }
 
 .traceTypeBlock {
   display: block;
-  margin-left: auto;
-  margin-right: auto;
-  width: 64%;
-  padding-bottom: 10px;
-  position: absolute;
-  right: 0px;
-  top: 100px;
+  width: 59%;
+  float: right;
 }
 
 .traceConfigBlock {
@@ -200,4 +194,13 @@
   width: 100%;
   height: 30px;
   background-color: #efefef;
+}
+
+.defaultBlock {
+  position: absolute;
+  bottom: 0px;
+}
+
+.rowLabel {
+  display: inline;
 }

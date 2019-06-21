@@ -2,36 +2,44 @@ solutions-widget-utility-network-trace
 
 A widget to perform tracing for the ArcGIS Utility Network Management Extension
 
-Read a step by step primer [here](https://esri.github.io/solutions-widget-utility-network-trace/)
-
-
 ## Features
 * An ArcGIS Web AppBuilder Widget
-* Configure a trace in the web without the need for ArcGIS Pro
-* Ability to combine a series a traces into a single workflor
+* Ability to combine a series a traces into a single workflow
 * Import trace ArcPy command into the configuration
 
 ## Requirements
 1. A published ArcGIS Utility Network Management feature service
-2. A map service of the above to use in ArcGIS Web Appbuilder for visualization. (Web Scene does not support UN Feature Layers as of 8/30/18)
-3. Developed for ArcGIS Web AppBuilder, use 3D layout to deploy
+2. A map with atleast 1 layer that participates in the Utility Network
+3. Developed for ArcGIS Web AppBuilder, use 2D layout to deploy
 
 ## Instructions
-1. Create a map with the UN map service.
-2. Download ArcGIS Web AppBuilder Dev Edition
-3. Download this widget and add it to `<location of WAB dev edition download>/client/stemapp3d/widgets`
+1. Create a map with atleast 1 layer that participates in the Utility Network.
+2. Download ArcGIS Web AppBuilder Dev Edition (optionally run as a custom widget in ArcGis Enterprise)
+3. Download this widget and add it to `<location of WAB dev edition download>/client/stemapp/widgets`
 4. Register WAB dev ed to your organization
 5. Create and app, select the map you created.
 6. Add and configure the UNTrace widget.
 
+## Configuration
+1. Click the circle plus icon next to "User Defined Trace Group" and give your trace a name.
+2. On the right side, click the icon with the square arrow with up arrow. This will let you import an ArcPy command signature.
+* Sample ArcPy Command
+```
+arcpy.un.Trace("L950Water_Utility_Network Utility Network", "ISOLATION", r"C:\Users\Documents\ArcGIS\Projects\UN Trace\UN Trace.gdb\UN_Temp_Starting_Points", r"C:\Users\Documents\ArcGIS\Projects\UN Trace\UN Trace.gdb\UN_Temp_Barriers", "Water", "System", None, None, None, "INCLUDE_CONTAINERS", "EXCLUDE_CONTENT", "INCLUDE_STRUCTURES", "INCLUDE_BARRIERS", "DO_NOT_VALIDATE_CONSISTENCY", "'Pipe Device Status' IS_EQUAL_TO SPECIFIC_VALUE 0 OR;'Lifecycle Status' DOES_NOT_INCLUDE_ANY SPECIFIC_VALUE 24 #", None, "BOTH_JUNCTIONS_AND_EDGES", "Category IS_EQUAL_TO SPECIFIC_VALUE Disconnecting OR;Category IS_EQUAL_TO SPECIFIC_VALUE Isolating OR;Category IS_EQUAL_TO SPECIFIC_VALUE Protective #", None, "BOTH_JUNCTIONS_AND_EDGES", None, "DO_NOT_FILTER", None, None, None, None, None, None, None, None, "INCLUDE_ISOLATED_FEATURES")
+```
+3. After import you will see your trace added.  Add any many traces into this group as needed.
+4. You can chain traces within your group together by defining the starting and barriers flags for each trace.  The type of asset you choose to set as start/barrier will be selected from the results of the previous trace.
+5. Click "OK" to save your configuration.
+
 ## Usage
 1. Launch the configuration application
-2. Click the trace widget to open it in the panel
-3. Click the starting point icon (marker icon) and click an asset on the map
-4. Click on the trace button with your named traced to run the trace
+2. Click the UNTrace widget to open it in the panel
+3. Select the trace you wish to run from the dropdown
+4. Click the starting point icon (flag icon) and click an asset on the map
+5. Click on the run button (traingle icon) to run the trace
+6. Once finish you should see the trace highlight on the map with the status "Done" on the bottom of the widget
 
-NOTE: The widget looks for the Utility Network Feature Service, not the map service.  map service is purely for visualization.
-Works on ES6 and greater supported browsers
+NOTE: Works on ES6 and greater supported browsers
 
 ## Issues
 
@@ -42,7 +50,7 @@ Find a bug or want to request a new feature?  Please let us know by submitting a
 Esri welcomes contributions from anyone and everyone. Please see our [guidelines for contributing](https://github.com/esri/contributing).
 
 ## Licensing
-Copyright 2018 Esri
+Copyright 2019 Esri
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

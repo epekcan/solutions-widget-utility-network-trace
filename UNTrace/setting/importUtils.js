@@ -51,6 +51,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, lang, array,
     importTrace: null,
     textInput: null,
     validInput: true,
+    validAssets: [],
 
     postCreate: function(){
       this.textInput = new SimpleTextarea({
@@ -76,8 +77,11 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, lang, array,
         if(stringSigArr.length >= 30) {
           //get the trace type part
           this.validInput = this.parseTraceType({value: stringSigArr[1], node:"type", preNode:""});
+          this.validInput = this.parseTraceType({value: stringSigArr[1], node:"type", preNode:"traceConfig"});
           //set the target tier
           if(this.validInput) {
+            this.validInput = this.parseTier({value: stringSigArr[4], node:"domainNetwork", preNode:"traceConfig"});
+            this.validInput = this.parseTier({value: stringSigArr[5], node:"tier", preNode:"traceConfig"});
             this.validInput = this.parseTier({value: stringSigArr[6], node:"targetTier", preNode:"traceConfig"});
           }
           if(this.validInput) {
@@ -86,6 +90,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, lang, array,
             this.validInput = this.parseIncludes({value: stringSigArr[11], node:"includeStructures"});
             this.validInput = this.parseIncludes({value: stringSigArr[12], node:"includeBarriers"});
             this.validInput = this.parseIncludes({value: stringSigArr[13], node:"validateConsistency"});
+            this.validInput = this.parseIncludes({value: stringSigArr[30], node:"includeIsolated"});
           }
           if(this.validInput) {
             this.validInput = this.parseBarriersFiltersFunctions({value: stringSigArr[14], node:"conditionBarriers"});
@@ -106,9 +111,6 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, lang, array,
             this.validInput = this.parseBarriersFiltersFunctions({value: stringSigArr[26], node:"functions"});
           }
           if(this.validInput) {
-            this.validInput = this.parseAssetList({value: stringSigArr[28], node:"outputFilters"});
-          }
-          if(this.validInput) {
             this.validInput = this.parseKNN({
               useNearest: stringSigArr[21],
               count: stringSigArr[22],
@@ -117,6 +119,9 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, lang, array,
               nearestAssets: stringSigArr[25],
               node:"nearestNeighbor"
             });
+          }
+          if(this.validInput) {
+            this.validInput = this.parseAssetList({value: stringSigArr[28], node:"outputFilters"});
           }
         } else {
           this.validInput = false;
@@ -270,9 +275,9 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, lang, array,
             for(var z=0;z<assetList.length;z++) {
               if(assetList[z].assetGroupName === obj[1] && assetList[z].assetTypeName === obj[2]) {
                 importList.push({
-                  "assetGroupCode": assetList[z].assetGroupCode,
-                  "assetTypeCode": assetList[z].assetTypeCode,
-                  "networkSourceId": assetList[z].networkSourceId
+                  "assetGroupCode": parseInt(assetList[z].assetGroupCode),
+                  "assetTypeCode": parseInt(assetList[z].assetTypeCode),
+                  "networkSourceId": parseInt(assetList[z].networkSourceId)
                 });
               }
             }
@@ -282,9 +287,9 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, lang, array,
           for(var z=0;z<assetList.length;z++) {
             if(assetList[z].assetGroupName === obj[1] && assetList[z].assetTypeName === obj[2]) {
               importList.push({
-                "assetGroupCode": assetList[z].assetGroupCode,
-                "assetTypeCode": assetList[z].assetTypeCode,
-                "networkSourceId": assetList[z].networkSourceId
+                "assetGroupCode": parseInt(assetList[z].assetGroupCode),
+                "assetTypeCode": parseInt(assetList[z].assetTypeCode),
+                "networkSourceId": parseInt(assetList[z].networkSourceId)
               });
             }
           }
@@ -316,12 +321,12 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, lang, array,
           typeHandler = this._enumMapper(param.values[2]);
         }
       }
-
+      var value = (param.values[3].replace(/["']/g, "")).replace(/[$]/g, " ");
       this.importTrace.traceConfig[param.node].push({
         "name": ((param.values[0].replace(/["']/g, "")).replace(/[$]/g, " ")).trim(),
         "type": typeHandler,
         "operator": this._enumMapper(param.values[1]),
-        "value": (param.values[3].replace(/["']/g, "")).replace(/[$]/g, " "),
+        "value": (isNaN(value))? value : Number(value),
         "combineUsingOr": (param.values[4] === "OR")? true : false,
         "isSpecificValue": (param.values[2] === "SPECIFIC_VALUE")? true : false
       });
@@ -387,26 +392,30 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, lang, array,
       }
     },
     _createAGATList: function() {
-      var deviceList = this.un.getAGByDevice(this.cmbDomainNetworks);
-      var junctionList = this.un.getAGByJunction(this.cmbDomainNetworks);
-      var lineList = this.un.getAGByLine(this.cmbDomainNetworks);
-      var assetGroupList = deviceList.concat(junctionList, lineList);
       var assetList = [];
-      array.forEach(assetGroupList, lang.hitch(this, function(agl) {
-        agl.assetGroup.sort((a,b) => (a.assetGroupName > b.assetGroupName) ? 1 : ((b.assetGroupName > a.assetGroupName) ? -1 : 0));
-        array.forEach(agl.assetGroup, lang.hitch(this, function(ag) {
-          array.forEach(ag.assetTypes, lang.hitch(this, function(at) {
-            assetList.push({
-              "assetGroupCode": ag.assetGroupCode,
-              "assetGroupName": ag.assetGroupName,
-              "assetTypeCode": at.assetTypeCode,
-              "assetTypeName": at.assetTypeName,
-              "networkSourceId": agl.sourceId,
-              "layerId": agl.layerId
-            });
+
+      var justCommod = this.validAssets.filter(function(va) {
+        return va.domain !== "Structure";
+      });
+
+      if(justCommod.length > 0) {
+        justCommod.map(lang.hitch(this, function(jc) {
+          jc.tiers.map(lang.hitch(this, function(t) {
+            t.validDevices.map(lang.hitch(this, function(vd){
+              vd.assetTypes.map(lang.hitch(this, function(at){
+                assetList.push({
+                  "assetGroupCode": vd.assetGroupCode,
+                  "assetGroupName": vd.assetGroupName,
+                  "assetTypeCode": at.assetTypeCode,
+                  "assetTypeName": at.assetTypeName,
+                  "networkSourceId": vd.sourceId,
+                  "layerId": vd.layerId
+                });
+              }));
+            }));
           }));
         }));
-      }));
+      }
       return assetList;
     },
     _enumMapper: function(param) {

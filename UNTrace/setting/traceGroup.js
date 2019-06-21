@@ -42,7 +42,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, domConstruct
     nls: null,
     token : null,
     un: null,
-    cmbDomainNetworks: null,
+    dataElements: null,
     domainValueListHelper: [],
     tempTraceConfigs: null,
     traceConfigParameter: null,
@@ -50,19 +50,22 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, domConstruct
     startFlagHandler: null,
     barrierFlagHandler: null,
     existingValues: null,
+    validAssets: null,
     defaultColor: [0,0,255,0.7],
 
     postCreate: function(){
       console.log(this);
       this._createTraceTypeTable();
 
-      this.own(on(this.addTraceType, "click", lang.hitch(this, function() {
-        this.addRowTraceType({"predefined":null});
-      })));
+      //this.own(on(this.addTraceType, "click", lang.hitch(this, function() {
+      //  this.addRowTraceType({"predefined":null});
+      //})));
 
       this.own(on(this.importTrace, "click", lang.hitch(this, function() {
         this.launchImportUtils({"predefined":null});
       })));
+
+      this.validAssets = this.getValidAssets();
 
       this._initialize();
 
@@ -80,10 +83,10 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, domConstruct
             this.addRowTraceType({"predefined":trace});
           }));
         } else {
-          this.addRowTraceType({"predefined":null});
+          //this.addRowTraceType({"predefined":null});
         }
       } else {
-        this.addRowTraceType({"predefined":null});
+        //this.addRowTraceType({"predefined":null});
       }
 
       //this.storeTempConfig();
@@ -128,7 +131,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, domConstruct
         type: 'actions',
         width: '75px',
         'class': 'actions',
-        actions: ['edit','up','down','delete']//'up','down',
+        actions: ['delete']//'up','down',
       }];
       var args = {
         fields: fields,
@@ -165,6 +168,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, domConstruct
       this._addTraceStartSelection({"tr":addRowResult.tr, "predefined":param.predefined});
       this._addTraceBarrierSelection({"tr":addRowResult.tr, "predefined":param.predefined});
       this.traceTypesTable.selectRow(addRowResult.tr);
+      //this.getValidAssets({"tr":addRowResult.tr, "predefined":param.predefined});
 
       var deleteBtn = query(".jimu-icon-delete", addRowResult.tr);
       if(deleteBtn.length > 0) {
@@ -193,27 +197,10 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, domConstruct
 
     _addTraceTypeSelection: function(param) {
       var td = query('.simple-table-cell', param.tr)[1];
-      var selectionBox = new Select({
-        options: [
-            { label: "Connected", value: "connected" },
-            { label: "Downstream", value: "downstream" },
-            { label: "Subnetwork", value: "subnetwork" },
-            { label: "Upstream", value: "upstream" }
-        ]
-      });
-      selectionBox.placeAt(td);
-      selectionBox.startup();
-      param.tr.traceType = selectionBox;
-
       if(param.predefined !== null) {
-        selectionBox.set("value", param.predefined.type);
-        param.tr.traceType.value = param.predefined.type;
+        td.innerHTML = param.predefined.type;
+        param.tr.traceType = param.predefined.type;
       }
-
-      this.own(on(selectionBox, "change", lang.hitch(this, function(val) {
-        this.traceTypesTable.selectRow(param.tr);
-        //this.traceConfigParameter.storeTempConfig();
-      })));
 
     },
 
@@ -233,6 +220,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, domConstruct
       }
 
       this.own(on(selectionBox, "change", lang.hitch(this, function(val) {
+        this.traceTypesTable.selectRow(param.tr);
         this.launchFlagParameters({
           val:val,
           tr: param.tr,
@@ -260,6 +248,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, domConstruct
       }
 
       this.own(on(selectionBox, "change", lang.hitch(this, function(val) {
+        this.traceTypesTable.selectRow(param.tr);
         this.launchFlagParameters({
           val:val,
           tr: param.tr,
@@ -296,7 +285,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, domConstruct
         array.forEach(this.existingValues.traces, lang.hitch(this, function(trace) {
           //var rowData = this.traceTypesTable.getRowData(tr);
           if(selectedRowMatch.rowID === trace.traceID) {
-              trace["type"] = row.traceType.value;
+              trace["type"] = row.traceType;
               trace["traceID"] = selectedRowMatch.rowID;
               trace["useAsStart"] = row.useAsStart.value;
               trace["useAsBarrier"] = row.useAsBarrier.value;
@@ -306,7 +295,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, domConstruct
         }));
         if(!match) {
           var obj = {
-            "type": row.traceType.value,
+            "type": row.traceType,
             "traceID": selectedRowMatch.rowID,
             "useAsStart": row.useAsStart.value,
             "useAsBarrier": row.useAsBarrier.value,
@@ -318,7 +307,8 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, domConstruct
               "includeStructLineContent": true,
               "includeStructures": true,
               "includeBarriers": true,
-              "validateConsistency": true,
+              "validateConsistency": false,
+              "includeIsolated": false,
               "conditionBarriers": [],
               "filterBarriers": [],
               "outputConditions": [],
@@ -361,6 +351,8 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, domConstruct
       if(rows.length > 0) {
         this.traceTypesTable.selectRow(rows[rows.length-1]);
       } else {
+        domConstruct.empty(this.traceTypesStartFlagHolder);
+        domConstruct.empty(this.traceTypesBarrierFlagHolder);
         this.storeTempConfig();
       }
     },
@@ -382,13 +374,14 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, domConstruct
         new flagParameters({
           nls: this.nls,
           un: this.un,
-          cmbDomainNetworks: this.cmbDomainNetworks,
+          dataElements: this.dataElements,
           existingValues: currentTrace,
           flagTypeAssetHolder: param.assetHolder,
           flagType: param.flagtype,
           flagUsage: currentTrace[param.flagUsage],
           flagTableHolder: holder,
-          parent: param.parent
+          parent: param.parent,
+          validAssets: this.validAssets
         }).placeAt(holder)
       } else {
         currentTrace[param.flagUsage] = (this.interactionList())[0].value;
@@ -403,7 +396,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, domConstruct
       var traceConfig = new traceParameters({
         nls: this.nls,
         un: this.un,
-        cmbDomainNetworks: this.cmbDomainNetworks,
+        dataElements: dataElements,
         domainValueListHelper: this.domainValueListHelper,
         existingValues: currentTrace
       });
@@ -435,9 +428,10 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, domConstruct
       var importConfig = new importUtils({
         nls: this.nls,
         un: this.un,
-        cmbDomainNetworks: this.cmbDomainNetworks,
+        dataElements: this.dataElements,
         domainValueListHelper: this.domainValueListHelper,
-        existingValues: this.existingValues
+        existingValues: this.existingValues,
+        validAssets: this.validAssets
       });
       var popup = new Popup({
         width: 850,
@@ -452,6 +446,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, domConstruct
           onClick: lang.hitch(this, function () {
             if(importConfig.validInput) {
               this.traceTypesTable.clear();
+              console.log(this.existingValues);
               this.existingValues.traces.push(importConfig.importTrace);
               this._initialize();
               popup.close();
@@ -502,6 +497,56 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, domConstruct
     //*************************
 
     //support functions
+    getValidAssets: function() {
+      //gets all valid assets so they can be used for starts and barriers
+      var validAssets = [];
+        var de = this.dataElements.layerDataElements[0].dataElement;
+        de.domainNetworks.map(lang.hitch(this, function(dn){
+          console.log(dn);
+          var obj = {
+            domain: dn.domainNetworkName,
+            tiers: []
+          };
+          if(dn.tiers.length > 0) {
+            //if there are tiers, get the valid assets from them
+            dn.tiers.map(lang.hitch(this, function(t) {
+              var tierObj = {
+                tier: t.name,
+                validDevices: []
+              };
+
+              t.validDevices.map(lang.hitch(this, function(vd) {
+                var matchList = this._matchAG(vd, dn.junctionSources);
+                if(matchList.length > 0) {
+                  matchList.map(function(ml) {
+                    tierObj.validDevices.push(ml);
+                  });
+                }
+              }));
+              obj.tiers.push(tierObj);
+            }));
+          }
+          validAssets.push(obj);
+        }));
+      console.log(validAssets);
+      return validAssets;
+    },
+
+    _matchAG: function(device, source) {
+      var filtered = [];
+      source.map(function(src) {
+        var list = src.assetGroups.filter(function(s_ag) {
+          s_ag["layerId"] = src.layerId;
+          s_ag["sourceId"] = src.sourceId;
+          return(parseInt(s_ag.assetGroupCode) === parseInt(device.assetGroupCode));
+        });
+        if(list.length > 0) {
+          filtered.push(list[0]);
+        }
+      });
+      return filtered;
+    },
+
     getCorrectTrace: function(param) {
       var currTrace = "";
       var rowData = this.traceTypesTable.getSelectedRowData(param.tr);
@@ -511,29 +556,6 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, domConstruct
         }
       }));
       return currTrace;
-    },
-
-    pullDomainValueList: async function() {
-      this.domainValueListHelper = [];
-      this.un.token = this.token;
-      var dupeFlag = false;
-      await this.un.getDeviceInfo().then(lang.hitch(this,function(devInf) {
-        array.forEach(devInf, lang.hitch(this, function(info) {
-          array.forEach(info.dataElement.fields.fieldArray, lang.hitch(this, function(fieldObj) {
-            dupeFlag = false;
-            if(typeof(fieldObj.domain) !== "undefined") {
-              for (var i = 0; i < this.domainValueListHelper.length; i++) {
-                if (this.domainValueListHelper[i]["domainName"] === fieldObj.domain.domainName) {
-                    dupeFlag = true;
-                }
-              }
-              if(!dupeFlag) {
-                this.domainValueListHelper.push(fieldObj.domain);
-              }
-            }
-          }));
-        }));
-      }));
     },
 
     interactionList: function() {
@@ -555,6 +577,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, domConstruct
       return userActions;
     }
 
+    //******** UN connection Info */
 
 
   });

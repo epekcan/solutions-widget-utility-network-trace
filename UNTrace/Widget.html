@@ -7,64 +7,62 @@
 			<div id="content">
 					<div id="tools">
 						<div class="inner">
-              <div class="rowLabel">FLAGS & BARRIERS:</div>
-							<div class="btnFlags">
-                <table width="100%">
-                  <tr>
-                  <td class="flagCell">
-                      <img src="widgets/untrace/images/delete.png"  data-dojo-attach-point="btnClearTraceLocations" class="button_nonactive" alt="Clear" width="32" height="32">
-                      <img src="widgets/untrace/images/add.png" data-dojo-attach-point="btnStartingPoint" class="button_nonactive" alt="Starting Points" width="32" height="32">
-                      <img src="widgets/untrace/images/add-barriers-select.png" data-dojo-attach-point="btnBarriers" class="button_nonactive" alt="Barriers" width="32" height="32">
-                  </td>
-                  <td class="drawCell">
-                    <div class="drawIconGroup">
-                    <button class="action-button esri-icon-blank-map-pin" data-dojo-attach-point="btnPoint" id="pointButton" type="button" title="Draw point"></button>
-                    <button class="action-button esri-icon-polygon" data-dojo-attach-point="btnPolygon" id="polygonButton" type="button" title="Draw polygon"></button>
-                    </div>
-                  </td>
-                  </tr>
-                </table>
+              <div class="rowLabel">TRACES:</div>
+              <div data-dojo-attach-point="customTracesHolder">
+                  <select name="cmbUserTraces" class="subnetTrace" data-dojo-attach-point="cmbUserTraces" data-dojo-type="dijit/form/Select"></select>
               </div>
-              <div class="traceLocations">
-                <table id='traceLocations'></table>
+              <div style="height:10px;"></div>
+              <div data-dojo-attach-point="flagsBlock" style="display:none">
+                  <div class="btnFlags">
+                    <table width="100%">
+                      <tr>
+                      <td class="flagCell">
+                          <div class="rowLabel">FLAGS</div>
+                          <img src="widgets/untrace/images/flag.png" data-dojo-attach-point="btnStartingPoint" class="button_nonactive" alt="Starting Points" width="32" height="32">
+                          <img src="widgets/untrace/images/add-barriers-select.png" data-dojo-attach-point="btnBarriers" class="button_nonactive" alt="Barriers" width="32" height="32">
+                      </td>
+                      <td class="drawCell">
+                        <div class="drawIconGroup">
+                        <div class="rowLabel">SELECTION</div>
+                          <div class="drawButtons">
+                            <img src="widgets/untrace/images/add.png" data-dojo-attach-point="btnPoint" class="button_nonactive" alt="Select a point" width="32" height="32">
+                            <img src="widgets/untrace/images/polygon.png" data-dojo-attach-point="btnPolygon" class="button_nonactive" alt="Select by polygon" width="32" height="32">
+                            <!--
+                          <button class="action-button esri-icon-blank-map-pin" data-dojo-attach-point="btnPoint" id="pointButton" type="button" title="Draw point"></button>
+                          <button class="action-button esri-icon-polygon" data-dojo-attach-point="btnPolygon" id="polygonButton" type="button" title="Draw polygon"></button>
+                            -->
+
+                          </div>
+                        </div>
+                      </td>
+                      <td class="runCell">
+                          <div class="rowLabel">ACTIONS</div>
+                        <div data-dojo-attach-point="runButtonHolder" style="display:none">
+                          <img src="widgets/untrace/images/run.png"  data-dojo-attach-point="btnRun" class="button_nonactive" alt="Run" width="32" height="32">
+                        </div>
+                        <img src="widgets/untrace/images/delete.png"  data-dojo-attach-point="btnClearTraceLocations" class="button_nonactive" alt="Clear" width="32" height="32">
+                      </td>
+                      </tr>
+                    </table>
+                  </div>
+                  <div class="traceLocations">
+                    <hr>
+                    <table id='traceLocations'></table>
+                  </div>
               </div>
+              <!--
 							<div class="rowLabel">SUBNETWORKS:</div>
 							<div class="row30">
 								<select name="cmbSubnetworks" class="subnetTrace" data-dojo-attach-point="cmbSubnetworks" data-dojo-type="dijit/form/Select"></select>
               </div>
-              <div class="rowLabel">CUSTOM TRACES:</div>
-							<div data-dojo-attach-point="customTracesHolder"></div>
-							<!--
-							<div class="rowBtn" data-dojo-attach-point="divTraceConnected">
-								<div data-dojo-attach-point="btnTraceConnected" class="button_nonactive">Connected Trace</div>
-							</div>
-							<div class="rowBtn" data-dojo-attach-point="divTraceUpstream">
-								<div data-dojo-attach-point="btnTraceUpstream" class="button_nonactive">Upstream Trace</div>
-							</div>
-							<div class="rowBtn" data-dojo-attach-point="divTraceDownstream">
-								<div data-dojo-attach-point="btnTraceDownstream" class="button_nonactive">Downstream Trace</div>
-							</div>
-							<div class="rowBtn" data-dojo-attach-point="divTrace">
-								<div data-dojo-attach-point="btnTrace" class="button_nonactive">Subnetwork Trace</div>
-							</div>
-							<div class="rowBtn" data-dojo-attach-point="divTraceIsolation">
-								<div data-dojo-attach-point="btnTraceIsolation" class="button_nonactive">Isolation Trace (Water only)</div>
-							</div>
-							<div class="rowChk" data-dojo-attach-point="divElimitateDevices">
-								<input type='checkbox' id='chkEliminate' style="width: 20px" checked>
-								<label for='chkEliminate'>ELIMINATE EXTRA DEVICES</label>
-							</div>
-							<div class="rowBtn" data-dojo-attach-point="divIslandsTrace">
-								<div data-dojo-attach-point="btnFindIslands" class="button_nonactive">Find Islands Trace</div>
-							</div>
-							-->
-
+              -->
 							<div class="rowChk"></div>
 						</div>
 					</div>
 			</div>
 			<div id="status">
-					<label id='lblStatus'></label>
+        <label id='lblStatus' class="statusLabel"></label>
+        <label id='lblExport' class="exportLabel" data-dojo-attach-point="lblExport" ></label>
 			</div>
 	</div>
 

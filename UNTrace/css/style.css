@@ -182,8 +182,8 @@
 }
 
 .jimu-widget-untrace .btnFlags {
-  height: 32px;
-  line-height: 32px;
+  height: 50px;
+  line-height: 50px;
   margin-top: 0px;
   margin-bottom: 10px;
   box-sizing: border-box;
@@ -261,13 +261,13 @@
 }
 
 .jimu-widget-untrace .action-button {
-  font-size: 16px;
   background-color: transparent;
   border: 1px solid #D3D3D3;
   color: #6e6e6e;
   height: 32px;
   width: 32px;
   text-align: center;
+  background-size: contain;
   box-shadow: 0 0 1px rgba(0, 0, 0, 0.3);
 }
 
@@ -283,13 +283,23 @@
 }
 
 .jimu-widget-untrace .flagCell {
-  width: 50%;
+  width: 33%;
   text-align: left;
   vertical-align: top;
 }
 
 .jimu-widget-untrace .drawCell {
-  width: 50%;
+  width: 33%;
+  vertical-align: top;
+  text-align: center;
+}
+
+.jimu-widget-untrace .drawButtons {
+  padding-top: -25px;
+}
+
+.jimu-widget-untrace .runCell {
+  width: 33%;
   text-align: right;
   vertical-align: top;
 }
@@ -300,5 +310,15 @@
 
 .jimu-widget-untrace .customTraceItem {
   margin-bottom: 10px;
+  cursor: pointer;
+}
+
+.jimu-widget-untrace .statusLabel {
+  float: left;
+}
+
+.jimu-widget-untrace .exportLabel {
+  float: right;
+  color: blue;
   cursor: pointer;
 }
