@@ -36,7 +36,7 @@ function (declare,
     baseClass: 'jimu-widget-UNTrace-setting',
     nls: null,
     un: null,
-    cmbDomainNetworks: null,
+    dataElements: null,
     domainValueListHelper: [],
     existingValues: null,
     flagTable: null,
@@ -47,6 +47,7 @@ function (declare,
     parent: null,
     currentTrace: null,
     addRowOnNew: true,
+    validAssets: null,
 
     constructor: function (/*Object*/args) {
       this.map = args.map;
@@ -59,7 +60,6 @@ function (declare,
 
     postCreate: function () {
       this.inherited(arguments);
-
       switch(this.parent) {
         case "flags":
           this.currentTrace = this.existingValues;
@@ -74,10 +74,10 @@ function (declare,
           this.currentTrace = this.existingValues;
           break;
       }
+      this.startup();
     },
 
     startup: function () {
-      //console.log(this);
       if(this.currentTrace !== null) {
         this._showAssetHolder({"useType": this.flagUsage});
       } else {
@@ -118,7 +118,7 @@ function (declare,
       this._createAddNewRowButton();
       var fields = [{
         name: 'flags',
-        title: "Select your <font weight=bold>"+this.flagType+"</font> Asset Group/Type",
+        title: "Select your <span style='font-weight:bold'>"+this.flagType+"</span> Asset Group/Type",
         type: 'empty',
         'class': 'editable'
       },{
@@ -162,34 +162,59 @@ function (declare,
     _createAGATList: function(param) {
       var rowData = this.flagTable.getRowData(param.tr);
       var td = query('.simple-table-cell', param.tr)[0];
-      var deviceList = this.un.getAGByDevice(this.cmbDomainNetworks);
-      var junctionList = this.un.getAGByJunction(this.cmbDomainNetworks);
-      var lineList = this.un.getAGByLine(this.cmbDomainNetworks);
-      var assetGroupList = deviceList.concat(junctionList, lineList);
       var optionList = [];
-      //optionList.push({ label: "All Features", value: "All" });
-      array.forEach(assetGroupList, lang.hitch(this, function(agl) {
-        agl.assetGroup.sort((a,b) => (a.assetGroupName > b.assetGroupName) ? 1 : ((b.assetGroupName > a.assetGroupName) ? -1 : 0));
-        array.forEach(agl.assetGroup, lang.hitch(this, function(ag) {
-          array.forEach(ag.assetTypes, lang.hitch(this, function(at) {
-            if(this.parent === "flags") {
-              optionList.push({
-                label: ag.assetGroupName + " - " + at.assetTypeName,
-                value: ag.assetGroupCode + ":" + at.assetTypeCode + ":" + agl.layerId,
-                layerId: agl.layerId,
-                sourceId: agl.sourceId
-              });
-            } else {
-              optionList.push({
-                label: ag.assetGroupName + " - " + at.assetTypeName,
-                value: ag.assetGroupCode + ":" + at.assetTypeCode + ":" + agl.sourceId,
-                layerId: agl.layerId,
-                sourceId: agl.sourceId
-              });
-            }
+
+      var justCommod = this.validAssets.filter(lang.hitch(this, function(va) {
+        if(this.currentTrace.traceConfig.domainNetwork !== "") {
+          return va.domain.toLowerCase() === this.currentTrace.traceConfig.domainNetwork.toLowerCase();
+        } else {
+          return va.domain !== "Structure";
+        }
+      }));
+
+      if(justCommod.length > 0) {
+        var justTiers = justCommod[0].tiers.filter(lang.hitch(this, function(t) {
+          if(this.currentTrace.traceConfig.tier !== "") {
+            return t.tier.toLowerCase() === this.currentTrace.traceConfig.tier.toLowerCase();
+          }
+        }));
+        if(justTiers.length > 0) {
+          justCommod[0].tiers = justTiers;
+        }
+
+        justCommod.map(lang.hitch(this, function(jc) {
+          jc.tiers.map(lang.hitch(this, function(t) {
+            t.validDevices.map(lang.hitch(this, function(vd){
+              vd.assetTypes.map(lang.hitch(this, function(at){
+                var currVal = vd.assetGroupCode + ":" + at.assetTypeCode + ":" + vd.layerId;
+                var check = optionList.find(lang.hitch(this, function(ol) {
+                  return this._checkDupe(ol, currVal);
+                }));
+                if(typeof(check) === "undefined") {
+                  if(this.parent === "flags") {
+                    optionList.push({
+                      label: vd.assetGroupName + " - " + at.assetTypeName,
+                      value: vd.assetGroupCode + ":" + at.assetTypeCode + ":" + vd.layerId,
+                      layerId: vd.layerId,
+                      sourceId: vd.sourceId
+                    });
+                  } else {
+                    optionList.push({
+                      label: vd.assetGroupName + " - " + at.assetTypeName,
+                      value: vd.assetGroupCode + ":" + at.assetTypeCode + ":" + vd.sourceId,
+                      layerId: vd.layerId,
+                      sourceId: vd.sourceId
+                    });
+                  }
+                }
+              }));
+            }));
           }));
         }));
-      }));
+      }
+
+      optionList.sort(this._compare("label"));
+
       var selectionBox = new Select({
         options: optionList,
         style: {width: '500px'},
@@ -198,7 +223,6 @@ function (declare,
       selectionBox.startup();
 
       if(rowData.hiddenValue !== null) {
-        console.log(rowData.hiddenValue);
         selectionBox.set("value", rowData.hiddenValue);
       }
 
@@ -209,6 +233,15 @@ function (declare,
 
     },
 
+    _checkDupe: function(item, checkVal) {
+      return item.value === checkVal;
+    },
+
+    _removeDuplicates: function(myArr, prop) {
+      return myArr.filter((obj, pos, arr) => {
+          return arr.map(mapObj => mapObj[prop]).indexOf(obj[prop]) === pos;
+      });
+    },
 
     storeTempConfig: function() {
 
@@ -224,15 +257,15 @@ function (declare,
           if(this.parent === "flags") {
             //row.flags.options[indx].layerId
             assetList.push({
-              "assetGroupCode": splitAGAT[0],
-              "assetTypeCode": splitAGAT[1],
-              "layerId": splitAGAT[2]
+              "assetGroupCode": parseInt(splitAGAT[0]),
+              "assetTypeCode": parseInt(splitAGAT[1]),
+              "layerId": parseInt(splitAGAT[2])
             });
           } else {
             assetList.push({
-              "assetGroupCode": splitAGAT[0],
-              "assetTypeCode": splitAGAT[1],
-              "networkSourceId": splitAGAT[2]
+              "assetGroupCode": parseInt(splitAGAT[0]),
+              "assetTypeCode": parseInt(splitAGAT[1]),
+              "networkSourceId": parseInt(splitAGAT[2])
             });
           }
         }));
@@ -244,32 +277,6 @@ function (declare,
       //emit that config change so it can saved
       //this.emit("config-change", tempSetting);
 
-    },
-
-
-
-    //support functions
-    pullDomainValueList: async function() {
-      this.domainValueListHelper = [];
-      this.un.token = this.token;
-      var dupeFlag = false;
-      await this.un.getDeviceInfo().then(lang.hitch(this,function(devInf) {
-        array.forEach(devInf, lang.hitch(this, function(info) {
-          array.forEach(info.dataElement.fields.fieldArray, lang.hitch(this, function(fieldObj) {
-            dupeFlag = false;
-            if(typeof(fieldObj.domain) !== "undefined") {
-              for (var i = 0; i < this.domainValueListHelper.length; i++) {
-                if (this.domainValueListHelper[i]["domainName"] === fieldObj.domain.domainName) {
-                    dupeFlag = true;
-                }
-              }
-              if(!dupeFlag) {
-                this.domainValueListHelper.push(fieldObj.domain);
-              }
-            }
-          }));
-        }));
-      }));
     },
 
     _createAddNewRowButton: function() {
@@ -288,6 +295,17 @@ function (declare,
       })));
     },
 
+    _compare: function(prop) {
+      return function(a,b) {
+        let comparison = 0;
+        if (a[prop] > b[prop]) {
+          comparison = 1;
+        } else if (a[prop] < b[prop]) {
+          comparison = -1;
+        }
+        return comparison;
+      }
+    },
 
     destroy: function () {
     }

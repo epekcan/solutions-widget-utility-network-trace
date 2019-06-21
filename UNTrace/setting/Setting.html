@@ -1,31 +1,31 @@
-<div>
+<div class="rootClass">
 	<!-- UN feature service -->
   <div id="settings" style='display: block;'>
-    <div class="UNConfigBlock" data-dojo-attach-point="UNConfig"></div>
-    <!--
-		<div class="UNConfigBlock">
-				<div class="rowLabel">SERVICE: <select name="cmbItems" data-dojo-attach-point="cmbItems" data-dojo-type="dijit/form/Select"></select>
-				DOMAIN NETWORKS: <select name="cmbDomainNetworks" data-dojo-attach-point="cmbDomainNetworks" data-dojo-type="dijit/form/Select"></select>
-				TIERS: <select name="cmbTiers" data-dojo-attach-point="cmbTiers" data-dojo-type="dijit/form/Select"></select>
-				</div>
-    </div>
-    -->
 		<div class="userTraceBlock">
 			<div class="traceTypes">
-        <table>
+        <table width="100%">
           <tr>
             <td width="100%"><div class="rowLabel">User Defined Trace Group:</div></td>
             <td><div class="addIcon" data-dojo-attach-point="addUserTraces"></div></td>
           </tr>
         </table>
         <div data-dojo-attach-point="dynamicUserTraces"></div>
-        <br>
-        <div class="rowLabel">Run this group:</div>
-        <div class="runTraceAmountHolder" data-dojo-attach-point="runTraceAmountHolder"></div>
 			</div>
 		</div>
 		<!-- Trace Configs -->
 		<div class="traceTypeBlock" data-dojo-attach-point="traceGroupHolder"></div>
-	</div>
+  </div>
+
+
+  <div class="defaultBlock">
+    <div>Define a default domain network and tier for traces without these parameters</div>
+    <div class="rowLabel"><!--SERVICE: <select name="cmbItems" data-dojo-attach-point="cmbItems" data-dojo-type="dijit/form/Select"></select>-->
+    Domain Networks: <div class="rowLabel" data-dojo-attach-point="domainNetworksSelectHolder"></div>
+    Tiers: <div class="rowLabel" data-dojo-attach-point="tiersSelectHolder"></div>
+    </div>
+  </div>
+
+
+
 
 </div>

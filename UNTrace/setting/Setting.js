@@ -18,30 +18,32 @@ define([
   'dojo/_base/declare',
   'jimu/BaseWidgetSetting',
   'dijit/_TemplatedMixin',
+  "dijit/registry",
   "dojo/on",
+  'dojo/Deferred',
   "dojo/dom-construct",
   "dojo/query",
   "dojo/_base/lang",
   "dojo/_base/array",
+  "dojo/promise/all",
   "esri/arcgis/Portal",
+  "esri/request",
   'jimu/dijit/Popup',
   "./PrivilegeUtil",
   "./utilitynetwork",
-  "./portal",
   './traceGroup',
   "jimu/tokenUtils",
   'jimu/dijit/SimpleTable',
   "dijit/form/TextBox",
   "dijit/form/Select"
 ],
-function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, lang, array,
-  agsPortal, Popup, PrivilegeUtil, UtilityNetwork, PortalHelper, traceGroup, tokenUtils,
+function(declare, BaseWidgetSetting, _TemplatedMixin, registry, on, Deferred, domConstruct, query, lang, array, all,
+  agsPortal, esriRequest, Popup, PrivilegeUtil, UtilityNetwork, traceGroup, tokenUtils,
   SimpleTable, Textbox, Select) {
   return declare([BaseWidgetSetting, _TemplatedMixin], {
     baseClass: 'jimu-widget-untrace-setting',
 
     portal: null,
-    portalHelper: null,
     token : null,
     un: null,
     domainValueListHelper: [],
@@ -49,31 +51,47 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
     traceGroupParameter: null,
     servicesTable: null,
     userDefinedTraces: null,
-    cmbItems: null,
-    cmbDomainNetworks: null,
-    cmbTiers: null,
-
+    unItems: [],
+    unDomainNetworks: [],
+    unTiers: [],
+    unLayerId: null,
+    unLayer: null,
+    unDataElements: null,
     runTraceAmount: null,
+    slDomainNetworks : null,
+    slTiers: null,
 
     postCreate: function(){
 
-      this.portalHelper = PortalHelper;
       this.un = UtilityNetwork;
       this.token = this.generateToken();
+      this.un.token = this.token;
+      //this.portalConnect();
+      this._checkURLLayersForUN().then(lang.hitch(this, function() {
+        //request for dataElements
+        if(this.unLayer !== null) {
+          var strippedURL = this.unLayer.url;
+          var requestURL = strippedURL + "/queryDataElements";
+          this.requestData({method: 'POST', url:requestURL, params: {f : "json", layers:"["+this.unLayerId+"]", token: this.token}}).then(lang.hitch(this, function(result) {
+            this.unDataElements = result;
+            console.log(this.unDataElements);
+            this.tempTraceConfigs = {
+              "userTraces":{}
+            };
+            this.setConfig(this.config);
 
-      this.tempTraceConfigs = {
-        "userTraces":{}
-      };
+            //this.createServiceTable();
+            this._listDefaultDomainNetworks(this.unDataElements.layerDataElements[0].dataElement);
+            this._createUserDefinedTraceTable();
+            this._restoreUserDefinedGroups();
 
-      this.createServiceTable();
+            this.own(on(this.addUserTraces, "click", lang.hitch(this, function() {
+              this.groupNamePopup();
+            })));
+          }));
+        }
 
-      this.setConfig(this.config);
-      this.portalConnect();
-
-      this.own(on(this.addUserTraces, "click", lang.hitch(this, function() {
-        this.groupNamePopup();
-      })));
-
+      }));
     },
 
     setConfig: function(config){
@@ -87,13 +105,23 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
         if (rows.length > 0) {
           //WAB will get config object through this method
           delete this.config.userTraces[""];
-          //this.traceConfigParameter.storeTempConfig();
+          /*
           this.config.service = this.cmbItems.value;
-          this.config.domainNetwork = this.cmbDomainNetworks.value;
           this.config.tier = this.cmbTiers.value;
           this.config.subnetLineLayer = this.un.subnetLineLayerId;
-          this.config.UNLayerId = this.un.layerId;
-          this.config.FSurl = this.un.featureServiceUrl;
+          */
+          this.config.domainNetwork = this.slDomainNetworks.get("value");
+          this.config.tier = this.slTiers.get("value");
+          this.config.UNLayerId = this.unLayerId;
+          this.config.FSurl = this.unLayer.url;
+
+          for(key in this.tempTraceConfigs["userTraces"]) {
+            var curr = this.tempTraceConfigs["userTraces"];
+            if(curr[key].traces.length <= 0) {
+              alert("You need atleast 1 trace within " + key);
+              return false;
+            }
+          }
 
           this.config["userTraces"] = this.tempTraceConfigs["userTraces"];
 
@@ -114,181 +142,64 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
       return tokenTool.getPortalCredential(this.appConfig.portalUrl).token;
     },
 
-    portalConnect: async function() {
-
-      var cred = new PrivilegeUtil(this.appConfig.portalUrl);
-      await cred.loadPrivileges(this.appConfig.portalUrl).then(lang.hitch(this, function() {
-        this.portal = new agsPortal.Portal(this.appConfig.portalUrl);
-        on(this.portal, "load", lang.hitch(this, function() {
-          var currUser = cred.getUser().username;
-          var params = {
-            token: this.token,
-            q:'owner:' + currUser,
-            num:100
+    _listDefaultDomainNetworks: function(params) {
+      var optionChoice = [];
+      params.domainNetworks.forEach(lang.hitch(this, function(domainNetwork) {
+        if(domainNetwork.domainNetworkName !== "Structure") {
+          var obj = {
+            label: domainNetwork.domainNetworkName,
+            value: domainNetwork.domainNetworkName
           };
-          var portalItemCount = 0;
-          this.portal.queryItems(params).then(lang.hitch(this, function(results){
-            array.forEach(results.results, lang.hitch(this, function(a) {
-              if (a.type === "Feature Service") {
-                var listItem = document.createElement("option");
-                listItem.textContent = a.title;
-                listItem.url = a.url;
-                listItem.value = a.title;
-                listItem.id = a.id;
-                if(this.config.service !== null) {
-                  if(this.config.service === a.title) {
-                    listItem.setAttribute("selected", "selected");
-                  }
-                }
-                this.cmbItems.addOption(listItem);
-              }
-            }));
-            if(this.config.service !== null) {
-              this.cmbItems.setAttribute("value", this.config.service);
+          if(this.config.domainNetwork !== null) {
+            if(this.config.domainNetwork === domainNetwork.domainNetworkName) {
+              obj.selected = true;
             }
-
-            if (this.cmbItems.options.length === 0) {
-              this.cmbItems.selectedIndex = -1;
-            } else {
-              this.un = UtilityNetwork;
-              this.un.token = this.token;
-              var fsUrl = "";
-              array.forEach(this.cmbItems.options, function(ops) {
-                if(ops.defaultSelected) {
-                  fsUrl = ops.url;
-                }
-              });
-              this.un.featureServiceUrl = fsUrl;
-              //this.cmbItems.emit("change", this.cmbItems);
-              this.listDomainNetworks(this.cmbItems.value);
-            }
-
-            //this._createUserDefinedTraceTable();
-
-          }));
-        }));
-      }));
-    },
-
-    // Create the table to handle UN service, domain, and tier
-    createServiceTable: function() {
-      var fields = [{
-        name: 'service',
-        title: "Service",
-        type: 'empty',
-        'class': 'editable'
-      },{
-        name: 'domain',
-        title: "Domains",
-        type: 'empty',
-        'class': 'editable'
-      },{
-        name: 'tier',
-        title: "Tiers",
-        type: 'empty',
-        'class': 'editable'
-      }];
-      var args = {
-        fields: fields
-      };
-      this.servicesTable = new SimpleTable(args);
-      this.servicesTable.placeAt(this.UNConfig);
-      this.servicesTable.startup();
-      this.servicesTable.addRow({});
-      var rows = this.servicesTable.getRows()[0];
-      var slService = new Select();
-      this.cmbItems = slService;
-      slService.placeAt(rows.children[0]);
-      var slDomain = new Select();
-      this.cmbDomainNetworks = slDomain;
-      slDomain.placeAt(rows.children[1]);
-      var slTiers = new Select();
-      this.cmbTiers = slTiers;
-      slTiers.placeAt(rows.children[2]);
-    },
-
-    // Query the UN module for list of domains and populate list
-    listDomainNetworks: function(e) {
-      //this.resetAll();
-      var fsUrl = "";
-      array.forEach(this.cmbItems.options, function(ops) {
-        if(ops.value === e) {
-          fsUrl = ops.url;
-        }
-      });
-      this.un.featureServiceUrl = fsUrl;
-      this.un.load().then(lang.hitch(this, function() {
-        //populate tiers, clear list first
-        while (this.cmbDomainNetworks.options.length > 0) this.cmbDomainNetworks.removeOption(this.cmbDomainNetworks.getOptions());
-        while (this.cmbTiers.options.length > 0) this.cmbTiers.removeOption(this.cmbTiers.getOptions());
-        this.un.dataElement.domainNetworks.forEach(domainNetwork => {
-          if(domainNetwork.domainNetworkName !== "Structure") {
-            var dn = document.createElement("option");
-            dn.textContent = domainNetwork.domainNetworkName;
-            this.cmbDomainNetworks.addOption(dn);
           }
-        });
-        if(this.config.domainNetwork !== null) {
-          this.cmbDomainNetworks.setAttribute("value", this.config.domainNetwork);
+          optionChoice.push(obj);
         }
-        if (this.un.dataElement.domainNetworks.length > 1) {
-            this.cmbDomainNetworks.selectedIndex = 1;
-            //this.cmbDomainNetworks.emit("change", this.cmbDomainNetworks);
-            this.listTiers(this.cmbDomainNetworks.value);
-        } else {
-            this.cmbDomainNetworks.selectedIndex = -1;
-        }
-
       }));
+      var selectionBox = new Select({
+        options: optionChoice
+      });
+      selectionBox.placeAt(this.domainNetworksSelectHolder);
+      selectionBox.startup();
+      this.slDomainNetworks = selectionBox;
+
+      this.own(on(this.slDomainNetworks, "change", lang.hitch(this, function() {
+        this._listDefaultTiers(this.slDomainNetworks.get("value"), params.domainNetworks);
+      })));
+
+      this._listDefaultTiers(this.slDomainNetworks.get("value"), params.domainNetworks);
     },
 
-    // Query the UN based on domain to find the tiers.  Once tiers are loaded, load the rest of the config form
-    listTiers: async function(e) {
-      //this.resetAll();
-      while (this.cmbTiers.options.length > 0) this.cmbTiers.removeOption(this.cmbTiers.getOptions());
-     // var selectedDomainNetwork = e.target.options[e.target.selectedIndex].textContent;
-
-      var domainNetwork = this.un.getDomainNetwork(e);
-
-      await this.pullDomainValueList();
-
-      domainNetwork.tiers.forEach(tier => {
-          let tn = document.createElement("option");
-          tn.textContent = tier.name;
-          this.cmbTiers.addOption(tn);
-      });
-      if(this.config.tier !== null) {
-        this.cmbTiers.setAttribute("value", this.config.tier);
-      }
-
-      if (this.cmbTiers.options.length > 1) {
-        let event = new Event('change');
-        this.cmbTiers.selectedIndex = 0;
-        //this.cmbTiers.dispatchEvent(event);
-        this.cmbTiers.emit("change", this.cmbTiers.selectIndex);
-      } else {
-        this.cmbTiers.selectedIndex = -1;
-      }
-
-      this.own(on(this.cmbItems, "change", lang.hitch(this,this.listDomainNetworks)));
-      this.own(on(this.cmbDomainNetworks, "change", lang.hitch(this,this.listTiers)));
-
-      this.deleteConfigurationTable(this.userDefinedTraces, this.dynamicUserTraces);
-      //this.deleteConfigurationTable(this.traceTypesTable, this.traceTypesTableHolder);
-
-      if(Object.keys(this.tempTraceConfigs["userTraces"]).length > 0) {
-        this._createUserDefinedTraceTable();
-        this._restoreUserDefinedGroups();
-        //this._checkGroupForTraces();
-        this._wireEventHandlers();
-
-        var rows = this.userDefinedTraces.getRows();
-        if(rows.length > 0) {
-          this.launchTraceGroup({tr:rows[rows.length-1]});
-        }
+    _listDefaultTiers: function(dnValue, dn) {
+      domConstruct.empty(this.tiersSelectHolder);
+      this.slTiers = null;
+      var validDN = dn.filter(lang.hitch(this, function(d) {
+        return d.domainNetworkName === dnValue;
+      }));
+      if(validDN.length > 0) {
+        var optionChoice = [];
+        validDN[0].tiers.forEach(lang.hitch(this, function(tier) {
+          var obj = {
+            label: tier.name,
+            value: tier.name
+          };
+          if(this.config.tier !== null) {
+            if(this.config.tier === tier.name) {
+              obj.selected = true;
+            }
+          }
+          optionChoice.push(obj);
+        }));
+        var selectionBox = new Select({
+          options: optionChoice
+        });
+        selectionBox.placeAt(this.tiersSelectHolder);
+        selectionBox.startup();
+        this.slTiers = selectionBox;
 
       }
-
 
     },
 
@@ -299,7 +210,14 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
         name: 'userDefinedName',
         title: "Trace Name",
         type: 'text',
-        width: '80%',
+        width: '40%',
+        'class': 'editable'
+      },
+      {
+        name: 'runAmount',
+        title: "Run",
+        type: 'empty',
+        width: '40%',
         'class': 'editable'
       },
       {
@@ -307,7 +225,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
         title: "Actions",
         type: 'actions',
         'class': 'actions',
-        actions: ['up','down','delete']//'up','down',
+        actions: ['delete']//'up','down',
       }];
       var args = {
         fields: fields,
@@ -316,16 +234,16 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
       this.userDefinedTraces = new SimpleTable(args);
       this.userDefinedTraces.placeAt(this.dynamicUserTraces);
       this.userDefinedTraces.startup();
-
+      this._wireEventHandlers();
     },
 
     addRowUserDefined: function(param) {
       var addRowResult = this.userDefinedTraces.addRow({
         userDefinedName: param.predefined
       });
-      //this._addUserTextbox({"tr":addRowResult.tr, "predefined":param.predefined});
+      this._populateRunAmount({"tr":addRowResult.tr, "predefined":param.runAmount});
       this.userDefinedTraces.selectRow(addRowResult.tr);
-
+      this.storeTempConfig();
       return addRowResult;
     },
 
@@ -361,47 +279,49 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
     //*****************************************
     _restoreUserDefinedGroups: function() {
       var existTraceCheck = this.tempTraceConfigs["userTraces"];
-      var newFlag = true;
       for (var key in existTraceCheck) {
         if (existTraceCheck.hasOwnProperty(key)) {
           var obj = {};
           obj[key] = existTraceCheck[key];
-          this.addRowUserDefined({"predefined":key});
-          this._populateRunAmount({"predefined":obj[key]});
-          newFlag = false;
+          this.addRowUserDefined({"predefined":key, "runAmount":obj[key]});
         }
-      }
-      if(newFlag) {
-        this.addRowUserDefined({"predefined":null});
-        this._populateRunAmount({"predefined":null});
       }
     },
 
     _populateRunAmount: function(param) {
-      domConstruct.empty(this.runTraceAmountHolder);
-      this.runTraceAmount = null;
+      var td = query('.simple-table-cell', param.tr)[1];
+      domConstruct.empty(td);
       var optionChoice = this.runOptions();
       var selectionBox = new Select({
         options: optionChoice
       });
-      selectionBox.placeAt(this.runTraceAmountHolder);
+      selectionBox.placeAt(td);
       selectionBox.startup();
-      this.runTraceAmount = selectionBox;
-      if(param.predefined !== null) {
-        this.runTraceAmount.set("value", param.predefined.runAmount);
-      } else {
-        this.runTraceAmount.set("value", selectionBox.value);
+      if(typeof(param.predefined) !== "undefined") {
+        if(param.predefined !== null) {
+          if(param.predefined.hasOwnProperty("runAmount")) {
+            selectionBox.set("value", param.predefined.runAmount);
+          }
+        }
       }
+      this.own(on(selectionBox, "change", lang.hitch(this, function(val) {
+        this.userDefinedTraces.selectRow(param.tr);
+      })));
     },
 
     storeTempConfig: function(param) {
       var userRowData = this.userDefinedTraces.getSelectedRowData();
+      var userSelectedRow = this.userDefinedTraces.getSelectedRow();
+      var td = query('.simple-table-cell', userSelectedRow)[1];
+      var runOption = registry.byNode(td.childNodes[0]);
       if(userRowData !== null) {
         if((this.tempTraceConfigs.userTraces).hasOwnProperty(userRowData.userDefinedName)) {
-          this.tempTraceConfigs.userTraces[userRowData.userDefinedName].runAmount = this.runTraceAmount.value;
+          this.tempTraceConfigs.userTraces[userRowData.userDefinedName].runAmount = runOption.value;
         } else {
-          this.tempTraceConfigs.userTraces[userRowData.userDefinedName] = {"traces":[], "runAmount":null};
-          this.tempTraceConfigs.userTraces[userRowData.userDefinedName].runAmount = this.runTraceAmount.value;
+          this.tempTraceConfigs.userTraces[userRowData.userDefinedName] = {"traces":[], "runAmount":runOption.value};
+          //if(this.runTraceAmount !== null) {
+          //  this.tempTraceConfigs.userTraces[userRowData.userDefinedName].runAmount = this.runTraceAmount.value;
+          //}
         }
       }
     },
@@ -429,9 +349,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
 
     launchTraceGroup: function(param) {
       var tdata = this.userDefinedTraces.getSelectedRowData(param.tr);
-      this.storeTempConfig();
       var group = null;
-      var defaultVal = null;
       var existTraceCheck = this.tempTraceConfigs["userTraces"];
       for (var key in existTraceCheck) {
         if (key === tdata.userDefinedName) {
@@ -447,8 +365,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
       domConstruct.empty(this.traceGroupHolder);
       this.traceGroupParameter = new traceGroup({
         un: this.un,
-        domainValueListHelper: this.domainValueListHelper,
-        cmbDomainNetworks: this.cmbDomainNetworks.value,
+        dataElements: this.unDataElements,
         nls: this.nls,
         row: param.tr,
         existingValues: group
@@ -459,7 +376,17 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
     //**** START GLOBAL EVENT HANDLERS
     _wireEventHandlers: function() {
       this.own(on(this.userDefinedTraces, "row-select", lang.hitch(this, function(tr) {
+        this.storeTempConfig();
         this.launchTraceGroup({tr:tr});
+      })));
+
+      this.own(on(this.userDefinedTraces, "row-down", lang.hitch(this, function(tr) {
+        this.reorderTraceGroup();
+        this.storeTempConfig();
+      })));
+      this.own(on(this.userDefinedTraces, "row-up", lang.hitch(this, function(tr) {
+        this.reorderTraceGroup();
+        this.storeTempConfig();
       })));
 
       this.own(on(this.userDefinedTraces, "row-delete", lang.hitch(this, function(tr, rowdata) {
@@ -469,12 +396,101 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
 
     //**** END GLOBAL EVENT HANDLERS
     //*************************
+    _checkURLLayersForUN: function() {
+      return new Promise(lang.hitch(this, function (resolve, reject) {
+        var distinctURLs = [];
+        var layers = this.map.itemInfo.itemData.operationalLayers;
+        layers.map(function(lyr) {
+          if(lyr.hasOwnProperty("itemProperties")) {
+            var cleanURL = lyr.url.substring(0, lyr.url.lastIndexOf("/"));
+            if(distinctURLs.indexOf(cleanURL) <= -1) {
+              distinctURLs.push(cleanURL);
+            };
+          }
+        });
+        if(distinctURLs.length > 0) {
+          distinctURLs.map(lang.hitch(this, function(u) {
+            this.requestData({method: 'POST', url: u, params: {f : "json", token: this.token}}).then(
+              lang.hitch(this, function(result) {
+                if(result.hasOwnProperty("controllerDatasetLayers")) {
+                  this.unLayerId = result.controllerDatasetLayers.utilityNetworkLayerId;
+                  this.unLayer = result;
+                  this.unLayer.url = u;
+                  resolve(true);
+                }
+              })
+            );
+          }));
+        }
+      }));
+    },
 
-    //support functions
+    //Request dataElements
+    requestDataElementsOld: function (url) {
+      var returnDef = new Deferred();
+      var deURL = url + "/queryDataElements";
+      console.log(deURL);
+      var layersRequest = esriRequest({
+          url: deURL,
+          content: {
+            token: this.token,
+            layers: 501,
+            f: "json"
+          },
+          handleAs: "json",
+          callbackParamName: "callback"
+        }, {
+          usePost: true
+        });
+        layersRequest.then(
+          function(result) {
+            returnDef.resolve(result);
+          }, function(error) {
+            returnDef.resolve(error);
+        });
+      return returnDef.promise;
+
+    },
+
+    requestData: function(opts) {
+      return new Promise(function (resolve, reject) {
+        let xhr = new XMLHttpRequest();
+
+        xhr.open(opts.method, opts.url);
+        xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        xhr.onerror = function(e){reject(e)};
+        xhr.onload = function () {
+          if (this.status >= 200 && this.status < 300) {
+              let jsonRes = xhr.response;
+              try {
+                if (typeof jsonRes !== "object") {jsonRes = JSON.parse(xhr.response)};
+              } catch(e) {
+                resolve(jsonRes);
+              }
+              resolve(jsonRes);
+          } else {
+              reject({
+              status: this.status,
+              statusText: xhr.statusText
+              });
+          }
+        };
+
+        if (opts.headers)
+        Object.keys(opts.headers).forEach(  key => xhr.setRequestHeader(key, opts.headers[key]) )
+        let params = opts.params;
+        // We'll need to stringify if we've been given an object
+        // If we have a string, this is skipped.
+        if (params && typeof params === 'object')
+            params = Object.keys(params).map(key =>  encodeURIComponent(key) + '=' + encodeURIComponent(params[key])).join('&');
+        xhr.send(params);
+      });
+    },
+
     groupNamePopup: function() {
       var dom = domConstruct.create("div");
       var userTextbox = new Textbox({
-        placeHolder: "Give your trace a name",
+        placeHolder: "Give your group a name",
         value: "",
         style: {
           width: "100%",
@@ -494,18 +510,18 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
         buttons: [{
           label: "OK",
           onClick: lang.hitch(this, function () {
-            var valid = this.verifyUserNameInput(userTextbox.value);
-            if(valid) {
-              if(this.userDefinedTraces !== null) {
-                this.addRowUserDefined({"predefined":userTextbox.value});
-                this.storeTempConfig();
-              } else {
-                this._createUserDefinedTraceTable();
-                this._populateRunAmount({"predefined":null});
-                this._wireEventHandlers();
-                this.addRowUserDefined({"predefined":userTextbox.value});
+            if(userTextbox.value !== "") {
+              var valid = this.verifyUserNameInput(userTextbox.value);
+              if(valid) {
+                if(this.userDefinedTraces !== null) {
+                  this.addRowUserDefined({"predefined":userTextbox.value});
+                  //this._populateRunAmount({"predefined":null});
+                  this.storeTempConfig();
+                }
+                popup.close();
               }
-              popup.close();
+            } else {
+              alert("Provide a name for this group");
             }
           })
         }, {
@@ -518,29 +534,22 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, on, domConstruct, query, l
       });
     },
 
-    pullDomainValueList: async function() {
-      this.domainValueListHelper = [];
-      this.un.token = this.token;
-      var dupeFlag = false;
-      await this.un.getDeviceInfo().then(lang.hitch(this,function(devInf) {
-        array.forEach(devInf, lang.hitch(this, function(info) {
-          array.forEach(info.dataElement.fields.fieldArray, lang.hitch(this, function(fieldObj) {
-            dupeFlag = false;
-            if(typeof(fieldObj.domain) !== "undefined") {
-              for (var i = 0; i < this.domainValueListHelper.length; i++) {
-                if (this.domainValueListHelper[i]["domainName"] === fieldObj.domain.domainName) {
-                    dupeFlag = true;
-                }
-              }
-              if(!dupeFlag) {
-                this.domainValueListHelper.push(fieldObj.domain);
-              }
-            }
-          }));
+    reorderTraceGroup: function(param) {
+      console.log("here");
+      var newState = {}
+      var rows = this.userDefinedTraces.getRows();
+      if (rows.length > 0) {
+        rows.map(lang.hitch(this, function(row,i) {
+          var td = this.userDefinedTraces.getRowData(row);
+          if(this.tempTraceConfigs["userTraces"].hasOwnProperty(td.userDefinedName)) {
+            newState[td.userDefinedName] = this.tempTraceConfigs.userTraces[td.userDefinedName];
+          }
         }));
-      }));
+      }
+      this.tempTraceConfigs["userTraces"] = newState;
     },
 
+    //support functions
     interactionList: function() {
       var userActions = [
         {label: "Use Existing", value: "useExisting"},
