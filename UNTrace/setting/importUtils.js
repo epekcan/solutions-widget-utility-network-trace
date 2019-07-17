@@ -91,6 +91,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, lang, array,
             this.validInput = this.parseIncludes({value: stringSigArr[12], node:"includeBarriers"});
             this.validInput = this.parseIncludes({value: stringSigArr[13], node:"validateConsistency"});
             this.validInput = this.parseIncludes({value: stringSigArr[30], node:"includeIsolated"});
+            this.validInput = this.parseIncludes({value: stringSigArr[31], node:"ignoreBarriersAtStartingPoints"});
           }
           if(this.validInput) {
             this.validInput = this.parseBarriersFiltersFunctions({value: stringSigArr[14], node:"conditionBarriers"});
@@ -155,7 +156,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, lang, array,
     },
     parseTier: function(param) {
       param.value = (param.value).trim();
-      if(param.value !== "None") {
+      if(param.value !== "None" || param.value !== "") {
         if(param.preNode === "") {
           this.importTrace[param.node] = ((param.value.replace(/"/g, '')).trim()).toLowerCase();
         } else {
@@ -471,7 +472,8 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, lang, array,
         stringSigArr[27];  //Propagators
         stringSigArr[28];  //Output Asset Types
         stringSigArr[29];  //Output Conditions
-        stringSigArr[30];  //Output Utility Network
+        stringSigArr[30];  //included isolated features
+        stringSigArr[30];  //igonore barriers at start
 
 
 */

@@ -560,6 +560,7 @@ function(declare,
         configuration.includeBarriers = param.traceInfo.traceConfig.includeBarriers;
         configuration.validateConsistency = param.traceInfo.traceConfig.validateConsistency;
         configuration.includeIsolated = param.traceInfo.traceConfig.includeIsolated;
+        configuration.ignoreBarriersAtStartingPoints = param.traceInfo.traceConfig.ignoreBarriersAtStartingPoints;
         configuration.domainNetworkName = (param.traceInfo.traceConfig.domainNetwork)?param.traceInfo.traceConfig.domainNetwork:this.config.domainNetwork;
         configuration.tierName = (param.traceInfo.traceConfig.tier)?param.traceInfo.traceConfig.tier:this.config.tier;
         configuration.conditionBarriers = param.traceInfo.traceConfig.conditionBarriers;

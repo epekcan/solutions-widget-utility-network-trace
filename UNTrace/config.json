@@ -27,6 +27,7 @@
       "includeBarriers":true,
       "validateConsistency":false,
       "includeIsolated": false,
+      "ignoreBarriersAtStartingPoints": false,
       "domainNetworkName":"",
       "tierName":"",
       "targetTierName":"",
