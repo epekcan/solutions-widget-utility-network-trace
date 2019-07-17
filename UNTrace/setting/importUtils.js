@@ -156,7 +156,7 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, lang, array,
     },
     parseTier: function(param) {
       param.value = (param.value).trim();
-      if(param.value !== "None") {
+      if(param.value !== "None" || param.value !== "") {
         if(param.preNode === "") {
           this.importTrace[param.node] = ((param.value.replace(/"/g, '')).trim()).toLowerCase();
         } else {
