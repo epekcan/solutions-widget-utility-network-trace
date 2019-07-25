@@ -1,0 +1,29 @@
+.jimu-widget-demo div:first-child{
+  color: red;
+}
+
+.UNVersionViewer .flex-container-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.UNVersionViewer .flex-container-row {
+  display: flex;
+  flex-direction: row;
+}
+
+.UNVersionViewer .flex-grow-1 {
+  flex-grow: 1;
+}
+
+.UNVersionViewer .flex-grow-2 {
+  flex-grow: 2;
+}
+
+.UNVersionViewer .flex-align-end {
+  justify-content: flex-end;
+}
+
+.UNVersionViewer .bottom-padding-10 {
+  padding-bottom: 10px;
+}
