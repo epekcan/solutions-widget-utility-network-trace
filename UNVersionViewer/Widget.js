@@ -80,12 +80,14 @@ function(declare, BaseWidget,
     operLayerInfos: null,
     gsvc: null,
     versionDifferenceHolder : [],
+    serviceRoot: null,
 
     postCreate: function() {
       this.inherited(arguments);
       console.log('postCreate');
+      this.serviceRoot = (this.config.serviceURL).replace("FeatureServer","");
       this.token = this.generateToken();
-      this.gsvc = new GeometryService("https://utility.arcgisonline.com/ArcGIS/rest/services/Geometry/GeometryServer");
+      this.gsvc = new GeometryService(this.config.geometryService);
 
       this._getOperationalLayers();
     },
@@ -97,7 +99,7 @@ function(declare, BaseWidget,
 
     //REQUEST FUNCTIONS
     requestAllVersions: function(opts) {
-      var requestURL = "https://arcgisutilitysolutionsdemo.esri.com/server/rest/services/Water_Distribution_Utility_Network/VersionManagementServer/versionInfos";
+      var requestURL = this.serviceRoot + "VersionManagementServer/versionInfos";
       this.requestData({method: 'POST', url:requestURL, params: {f : "json", ownerFilter:"admin", includeHidden:true, token: this.token}}).then(lang.hitch(this, function(result) {
         console.log(result);
         this.versionDifferenceHolder = result.versions;
@@ -108,7 +110,7 @@ function(declare, BaseWidget,
     requestStartRead: function(opts, loadingNode, detailsNode) {
       var versionStripped = opts.versionGuid.replace("{","");
       versionStripped = versionStripped.replace("}","");
-      var requestURL = "https://arcgisutilitysolutionsdemo.esri.com/server/rest/services/Water_Distribution_Utility_Network/VersionManagementServer/versions/"+versionStripped+"/startReading/";
+      var requestURL = this.serviceRoot + "VersionManagementServer/versions/"+versionStripped+"/startReading/";
       this.requestData({method: 'POST', url:requestURL,
         params: {f : "json",
         sessionId: opts.versionGuid,
@@ -121,7 +123,7 @@ function(declare, BaseWidget,
     requestStopRead: function(opts) {
       var versionStripped = opts.versionGuid.replace("{","");
       versionStripped = versionStripped.replace("}","");
-      var requestURL = "https://arcgisutilitysolutionsdemo.esri.com/server/rest/services/Water_Distribution_Utility_Network/VersionManagementServer/versions/"+versionStripped+"/stopReading/";
+      var requestURL = this.serviceRoot + "VersionManagementServer/versions/"+versionStripped+"/stopReading/";
       this.requestData({method: 'POST', url:requestURL,
         params: {f : "json",
         sessionId: opts.versionGuid,
@@ -134,7 +136,7 @@ function(declare, BaseWidget,
     requestSpecificVersion: function(opts, loadingNode, detailsNode) {
       var versionStripped = opts.versionGuid.replace("{","");
       versionStripped = versionStripped.replace("}","");
-      var requestURL = "https://arcgisutilitysolutionsdemo.esri.com/server/rest/services/Water_Distribution_Utility_Network/VersionManagementServer/versions/"+versionStripped+"/differences/";
+      var requestURL = this.serviceRoot + "VersionManagementServer/versions/"+versionStripped+"/differences/";
       console.log(requestURL);
       this.requestData({method: 'POST', url:requestURL,
         params: {f : "json",
@@ -189,8 +191,9 @@ function(declare, BaseWidget,
     _createVersionInfoRow: function(params) {
       if(params.hasOwnProperty("success")) {
         if(params.hasOwnProperty("versions") && params.versions.length > 0) {
-          params.versions.map(lang.hitch(this, function(ver) {
-            var versionInfoHolder = domConstruct.create("div", {'class': 'flex-container-row bottom-padding-10'});
+          params.versions.map(lang.hitch(this, function(ver, i) {
+            var rowCSS = (i % 2 === 0)?"bgRowColor":"";
+            var versionInfoHolder = domConstruct.create("div", {'class': 'flex-container-row padding-5 ' + rowCSS});
             domConstruct.place(versionInfoHolder, this.UNVersionList);
             //create version info spot
             var versionInfo = domConstruct.create("div", {'class': 'flex-container-column flex-grow-2'});
@@ -235,9 +238,10 @@ function(declare, BaseWidget,
       }, node);
       versionRadio.startup();
       this.own(on(versionRadio, "click", lang.hitch(this, function(val) {
-        var widget = registry.byId(versionToggle.id);
-        console.log(widget);
-        widget.set("checked", false);
+        var toggleView = registry.byId(versionToggle.id);
+        if(typeof(toggleView) !== "undefined") {
+          toggleView.setValue(false);
+        }
         this.switchGDBVersion(version);
       })));
 
@@ -293,8 +297,10 @@ function(declare, BaseWidget,
         })));
       } else {
         if(results.success){
+          domClass.remove(detailsNode, "bgArrowRight");
           alert("No difference from Default version");
         } else {
+          domClass.remove(detailsNode, "bgArrowRight");
           alert("An error ocurred");
         }
       }
@@ -344,6 +350,7 @@ function(declare, BaseWidget,
             var geom = new Point(act.geometry.x, act.geometry.y, layerObj.layerObject.spatialReference);
           }
           var outSR = new SpatialReference(102100);
+          console.log(geom);
           this.gsvc.project([ geom ], outSR, lang.hitch(this,function(projected) {
             console.log(projected);
             this._createGraphicObject(projected[0], feat, act, diffVer, type);
@@ -415,38 +422,40 @@ function(declare, BaseWidget,
       array.forEach(features, lang.hitch(this, function(feats) {
         var transactionLog = [];
         var layerObj = this._lookupLayer(feats.layerId);
-        if(feats.hasOwnProperty("inserts")) {
-          array.forEach(feats.inserts, lang.hitch(this, function(act) {
-            act.type = "Insert";
-            transactionLog.push(act);
-          }));
-        }
-        if(feats.hasOwnProperty("updates")) {
-          array.forEach(feats.updates, lang.hitch(this, function(act) {
-            act.type = "Update";
-            transactionLog.push(act);
-          }));
-        }
-        if(feats.hasOwnProperty("deletes")) {
-          array.forEach(feats.deletes, lang.hitch(this, function(act) {
-            act.type = "Delete";
-            transactionLog.push(act);
-          }));
-        }
+        if(typeof(layerObj) !== "undefined") {
+          if(feats.hasOwnProperty("inserts")) {
+            array.forEach(feats.inserts, lang.hitch(this, function(act) {
+              act.type = "Insert";
+              transactionLog.push(act);
+            }));
+          }
+          if(feats.hasOwnProperty("updates")) {
+            array.forEach(feats.updates, lang.hitch(this, function(act) {
+              act.type = "Update";
+              transactionLog.push(act);
+            }));
+          }
+          if(feats.hasOwnProperty("deletes")) {
+            array.forEach(feats.deletes, lang.hitch(this, function(act) {
+              act.type = "Delete";
+              transactionLog.push(act);
+            }));
+          }
 
-        if(sort !== "cud") {
-          transactionLog.sort(this._compareValues("lastupdate", "desc"));
+          if(sort !== "cud") {
+            transactionLog.sort(this._compareValues("lastupdate", "desc"));
+          }
+
+          var versionLayer = domConstruct.create("div", {'class': 'flex-container-row bottom-padding-10 underlineTopBorder'});
+          domConstruct.place(versionLayer, recordsHolder);
+
+          var descriptionHolder = domConstruct.create("div", {'class': 'flex-container-column flex-grow-2',
+            innerHTML: (typeof(layerObj) !== "undefined")?(layerObj.layerObject.description)?layerObj.layerObject.description:feats.layerId:feats.layerId
+          });
+          domConstruct.place(descriptionHolder, versionLayer);
+
+          this._featureModifiedRows(transactionLog, layerObj, recordsHolder);
         }
-
-        var versionLayer = domConstruct.create("div", {'class': 'flex-container-row bottom-padding-10 underlineTopBorder'});
-        domConstruct.place(versionLayer, recordsHolder);
-
-        var descriptionHolder = domConstruct.create("div", {'class': 'flex-container-column flex-grow-2',
-          innerHTML: (typeof(layerObj) !== "undefined")?(layerObj.layerObject.description)?layerObj.layerObject.description:feats.layerId:feats.layerId
-        });
-        domConstruct.place(descriptionHolder, versionLayer);
-
-        this._featureModifiedRows(transactionLog, layerObj, recordsHolder);
       }));
     },
 

@@ -1,3 +1,4 @@
 {
-	"configText":"abcdefg"
+  "serviceURL": "",
+  "geometryService": "https://utility.arcgisonline.com/ArcGIS/rest/services/Geometry/GeometryServer"
 }

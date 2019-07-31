@@ -1,3 +1,10 @@
-.jimu-widget-demo-setting input{
+.UNVersionViewer-setting input{
   margin-left: 10px;
+}
+
+.UNVersionViewer-setting .mapChooserIcon{
+  width: 150px;
+  height: 150px;
+  background-image: url("../images/selectFS.png");
+  background-repeat: no-repeat;
 }
