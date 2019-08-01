@@ -70,7 +70,8 @@ function(declare,
       //WAB will get config object through this method
       if(this.operLayerInfos.length > 0) {
         return {
-          serviceURL: this.fsSelector.value
+          serviceURL: this.fsSelector.value,
+          geometryService: "https://utility.arcgisonline.com/ArcGIS/rest/services/Geometry/GeometryServer"
         };
       } else {
         new Message({
