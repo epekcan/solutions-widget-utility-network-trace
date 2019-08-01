@@ -23,11 +23,13 @@ define(['dojo/_base/declare',
 'dojo/dom-style',
 'dojo/on',
 'dojo/store/Memory',
+"dojo/query",
 "dijit/form/RadioButton",
 "dijit/registry",
 'jimu/dijit/ToggleButton',
 'jimu/tokenUtils',
 'jimu/LayerInfos/LayerInfos',
+'jimu/dijit/Message',
 "esri/graphic",
 "esri/geometry/Point",
 "esri/geometry/Polyline",
@@ -50,11 +52,13 @@ function(declare, BaseWidget,
   domStyle,
   on,
   Memory,
+  query,
   RadioButton,
   registry,
   ToggleButton,
   tokenUtils,
   LayerInfos,
+  Message,
   Graphic,
   Point,
   Polyline,
@@ -81,6 +85,7 @@ function(declare, BaseWidget,
     gsvc: null,
     versionDifferenceHolder : [],
     serviceRoot: null,
+    validateEventHandler: null,
 
     postCreate: function() {
       this.inherited(arguments);
@@ -107,7 +112,7 @@ function(declare, BaseWidget,
       }));
     },
 
-    requestStartRead: function(opts, loadingNode, detailsNode) {
+    requestStartRead: function(opts, loadingNode, detailsNode, task) {
       var versionStripped = opts.versionGuid.replace("{","");
       versionStripped = versionStripped.replace("}","");
       var requestURL = this.serviceRoot + "VersionManagementServer/versions/"+versionStripped+"/startReading/";
@@ -116,7 +121,11 @@ function(declare, BaseWidget,
         sessionId: opts.versionGuid,
         token: this.token
       }}).then(lang.hitch(this, function(result) {
-        this.requestSpecificVersion(opts, loadingNode, detailsNode);
+        if(task === "validate") {
+          this.requestValidation(opts, loadingNode, detailsNode);
+        } else {
+          this.requestSpecificVersion(opts, loadingNode, detailsNode);
+        }
       }));
     },
 
@@ -148,6 +157,42 @@ function(declare, BaseWidget,
         this.requestStopRead(opts);
         console.log(result);
         this._showDifferences(result, opts, loadingNode, detailsNode);
+      }));
+    },
+
+    requestValidation: function(opts, loadingNode, detailsNode) {
+      var versionStripped = opts.versionGuid.replace("{","");
+      versionStripped = versionStripped.replace("}","");
+      var requestURL = this.serviceRoot + "UtilityNetworkServer/validateNetworkTopology?token="+this.token;
+      console.log(requestURL);
+      var outSR = this.operLayerInfos[2].layerObject.spatialReference;
+      this.gsvc.project([ this.map.extent ], outSR, lang.hitch(this,function(projected) {
+        this.requestData({method: 'POST', url:requestURL,
+          params: {f : "json",
+          sessionId: opts.versionGuid,
+          validateArea: JSON.stringify(projected[0]),
+          gdbVersion: opts.versionName,
+          async: false,
+          returnErrors: true,
+          token: this.token
+        }}).then(lang.hitch(this, function(result) {
+          this.requestStopRead(opts);
+          console.log(result);
+          domClass.remove(loadingNode, "loading");
+          if(result.success) {
+            domClass.add(detailsNode, "valid");
+            array.forEach(this.operLayerInfos, lang.hitch(this, function(opl) {
+              if(opl.layerType === "ArcGISFeatureLayer") {
+                opl.layerObject.refresh();
+              }
+            }));
+          } else {
+            domClass.add(detailsNode, "notValid");
+            new Message({
+              message: result.error.message
+            });
+          }
+        }));
       }));
     },
 
@@ -201,6 +246,9 @@ function(declare, BaseWidget,
             //create version loading gif spot
             var versionLoading = domConstruct.create("div", {'class': 'flex-grow-1 active-align-first noLoading'});
             domConstruct.place(versionLoading, versionInfoHolder);
+            //create version validate spot
+            var versionValidate = domConstruct.create("div", {'class': 'flex-grow-1 active-align-first validateNode'});
+            domConstruct.place(versionValidate, versionInfoHolder);
             //create version active toggle spot
             var versionActiveToggle = domConstruct.create("div", {'class': 'flex-grow-1 active-align-first'});
             domConstruct.place(versionActiveToggle, versionInfoHolder);
@@ -212,7 +260,7 @@ function(declare, BaseWidget,
             domConstruct.place(versionChangeDetails, versionInfoHolder);
 
             this._createVersionToggle(ver, versionToggle, versionLoading, versionChangeDetails);
-            this._createActiveVersionToggle(ver, versionActiveToggle, versionLoading, versionToggle);
+            this._createActiveVersionToggle(ver, versionActiveToggle, versionLoading, versionToggle, versionValidate);
 
             //create Version info details spot
             var versionInfoName = domConstruct.create("div", {'class': '', innerHTML: ver.versionName});
@@ -230,7 +278,7 @@ function(declare, BaseWidget,
     //END CREATE VERSION ROW UI ELEMENTS
 
     //CREATE ACTIVE VERSION BUTTON
-    _createActiveVersionToggle: function(version, node, loadingNode, versionToggle) {
+    _createActiveVersionToggle: function(version, node, loadingNode, versionToggle, versionValidate) {
       var versionRadio = new RadioButton({
         checked: (version.versionName === "sde.DEFAULT")?true:false,
         value: version,
@@ -243,6 +291,20 @@ function(declare, BaseWidget,
           toggleView.setValue(false);
         }
         this.switchGDBVersion(version);
+        var list = query(".validateNode", this.UNVersionList);
+        list.map(function(item) {
+          domClass.remove(item, "validating");
+          domClass.remove(item, "notValid");
+          domClass.remove(item, "valid");
+        });
+        domClass.add(versionValidate, "validating");
+        if(this.validateEventHandler !== null) {
+          this.validateEventHandler.remove();
+        }
+        this.validateEventHandler = on(versionValidate, "click", lang.hitch(this, function() {
+          domClass.add(loadingNode, "loading");
+          this.requestStartRead(version, loadingNode, versionValidate, "validate");
+        }));
       })));
 
     },
@@ -263,7 +325,7 @@ function(declare, BaseWidget,
           if(val) {
             domClass.remove(loadingNode, "noLoading");
             domClass.add(loadingNode, "loading");
-            this.requestStartRead(version, loadingNode, detailsNode);
+            this.requestStartRead(version, loadingNode, detailsNode, "view");
           } else {
             domClass.remove(detailsNode, "bgArrowRight");
             this.removeGraphic(version);
@@ -298,10 +360,14 @@ function(declare, BaseWidget,
       } else {
         if(results.success){
           domClass.remove(detailsNode, "bgArrowRight");
-          alert("No difference from Default version");
+          new Message({
+            message: "No difference from Default version"
+          });
         } else {
           domClass.remove(detailsNode, "bgArrowRight");
-          alert("An error ocurred");
+          new Message({
+            message: "An error ocurred"
+          });
         }
       }
     },

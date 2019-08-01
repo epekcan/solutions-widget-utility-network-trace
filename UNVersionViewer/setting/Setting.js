@@ -85,7 +85,8 @@ function(declare,
       this.operLayerInfos.forEach(lang.hitch(this, function(opl) {
           var obj = {
             label: opl,
-            value: opl
+            value: opl,
+            selected: (opl === this.config.serviceURL)?true:false
           };
           optionChoice.push(obj);
       }));

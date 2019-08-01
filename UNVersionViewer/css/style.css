@@ -59,7 +59,6 @@
   height: 24px;
   background-image: url(../images/arrow-right.png);
   background-position: 0 0;
-  background-position: center; /* Center the image */
   background-repeat: no-repeat; /* Do not repeat the image */
   cursor: pointer;
 }
@@ -68,7 +67,6 @@
   height: 24px;
   background-image: url(../images/arrow-left.png);
   background-position: 0 0;
-  background-position: left; /* Center the image */
   background-repeat: no-repeat; /* Do not repeat the image */
   cursor: pointer;
   padding-left: 25px;
@@ -107,10 +105,17 @@
   background-repeat: no-repeat; /* Do not repeat the image */
 }
 
-.UNVersionViewer .loading {
-  background-image: url(../images/validating.gif);
+.UNVersionViewer .bgValidate {
+  height: 24px;
+  background-image: url(../images/validating.png);
   background-position: 0 0;
   background-position: center; /* Center the image */
+  background-repeat: no-repeat; /* Do not repeat the image */
+}
+
+.UNVersionViewer .loading {
+  background-image: url(../images/loading.gif);
+  background-position: 0 0;
   background-repeat: no-repeat; /* Do not repeat the image */
   vertical-align: top;
 }
@@ -125,6 +130,27 @@
 
 .UNVersionViewer .cud {
   background-image: url(../images/cud.png);
+  background-position: 0 0;
+  background-repeat: no-repeat; /* Do not repeat the image */
+  cursor: pointer;
+}
+
+.UNVersionViewer .validating {
+  background-image: url(../images/validating.png);
+  background-position: 0 0;
+  background-repeat: no-repeat; /* Do not repeat the image */
+  cursor: pointer;
+}
+
+.UNVersionViewer .notValid {
+  background-image: url(../images/not-valid.png);
+  background-position: 0 0;
+  background-repeat: no-repeat; /* Do not repeat the image */
+  cursor: pointer;
+}
+
+.UNVersionViewer .valid {
+  background-image: url(../images/valid.png);
   background-position: 0 0;
   background-position: center; /* Center the image */
   background-repeat: no-repeat; /* Do not repeat the image */
