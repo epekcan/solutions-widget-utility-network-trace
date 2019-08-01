@@ -536,7 +536,9 @@ function(declare,
             }
             this.drawTraceResults(this.un, traceResults, this.resultHighlightColor, false);
             this.tempRecordSet = traceResults;
-            this.commulativeRecordSet = this.commulativeRecordSet.concat(traceResults.traceResults.elements);
+            if(traceResults.success) {
+              this.commulativeRecordSet = this.commulativeRecordSet.concat(traceResults.traceResults.elements);
+            }
           })
         .then(a => {
             domAttr.set(this.btnRun, "class", "button_nonactive");
@@ -1014,9 +1016,23 @@ function(declare,
       dom.byId("lblExport").textContent = params;
     },
 
+    _getDescriptions: function(results) {
+      var finalList = [];
+      array.forEach(results, lang.hitch(this, function(item) {
+        var unLayer = this.un.getLayerIdfromSourceId(item.networkSourceId);
+        var types = this.un.getAssetType(unLayer.layerId, item.assetGroupCode, item.assetTypeCode);
+        item["assetGroupName"] = types.assetGroupName;
+        item["assetTypeName"] = types.assetTypeName;
+        item["layerId"] = unLayer.layerId;
+        finalList.push(item);
+      }));
+      return finalList;
+    },
+
     exportResults: function() {
       if(this.commulativeRecordSet.length > 0) {
-        var exportData = this._createCSVContent(this.commulativeRecordSet, "traceResult");
+        var finalList = this._getDescriptions(this.commulativeRecordSet);
+        var exportData = this._createCSVContent(finalList, "traceResult");
         this._exportToCSVComplete(exportData, "TraceResult");
       }
     },
