@@ -1,8 +1,11 @@
 <div>
-	<div class="flex-container-column" data-dojo-attach-point="UNVersionList">
+	<div class="flex-container-column" data-dojo-attach-point="UNVersionListHeader">
     <div class="flex-container-row bottom-padding-10 underlineBottomBorder">
       <div class="flex-container-column flex-grow-2">
-        <div>Versions</div>
+        <div class="flex-container-row">
+          <div class="header">Versions</div>
+          <div class="bgAddVersion active-align-first" data-dojo-attach-point="UNMakeVersion"></div>
+        </div>
       </div>
       <div class="flex-grow-1 active-align-first"></div>
       <div class="flex-grow-1 active-align-first bgValidate"></div>
@@ -11,6 +14,7 @@
       <div class="flex-grow-1 details-align-end bgDetails"></div>
     </div>
     <div class="bottom-padding-10"></div>
+    <div class="flex-container-column" data-dojo-attach-point="UNVersionList"></div>
   </div>
 
   <div class="flex-container-column hide" data-dojo-attach-point="UNDetailList"></div>

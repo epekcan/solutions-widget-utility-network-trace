@@ -157,6 +157,21 @@
   cursor: pointer;
 }
 
+.UNVersionViewer .bgAddVersion {
+  background-image: url(../images/add_default.png);
+  background-position: 0 0;
+  background-position: center; /* Center the image */
+  background-repeat: no-repeat; /* Do not repeat the image */
+  cursor: pointer;
+}
+
+.UNVersionViewer .bgDeleteVersion {
+  background-image: url(../images/delete.png);
+  background-position: 0 0;
+  background-repeat: no-repeat; /* Do not repeat the image */
+  cursor: pointer;
+}
+
 .UNVersionViewer .alignCenter {
   vertical-align: center;
 }
@@ -200,4 +215,21 @@
   border-left-style: solid;
   border-left-color: rgba(255,0,0, 1);
   padding-left: 5px;
+}
+
+.UNVersionViewer .header {
+  font-size: large;
+  font-weight: bold;
+}
+
+.create-version .radioSize {
+  font-size: small;
+}
+
+.create-version .versionHeaderLegend {
+  font-weight: bold;
+}
+
+.create-version .versionOptionFieldSet {
+  padding-bottom: 10px;
 }

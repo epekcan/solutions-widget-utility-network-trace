@@ -24,12 +24,14 @@ define(['dojo/_base/declare',
 'dojo/on',
 'dojo/store/Memory',
 "dojo/query",
+"dojo/mouse",
 "dijit/form/RadioButton",
 "dijit/registry",
 'jimu/dijit/ToggleButton',
 'jimu/tokenUtils',
 'jimu/LayerInfos/LayerInfos',
 'jimu/dijit/Message',
+'jimu/dijit/Popup',
 "esri/graphic",
 "esri/geometry/Point",
 "esri/geometry/Polyline",
@@ -41,7 +43,8 @@ define(['dojo/_base/declare',
 "esri/tasks/GeometryService",
 "esri/geometry/geometryEngine",
 "esri/SpatialReference",
-"esri/InfoTemplate"
+"esri/InfoTemplate",
+"./versionManagement"
 ],
 function(declare, BaseWidget,
   lang,
@@ -53,12 +56,14 @@ function(declare, BaseWidget,
   on,
   Memory,
   query,
+  mouse,
   RadioButton,
   registry,
   ToggleButton,
   tokenUtils,
   LayerInfos,
   Message,
+  Popup,
   Graphic,
   Point,
   Polyline,
@@ -70,7 +75,8 @@ function(declare, BaseWidget,
   GeometryService,
   geometryEngine,
   SpatialReference,
-  InfoTemplate
+  InfoTemplate,
+  versionManagement
   ) {
   //To create a widget, you need to derive from BaseWidget.
   return declare([BaseWidget], {
@@ -86,6 +92,7 @@ function(declare, BaseWidget,
     versionDifferenceHolder : [],
     serviceRoot: null,
     validateEventHandler: null,
+    deleteEventHandler: null,
 
     postCreate: function() {
       this.inherited(arguments);
@@ -95,6 +102,11 @@ function(declare, BaseWidget,
       this.gsvc = new GeometryService(this.config.geometryService);
 
       this._getOperationalLayers();
+
+      this.own(on(this.UNMakeVersion, "click", lang.hitch(this, function() {
+        this.newVersionPopup();
+      })));
+
     },
 
     startup: function() {
@@ -106,7 +118,6 @@ function(declare, BaseWidget,
     requestAllVersions: function(opts) {
       var requestURL = this.serviceRoot + "VersionManagementServer/versionInfos";
       this.requestData({method: 'POST', url:requestURL, params: {f : "json", ownerFilter:"admin", includeHidden:true, token: this.token}}).then(lang.hitch(this, function(result) {
-        console.log(result);
         this.versionDifferenceHolder = result.versions;
         this._createVersionInfoRow(result);
       }));
@@ -123,7 +134,10 @@ function(declare, BaseWidget,
       }}).then(lang.hitch(this, function(result) {
         if(task === "validate") {
           this.requestValidation(opts, loadingNode, detailsNode);
-        } else {
+        } else if(task === "delete") {
+          this.requestDeleteVersion(opts, loadingNode);
+        }
+        else {
           this.requestSpecificVersion(opts, loadingNode, detailsNode);
         }
       }));
@@ -146,7 +160,6 @@ function(declare, BaseWidget,
       var versionStripped = opts.versionGuid.replace("{","");
       versionStripped = versionStripped.replace("}","");
       var requestURL = this.serviceRoot + "VersionManagementServer/versions/"+versionStripped+"/differences/";
-      console.log(requestURL);
       this.requestData({method: 'POST', url:requestURL,
         params: {f : "json",
         sessionId: opts.versionGuid,
@@ -155,7 +168,6 @@ function(declare, BaseWidget,
         token: this.token
       }}).then(lang.hitch(this, function(result) {
         this.requestStopRead(opts);
-        console.log(result);
         this._showDifferences(result, opts, loadingNode, detailsNode);
       }));
     },
@@ -164,7 +176,6 @@ function(declare, BaseWidget,
       var versionStripped = opts.versionGuid.replace("{","");
       versionStripped = versionStripped.replace("}","");
       var requestURL = this.serviceRoot + "UtilityNetworkServer/validateNetworkTopology?token="+this.token;
-      console.log(requestURL);
       var outSR = this.operLayerInfos[2].layerObject.spatialReference;
       this.gsvc.project([ this.map.extent ], outSR, lang.hitch(this,function(projected) {
         this.requestData({method: 'POST', url:requestURL,
@@ -177,7 +188,6 @@ function(declare, BaseWidget,
           token: this.token
         }}).then(lang.hitch(this, function(result) {
           this.requestStopRead(opts);
-          console.log(result);
           domClass.remove(loadingNode, "loading");
           if(result.success) {
             domClass.add(detailsNode, "valid");
@@ -193,6 +203,37 @@ function(declare, BaseWidget,
             });
           }
         }));
+      }));
+    },
+
+    requestCreateVersion: function(opts) {
+      var requestURL = this.serviceRoot + "VersionManagementServer/create";
+      this.requestData({method: 'POST', url:requestURL,
+          params: {f : "json",
+                  versionName: opts.versionName,
+                  description:"new version from web",
+                  accessPermission: opts.versionScope,
+                  token: this.token}})
+        .then(lang.hitch(this, function(result) {
+          if(result.success) {
+            this.requestAllVersions(opts);
+          }
+      }));
+    },
+
+    requestDeleteVersion: function(opts, loadingNode) {
+      var requestURL = this.serviceRoot + "VersionManagementServer/delete";
+      this.requestData({method: 'POST', url:requestURL,
+          params: {f : "json",
+                  versionName: opts.versionName,
+                  sessionId: opts.versionGuid,
+                  token: this.token}})
+        .then(lang.hitch(this, function(result) {
+          if(result.success) {
+            domClass.remove(loadingNode, "loading");
+            this.requestStopRead(opts);
+            this.requestAllVersions(opts);
+          }
       }));
     },
 
@@ -236,10 +277,14 @@ function(declare, BaseWidget,
     _createVersionInfoRow: function(params) {
       if(params.hasOwnProperty("success")) {
         if(params.hasOwnProperty("versions") && params.versions.length > 0) {
+          domConstruct.empty(this.UNVersionList);
           params.versions.map(lang.hitch(this, function(ver, i) {
             var rowCSS = (i % 2 === 0)?"bgRowColor":"";
             var versionInfoHolder = domConstruct.create("div", {'class': 'flex-container-row padding-5 ' + rowCSS});
             domConstruct.place(versionInfoHolder, this.UNVersionList);
+            //create version active toggle spot
+            var versionDelete = domConstruct.create("div", {'class': 'flex-grow-1 active-align-first'});
+            domConstruct.place(versionDelete, versionInfoHolder);
             //create version info spot
             var versionInfo = domConstruct.create("div", {'class': 'flex-container-column flex-grow-2'});
             domConstruct.place(versionInfo, versionInfoHolder);
@@ -258,10 +303,6 @@ function(declare, BaseWidget,
             //create version changes detail spot
             var versionChangeDetails = domConstruct.create("div", {'class': 'flex-grow-1 details-align-end'});
             domConstruct.place(versionChangeDetails, versionInfoHolder);
-
-            this._createVersionToggle(ver, versionToggle, versionLoading, versionChangeDetails);
-            this._createActiveVersionToggle(ver, versionActiveToggle, versionLoading, versionToggle, versionValidate);
-
             //create Version info details spot
             var versionInfoName = domConstruct.create("div", {'class': '', innerHTML: ver.versionName});
             domConstruct.place(versionInfoName, versionInfo);
@@ -271,6 +312,21 @@ function(declare, BaseWidget,
             //create version info dates
             var versionInfoLastUpdate = domConstruct.create("div", {'class': '', innerHTML: "modified: " + new Date(ver.modifiedDate).toDateString()});
             domConstruct.place(versionInfoLastUpdate, versionInfo);
+
+            this._createVersionToggle(ver, versionToggle, versionLoading, versionChangeDetails);
+            this._createActiveVersionToggle(ver, versionActiveToggle, versionLoading, versionToggle, versionValidate);
+
+            this.own(on(versionDelete, mouse.enter, lang.hitch(this, function() {
+              this._deleteVersionHandler(ver, versionDelete, versionLoading);
+            })));
+
+            this.own(on(versionDelete, mouse.leave, lang.hitch(this, function() {
+              domClass.remove(versionDelete, "bgDeleteVersion");
+              if(this.deleteEventHandler !== null) {
+                this.deleteEventHandler.remove();
+              }
+            })));
+
           }));
         }
       }
@@ -335,6 +391,39 @@ function(declare, BaseWidget,
     },
     //END CREATE TOGGLE VERSION
 
+    //DELETE THE VERSION
+    _deleteVersionHandler: function(version, node, loadingNode) {
+      if(version.versionName !== "sde.DEFAULT") {
+        domClass.add(node, "bgDeleteVersion");
+        if(this.deleteEventHandler !== null) {
+          this.deleteEventHandler.remove();
+        }
+        this.deleteEventHandler = on(node, "click", lang.hitch(this, function() {
+          var popup = new Popup({
+            content: "Delete this version?",
+            titleLabel: "confirmation",
+            width: 250,
+            height: 150,
+            buttons: [{
+              label: window.jimuNls.common.ok,
+              onClick: lang.hitch(this, function() {
+                domClass.add(loadingNode, "loading");
+                this.requestStartRead(version, loadingNode, null, "delete");
+                popup.close();
+              })
+            }, {
+              label: window.jimuNls.common.cancel,
+              classNames: ['jimu-btn-vacation'],
+              onClick: lang.hitch(this, function() {
+                popup.close();
+              })
+            }]
+          });
+        }));
+      }
+    },
+    //END DELETE THE VERSION
+
     //SHOW DIFFERENCES
     _showDifferences: function(results, version, loadingNode, detailsNode) {
       domClass.remove(loadingNode, "loading");
@@ -375,7 +464,6 @@ function(declare, BaseWidget,
 
     //SWITCH FEATURE SERVICE VERSION
     switchGDBVersion: function(version) {
-      console.log(version);
       array.forEach(this.operLayerInfos, lang.hitch(this, function(lyrInf) {
         lyrInf.layerObject.setGDBVersion(version.versionName);
       }));
@@ -416,9 +504,7 @@ function(declare, BaseWidget,
             var geom = new Point(act.geometry.x, act.geometry.y, layerObj.layerObject.spatialReference);
           }
           var outSR = new SpatialReference(102100);
-          console.log(geom);
           this.gsvc.project([ geom ], outSR, lang.hitch(this,function(projected) {
-            console.log(projected);
             this._createGraphicObject(projected[0], feat, act, diffVer, type);
           }));
         }
@@ -448,7 +534,6 @@ function(declare, BaseWidget,
       domConstruct.empty(this.UNDetailList);
       domClass.remove(this.UNDetailList, "hide");
       domClass.add(this.UNVersionList, "hide");
-      console.log(features);
       var header = domConstruct.create("div", {'class': 'flex-container-row flex-grow-2 bottom-padding-10'});
       domConstruct.place(header, this.UNDetailList);
 
@@ -577,23 +662,53 @@ function(declare, BaseWidget,
     },
     //END ZOOM TO MODIFIED FEATURE
 
+    //CREATE NEW VERSION
+    newVersionPopup: function() {
+      var vms = new versionManagement({
+        nls: this.nls
+      });
+      var popup = new Popup({
+        content: vms,
+        titleLabel: "Create a version",
+        width: 350,
+        height: 300,
+        buttons: [{
+          label: window.jimuNls.common.ok,
+          onClick: lang.hitch(this, function() {
+            if(vms.versionName.value !== "") {
+              var opts = {versionName: vms.versionName.value, versionScope: vms.versionScope};
+              this.requestCreateVersion(opts);
+              popup.close();
+            } else {
+              new Message({
+                message: "Please provide a name"
+              });
+            }
+          })
+        }, {
+          label: window.jimuNls.common.cancel,
+          classNames: ['jimu-btn-vacation'],
+          onClick: lang.hitch(this, function() {
+            popup.close();
+          })
+        }]
+      });
+    },
+    //END CREATE NEW VERSION
 
     //SUPPORT FUNCTIONS
     generateToken: function() {
       var tokenTool = tokenUtils;
       tokenTool.portalUrl = this.appConfig.portalUrl;
-      console.log(tokenTool.getPortalCredential(this.appConfig.portalUrl));
       return tokenTool.getPortalCredential(this.appConfig.portalUrl).token;
     },
 
     _getOperationalLayers: function() {
       //need to get the layers because the version results do not have spatial reference tied to results.
-      console.log(this.map.graphicsLayerIds);
       var itemInfo = this._obtainMapLayers();
       LayerInfos.getInstance(this.map, itemInfo)
         .then(lang.hitch(this, function(operLayerInfos) {
           this.operLayerInfos = operLayerInfos._operLayers;
-          console.log(this.operLayerInfos);
           this.requestAllVersions(null);
         }));
     },
