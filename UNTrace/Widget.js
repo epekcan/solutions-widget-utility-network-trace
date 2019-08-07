@@ -105,12 +105,12 @@ function(declare,
       console.log('postCreate');
 
       //load flag images
-      domAttr.set(this.btnClearTraceLocations, "src", this.folderUrl + "/images/delete.png" );
-      domAttr.set(this.btnStartingPoint, "src", this.folderUrl + "/images/flag.png" );
-      domAttr.set(this.btnBarriers, "src", this.folderUrl + "/images/add-barriers-select.png" );
-      domAttr.set(this.btnPoint, "src", this.folderUrl + "/images/add.png" );
-      domAttr.set(this.btnPolygon, "src", this.folderUrl + "/images/polygon.png" );
-      domAttr.set(this.btnRun, "src", this.folderUrl + "/images/run.png" );
+      domAttr.set(this.btnClearTraceLocations, "src", this.folderUrl + "images/delete.png" );
+      domAttr.set(this.btnStartingPoint, "src", this.folderUrl + "images/flag.png" );
+      domAttr.set(this.btnBarriers, "src", this.folderUrl + "images/add-barriers-select.png" );
+      domAttr.set(this.btnPoint, "src", this.folderUrl + "images/add.png" );
+      domAttr.set(this.btnPolygon, "src", this.folderUrl + "images/polygon.png" );
+      domAttr.set(this.btnRun, "src", this.folderUrl + "images/run.png" );
 
       this.un = UtilityNetwork;
       this.token = this.generateToken();
@@ -286,11 +286,11 @@ function(declare,
 
                     let img = document.createElement("img");
                     if (this.activeTraceLocation === this.config.TRACELOCATION_START) {
-                        img.src = this.folderUrl + "/images/flag.png";
+                        img.src = this.folderUrl + "images/flag.png";
                         img.className = "btnStartItems";
                     }
                     else {
-                        img.src = this.folderUrl + "/images/add-barriers-select.png";
+                        img.src = this.folderUrl + "images/add-barriers-select.png";
                         img.className = "btnBarrierItems";
                     }
                     let rowTraceLocation = document.createElement("tr");
@@ -308,7 +308,7 @@ function(declare,
                     let columnBtn = document.createElement("td");
                     rowTraceLocation.appendChild(columnBtn);
                     let deleteTraceLocation = document.createElement("img");
-                    deleteTraceLocation.src = this.folderUrl + "/images/delete.png"
+                    deleteTraceLocation.src = this.folderUrl + "images/delete.png"
                     deleteTraceLocation.className = "btnX";
                     deleteTraceLocation.addEventListener("click", lang.hitch(this, function(e){
                         traceLocations.removeChild(rowTraceLocation);
