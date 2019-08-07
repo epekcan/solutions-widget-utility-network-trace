@@ -409,6 +409,8 @@ function(declare, BaseWidget,
               onClick: lang.hitch(this, function() {
                 domClass.add(loadingNode, "loading");
                 this.requestStartRead(version, loadingNode, null, "delete");
+                this.switchGDBVersion({versionName:"sde.DEFAULT"});
+                this.map.graphics.clear();
                 popup.close();
               })
             }, {
@@ -678,6 +680,8 @@ function(declare, BaseWidget,
             if(vms.versionName.value !== "") {
               var opts = {versionName: vms.versionName.value, versionScope: vms.versionScope};
               this.requestCreateVersion(opts);
+              this.switchGDBVersion({versionName:"sde.DEFAULT"});
+              this.map.graphics.clear();
               popup.close();
             } else {
               new Message({
