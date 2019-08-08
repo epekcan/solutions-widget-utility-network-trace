@@ -536,6 +536,7 @@ function(declare, BaseWidget,
       domConstruct.empty(this.UNDetailList);
       domClass.remove(this.UNDetailList, "hide");
       domClass.add(this.UNVersionList, "hide");
+      domClass.add(this.UNVersionListHeader, "hide");
       var header = domConstruct.create("div", {'class': 'flex-container-row flex-grow-2 bottom-padding-10'});
       domConstruct.place(header, this.UNDetailList);
 
@@ -838,6 +839,7 @@ function(declare, BaseWidget,
     closeDetailsPanel: function() {
       domClass.add(this.UNDetailList, "hide");
       domClass.remove(this.UNVersionList, "hide");
+      domClass.remove(this.UNVersionListHeader, "hide");
     },
 
     _compareValues: function(key, order='asc') {
