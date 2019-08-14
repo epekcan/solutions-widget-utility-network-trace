@@ -24,6 +24,7 @@ define([
   'jimu/dijit/ItemSelector',
   'jimu/dijit/Popup',
   'jimu/dijit/Message',
+  'jimu/dijit/Checkbox',
   'jimu/portalUtils',
   'jimu/portalUrlUtils',
   'jimu/tokenUtils',
@@ -39,6 +40,7 @@ function(declare,
   ItemSelector,
   Popup,
   Message,
+  Checkbox,
   portalUtils,
   portalUrlUtils,
   tokenUtils,
@@ -50,6 +52,8 @@ function(declare,
     portalUrl: null,
     portal: null,
     fsSelector: null,
+    chkSwitchVersion: null,
+    chkCreateVersion: null,
     tempFS: null,
     operLayerInfos: [],
 
@@ -71,7 +75,9 @@ function(declare,
       if(this.operLayerInfos.length > 0) {
         return {
           serviceURL: this.fsSelector.value,
-          geometryService: "https://utility.arcgisonline.com/ArcGIS/rest/services/Geometry/GeometryServer"
+          geometryService: "https://utility.arcgisonline.com/ArcGIS/rest/services/Geometry/GeometryServer",
+          allowVersionSwitch: this.chkSwitchVersion.getStatus(),
+          allowVersionCreation: this.chkAllowVersionCreation.getStatus()
         };
       } else {
         new Message({
@@ -84,6 +90,7 @@ function(declare,
     _createSelectionBox: function() {
       var optionChoice = [];
       this.operLayerInfos.forEach(lang.hitch(this, function(opl) {
+        console.log(opl);
           var obj = {
             label: opl,
             value: opl,
@@ -99,6 +106,23 @@ function(declare,
       this.fsSelector = selectionBox;
     },
 
+    _createSwitchVersionCheckbox: function() {
+      var checkbox = new Checkbox({
+        checked: (this.config.allowVersionSwitch)?true:false
+      });
+      checkbox.placeAt(this.chkAllowSwitchVersion);
+      checkbox.startup();
+      this.chkSwitchVersion = checkbox;
+    },
+
+    _createCreateVersionCheckbox: function() {
+      var checkbox = new Checkbox({
+        checked: (this.config.allowVersionCreation)?true:false
+      });
+      checkbox.placeAt(this.chkAllowVersionCreation);
+      checkbox.startup();
+      this.chkAllowVersionCreation = checkbox;
+    },
 
     _getOperationalLayers: function() {
       //need to get the layers because the version results do not have spatial reference tied to results.
@@ -117,6 +141,8 @@ function(declare,
               }
             }));
             this._createSelectionBox();
+            this._createSwitchVersionCheckbox();
+            this._createCreateVersionCheckbox();
           }
         }));
     },

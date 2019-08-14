@@ -103,9 +103,17 @@ function(declare, BaseWidget,
 
       this._getOperationalLayers();
 
-      this.own(on(this.UNMakeVersion, "click", lang.hitch(this, function() {
-        this.newVersionPopup();
-      })));
+      if(!this.config.allowVersionSwitch) {
+        domClass.add(this.validateHeader, "hideHeader");
+        domClass.add(this.activeVersionHeader, "hideHeader");
+      }
+
+      if(!this.config.allowVersionCreation) {
+        domClass.add(this.UNMakeVersion, "hideHeader");
+        this.own(on(this.UNMakeVersion, "click", lang.hitch(this, function() {
+          this.newVersionPopup();
+        })));
+      }
 
     },
 
@@ -282,9 +290,11 @@ function(declare, BaseWidget,
             var rowCSS = (i % 2 === 0)?"bgRowColor":"";
             var versionInfoHolder = domConstruct.create("div", {'class': 'flex-container-row padding-5 ' + rowCSS});
             domConstruct.place(versionInfoHolder, this.UNVersionList);
-            //create version active toggle spot
-            var versionDelete = domConstruct.create("div", {'class': 'flex-grow-1 active-align-first'});
-            domConstruct.place(versionDelete, versionInfoHolder);
+            //create Delete version spot
+            if(this.config.allowVersionCreation) {
+              var versionDelete = domConstruct.create("div", {'class': 'flex-grow-1 active-align-first'});
+              domConstruct.place(versionDelete, versionInfoHolder);
+            }
             //create version info spot
             var versionInfo = domConstruct.create("div", {'class': 'flex-container-column flex-grow-2'});
             domConstruct.place(versionInfo, versionInfoHolder);
@@ -292,12 +302,14 @@ function(declare, BaseWidget,
             var versionLoading = domConstruct.create("div", {'class': 'flex-grow-1 active-align-first noLoading'});
             domConstruct.place(versionLoading, versionInfoHolder);
             //create version validate spot
-            var versionValidate = domConstruct.create("div", {'class': 'flex-grow-1 active-align-first validateNode'});
-            domConstruct.place(versionValidate, versionInfoHolder);
-            //create version active toggle spot
-            var versionActiveToggle = domConstruct.create("div", {'class': 'flex-grow-1 active-align-first'});
-            domConstruct.place(versionActiveToggle, versionInfoHolder);
-            //create version toggle spot
+            if(this.config.allowVersionSwitch) {
+              var versionValidate = domConstruct.create("div", {'class': 'flex-grow-1 active-align-first validateNode'});
+              domConstruct.place(versionValidate, versionInfoHolder);
+              //create version active toggle spot
+              var versionActiveToggle = domConstruct.create("div", {'class': 'flex-grow-1 active-align-first'});
+              domConstruct.place(versionActiveToggle, versionInfoHolder);
+            }
+            //create view version difference toggle spot
             var versionToggle = domConstruct.create("div", {'class': 'flex-grow-1 flex-align-end'});
             domConstruct.place(versionToggle, versionInfoHolder);
             //create version changes detail spot
@@ -314,18 +326,22 @@ function(declare, BaseWidget,
             domConstruct.place(versionInfoLastUpdate, versionInfo);
 
             this._createVersionToggle(ver, versionToggle, versionLoading, versionChangeDetails);
-            this._createActiveVersionToggle(ver, versionActiveToggle, versionLoading, versionToggle, versionValidate);
+            if(this.config.allowVersionSwitch) {
+              this._createActiveVersionToggle(ver, versionActiveToggle, versionLoading, versionToggle, versionValidate);
+            }
 
-            this.own(on(versionDelete, mouse.enter, lang.hitch(this, function() {
-              this._deleteVersionHandler(ver, versionDelete, versionLoading);
-            })));
+            if(this.config.allowVersionCreation) {
+              this.own(on(versionDelete, mouse.enter, lang.hitch(this, function() {
+                this._deleteVersionHandler(ver, versionDelete, versionLoading);
+              })));
 
-            this.own(on(versionDelete, mouse.leave, lang.hitch(this, function() {
-              domClass.remove(versionDelete, "bgDeleteVersion");
-              if(this.deleteEventHandler !== null) {
-                this.deleteEventHandler.remove();
-              }
-            })));
+              this.own(on(versionDelete, mouse.leave, lang.hitch(this, function() {
+                domClass.remove(versionDelete, "bgDeleteVersion");
+                if(this.deleteEventHandler !== null) {
+                  this.deleteEventHandler.remove();
+                }
+              })));
+            }
 
           }));
         }

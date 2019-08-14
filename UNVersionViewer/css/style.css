@@ -233,3 +233,7 @@
 .create-version .versionOptionFieldSet {
   padding-bottom: 10px;
 }
+
+.UNVersionViewer .hideHeader {
+  display: none;
+}
