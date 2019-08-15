@@ -427,7 +427,7 @@ function(declare,
       this.traceCounter = 0;
       this.traceMax = parseInt(param.count);
       this.traceLocationsParam = [];
-      if(this.config.userTraces[param.value].traces[0].traceConfig.domainNetwork !== "") {
+      if(this.config.userTraces[param.value].traces[0].traceConfig.domainNetwork !== "" || this.config.userTraces[param.value].traces[0].traceConfig.domainNetwork !== "''") {
         this.currentDomainNetwork = this.config.userTraces[param.value].traces[0].traceConfig.domainNetwork;
       } else {
         this.currentDomainNetwork = this.config.domainNetwork;
