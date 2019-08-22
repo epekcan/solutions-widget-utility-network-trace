@@ -73,16 +73,16 @@ function(declare,
     getConfig: function(){
       //WAB will get config object through this method
       if(this.operLayerInfos.length > 0) {
-        return {
-          serviceURL: this.fsSelector.value,
-          geometryService: "https://utility.arcgisonline.com/ArcGIS/rest/services/Geometry/GeometryServer",
-          allowVersionSwitch: this.chkSwitchVersion.getStatus(),
-          allowVersionCreation: this.chkAllowVersionCreation.getStatus()
-        };
+        this.config.serviceURL = this.fsSelector.value;
+        this.config.geometryService = "https://utility.arcgisonline.com/ArcGIS/rest/services/Geometry/GeometryServer";
+        this.config.allowVersionSwitch = this.chkSwitchVersion.getValue();
+        this.config.allowVersionCreation = this.chkAllowVersionCreation.getValue();
+        return this.config;
       } else {
         new Message({
           message: "Please choose a Feature Service"
         });
+        return false;
       }
     },
 
@@ -90,7 +90,6 @@ function(declare,
     _createSelectionBox: function() {
       var optionChoice = [];
       this.operLayerInfos.forEach(lang.hitch(this, function(opl) {
-        console.log(opl);
           var obj = {
             label: opl,
             value: opl,
