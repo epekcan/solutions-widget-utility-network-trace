@@ -108,8 +108,8 @@ function(declare, BaseWidget,
         domClass.add(this.activeVersionHeader, "hideHeader");
       }
 
-      if(!this.config.allowVersionCreation) {
-        domClass.add(this.UNMakeVersion, "hideHeader");
+      if(this.config.allowVersionCreation) {
+        //domClass.add(this.UNMakeVersion, "hideHeader");
         this.own(on(this.UNMakeVersion, "click", lang.hitch(this, function() {
           this.newVersionPopup();
         })));
@@ -146,7 +146,7 @@ function(declare, BaseWidget,
           this.requestDeleteVersion(opts, loadingNode);
         }
         else {
-          this.requestSpecificVersion(opts, loadingNode, detailsNode);
+          this.requestVersionDifferences(opts, loadingNode, detailsNode);
         }
       }));
     },
@@ -164,7 +164,7 @@ function(declare, BaseWidget,
       }));
     },
 
-    requestSpecificVersion: function(opts, loadingNode, detailsNode) {
+    requestVersionDifferences: function(opts, loadingNode, detailsNode) {
       var versionStripped = opts.versionGuid.replace("{","");
       versionStripped = versionStripped.replace("}","");
       var requestURL = this.serviceRoot + "VersionManagementServer/versions/"+versionStripped+"/differences/";
@@ -177,6 +177,20 @@ function(declare, BaseWidget,
       }}).then(lang.hitch(this, function(result) {
         this.requestStopRead(opts);
         this._showDifferences(result, opts, loadingNode, detailsNode);
+      }));
+    },
+
+    requestVersionConflictss: function(opts, loadingNode, detailsNode) {
+      var versionStripped = opts.versionGuid.replace("{","");
+      versionStripped = versionStripped.replace("}","");
+      var requestURL = this.serviceRoot + "VersionManagementServer/versions/"+versionStripped+"/conflicts/";
+      this.requestData({method: 'POST', url:requestURL,
+        params: {f : "json",
+        sessionId: opts.versionGuid,
+        token: this.token
+      }}).then(lang.hitch(this, function(result) {
+        this.requestStopRead(opts);
+        this._showConflictsManagement(result, opts, loadingNode, detailsNode);
       }));
     },
 
@@ -484,6 +498,7 @@ function(declare, BaseWidget,
     switchGDBVersion: function(version) {
       array.forEach(this.operLayerInfos, lang.hitch(this, function(lyrInf) {
         lyrInf.layerObject.setGDBVersion(version.versionName);
+        console.log(lyrInf);
       }));
     },
     //END SWITCH FEATURE SERVICE VERSION
@@ -653,6 +668,13 @@ function(declare, BaseWidget,
         this.own(on(versionZoom, "click", lang.hitch(this, function() {
           this.zoomToFeature(feature, layerObj);
         })));
+        //create conflict Management spot
+        var versionConflict = domConstruct.create("div", {'class': 'flex-grow-1 details-align-end bgZoom'});
+        domConstruct.place(versionConflict, versionInfoHolder);
+        this.own(on(versionConflict, "click", lang.hitch(this, function() {
+          this.zoomToFeature(feature, layerObj);
+        })));
+
         var spacer = domConstruct.create("div", {'class': 'flex-container-row bottom-padding-10'});
         domConstruct.place(spacer, recordsHolder);
       }));
