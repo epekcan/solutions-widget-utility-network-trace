@@ -24,7 +24,7 @@ define([
   'jimu/dijit/ItemSelector',
   'jimu/dijit/Popup',
   'jimu/dijit/Message',
-  'jimu/dijit/Checkbox',
+  "dijit/form/CheckBox",
   'jimu/portalUtils',
   'jimu/portalUrlUtils',
   'jimu/tokenUtils',
@@ -75,8 +75,8 @@ function(declare,
       if(this.operLayerInfos.length > 0) {
         this.config.serviceURL = this.fsSelector.value;
         this.config.geometryService = "https://utility.arcgisonline.com/ArcGIS/rest/services/Geometry/GeometryServer";
-        this.config.allowVersionSwitch = this.chkSwitchVersion.getValue();
-        this.config.allowVersionCreation = this.chkAllowVersionCreation.getValue();
+        this.config.allowVersionSwitch = this.chkSwitchVersion.get("checked");
+        this.config.allowVersionCreation = this.chkAllowVersionCreation.get("checked");
         return this.config;
       } else {
         new Message({
@@ -106,21 +106,35 @@ function(declare,
     },
 
     _createSwitchVersionCheckbox: function() {
+      var checkBox = new Checkbox({
+        name: "switchVersion",
+        value: true,
+        checked: (this.config.allowVersionSwitch)?true:false,
+      });
+      /*
       var checkbox = new Checkbox({
         checked: (this.config.allowVersionSwitch)?true:false
       });
-      checkbox.placeAt(this.chkAllowSwitchVersion);
-      checkbox.startup();
-      this.chkSwitchVersion = checkbox;
+      */
+     checkBox.placeAt(this.chkAllowSwitchVersion);
+     checkBox.startup();
+      this.chkSwitchVersion = checkBox;
     },
 
     _createCreateVersionCheckbox: function() {
+      var checkBox = new Checkbox({
+        name: "createVersion",
+        value: true,
+        checked: (this.config.allowVersionCreation)?true:false,
+      });
+      /*
       var checkbox = new Checkbox({
         checked: (this.config.allowVersionCreation)?true:false
       });
-      checkbox.placeAt(this.chkAllowVersionCreation);
-      checkbox.startup();
-      this.chkAllowVersionCreation = checkbox;
+      */
+     checkBox.placeAt(this.chkAllowVersionCreation);
+     checkBox.startup();
+      this.chkAllowVersionCreation = checkBox;
     },
 
     _getOperationalLayers: function() {
