@@ -546,19 +546,21 @@ function(declare, BaseWidget,
 
     _createGraphicObject: function(geom, feat, act, diffVer, type) {
       var layerObj = this._lookupLayer(feat.layerId);
-      var layerSymbol = this._lookupSymbol(layerObj, act);
-      var attr = act.attributes;
-      var string = "";
-      for(key in attr) {
-        string + string + key + " : " + attr[key] + "<br>";
+      if(layerObj.layerObject.arcgisProps.title !== "Dirty Areas") {
+        var layerSymbol = this._lookupSymbol(layerObj, act);
+        var attr = act.attributes;
+        var string = "";
+        for(key in attr) {
+          string + string + key + " : " + attr[key] + "<br>";
+        }
+        var infoTemplate = new InfoTemplate("Version Changes",string);
+        var graphic = new Graphic(geom,layerSymbol.symbol,attr, infoTemplate);
+        var buffer = this._simpleBuffer(geom, type);
+        this.map.graphics.add(buffer);
+        this.map.graphics.add(graphic);
+        diffVer.differenceGraphics.push(buffer);
+        diffVer.differenceGraphics.push(graphic);
       }
-      var infoTemplate = new InfoTemplate("Version Changes",string);
-      var graphic = new Graphic(geom,layerSymbol.symbol,attr, infoTemplate);
-      var buffer = this._simpleBuffer(geom, type);
-      this.map.graphics.add(buffer);
-      this.map.graphics.add(graphic);
-      diffVer.differenceGraphics.push(buffer);
-      diffVer.differenceGraphics.push(graphic);
     },
     //END GRAPHIC FOR DIFFERENCES
 
@@ -648,18 +650,36 @@ function(declare, BaseWidget,
       array.forEach(feature, lang.hitch(this, function(feature, i) {
         var borderCSS = "leftBorder" + feature.type;
         var rowCSS = (i % 2 === 0)?"bgRowColor":"";
-        var subType = this._lookupSubType(layerObj, feature.attributes.assetgroup);
+        var assetgroup = "";
+        if(feature.attributes.hasOwnProperty("assetgroup")) {
+          assetgroup = feature.attributes.assetgroup;
+        } else if(feature.attributes.hasOwnProperty("ASSETGROUP")) {
+          assetgroup = feature.attributes.ASSETGROUP;
+        } else {}
+        var subType = this._lookupSubType(layerObj, assetgroup);
         var versionInfoHolder = domConstruct.create("div", {'class': 'flex-container-row ' + rowCSS + ' ' + borderCSS});
         domConstruct.place(versionInfoHolder, recordsHolder);
         //create version info spot
+        var objectId = "";
+        if(feature.attributes.hasOwnProperty("objectId")) {
+          objectId = feature.attributes.objectId;
+        } else if(feature.attributes.hasOwnProperty("OBJECTID")) {
+          objectId = feature.attributes.OBJECTID;
+        } else {}
         var versionInfo = domConstruct.create("div", {
           'class': 'flex-container-column flex-grow-2',
-          innerHTML:(subType !== null)?subType.name:feature.attributes.objectid
+          innerHTML:(subType !== null)?subType.name:objectId
         });
         domConstruct.place(versionInfo, versionInfoHolder);
+        var lastupdate = "";
+        if(feature.attributes.hasOwnProperty("lastupdate")) {
+          lastupdate = feature.attributes.lastupdate;
+        } else if(feature.attributes.hasOwnProperty("LASTUPDATE")) {
+          lastupdate = feature.attributes.LASTUPDATE;
+        } else {}
         var dateInfo = domConstruct.create("div", {
           'class': 'flex-container-column flex-grow-2',
-          innerHTML:new Date(feature.attributes.lastupdate).toDateString()
+          innerHTML:new Date(lastupdate).toDateString()
         });
         domConstruct.place(dateInfo, versionInfoHolder);
         //create zoom to record spot
@@ -669,11 +689,13 @@ function(declare, BaseWidget,
           this.zoomToFeature(feature, layerObj);
         })));
         //create conflict Management spot
+        /*
         var versionConflict = domConstruct.create("div", {'class': 'flex-grow-1 details-align-end bgZoom'});
         domConstruct.place(versionConflict, versionInfoHolder);
         this.own(on(versionConflict, "click", lang.hitch(this, function() {
           this.zoomToFeature(feature, layerObj);
         })));
+        */
 
         var spacer = domConstruct.create("div", {'class': 'flex-container-row bottom-padding-10'});
         domConstruct.place(spacer, recordsHolder);
@@ -811,14 +833,22 @@ function(declare, BaseWidget,
     },
 
     _lookupSymbol: function(layer, feat) {
-      var symbols = layer.layerObject.renderer.infos;
-      var symbol = symbols.filter(function(sym) {
-        return parseInt(sym.value) === parseInt(feat.attributes.assetgroup);
-      });
-      if(symbol.length > 0) {
-        return symbol[0];
-      } else {
-        return symbol;
+      if(layer.layerObject.arcgisProps.title !== "Dirty Areas") {
+        var symbols = layer.layerObject.renderer.infos;
+        var symbol = symbols.filter(function(sym) {
+          var assetgroup = "";
+          if(feat.attributes.hasOwnProperty("assetgroup")) {
+            assetgroup = feat.attributes.assetgroup;
+          } else if(feat.attributes.hasOwnProperty("ASSETGROUP")) {
+            assetgroup = feat.attributes.ASSETGROUP;
+          } else {}
+          return parseInt(sym.value) === parseInt(assetgroup);
+        });
+        if(symbol.length > 0) {
+          return symbol[0];
+        } else {
+          return symbol;
+        }
       }
     },
 
