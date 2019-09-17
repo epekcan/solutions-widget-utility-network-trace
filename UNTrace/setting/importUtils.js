@@ -173,17 +173,22 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, template, on, lang, array,
       }
     },
     parseIncludes: function(param) {
-      param.value = (param.value).trim();
-      if(param.value !== "None") {
-          if(param.value.indexOf("EXCLUDE") > -1 || param.value.indexOf("DO_NOT") > -1) {
-            this.importTrace.traceConfig[param.node] = false;
-          } else {
-            this.importTrace.traceConfig[param.node] = true;
-          }
-        return true;
+      if(typeof(param.value) !== "undefined") {
+        param.value = (param.value).trim();
+        if(param.value !== "None") {
+            if(param.value.indexOf("EXCLUDE") > -1 || param.value.indexOf("DO_NOT") > -1) {
+              this.importTrace.traceConfig[param.node] = false;
+            } else {
+              this.importTrace.traceConfig[param.node] = true;
+            }
+          return true;
+        } else {
+          this.importTrace.traceConfig[param.node] = false;
+          return true;
+        }
       } else {
         this.importTrace.traceConfig[param.node] = false;
-        return false;
+        return true;
       }
     },
     parseBarriersFiltersFunctions: function(param) {
