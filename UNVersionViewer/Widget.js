@@ -497,8 +497,11 @@ function(declare, BaseWidget,
     //SWITCH FEATURE SERVICE VERSION
     switchGDBVersion: function(version) {
       array.forEach(this.operLayerInfos, lang.hitch(this, function(lyrInf) {
-        lyrInf.layerObject.setGDBVersion(version.versionName);
-        console.log(lyrInf);
+        if(lyrInf.hasOwnProperty("layerObject")) {
+          if(lyrInf.layerObject.hasOwnProperty("gdbVersion")) {
+            lyrInf.layerObject.setGDBVersion(version.versionName);
+          }
+        }
       }));
     },
     //END SWITCH FEATURE SERVICE VERSION
@@ -548,13 +551,18 @@ function(declare, BaseWidget,
       var layerObj = this._lookupLayer(feat.layerId);
       if(layerObj.layerObject.arcgisProps.title !== "Dirty Areas") {
         var layerSymbol = this._lookupSymbol(layerObj, act);
+        if(layerSymbol.hasOwnProperty("symbol")) {
+          layerSymbol = layerSymbol.symbol;
+        } else {
+          layerSymbol = layerSymbol
+        }
         var attr = act.attributes;
         var string = "";
         for(key in attr) {
           string + string + key + " : " + attr[key] + "<br>";
         }
         var infoTemplate = new InfoTemplate("Version Changes",string);
-        var graphic = new Graphic(geom,layerSymbol.symbol,attr, infoTemplate);
+        var graphic = new Graphic(geom,layerSymbol,attr, infoTemplate);
         var buffer = this._simpleBuffer(geom, type);
         this.map.graphics.add(buffer);
         this.map.graphics.add(graphic);
