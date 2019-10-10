@@ -836,19 +836,24 @@ function(declare, BaseWidget,
 
     _lookupSymbol: function(layer, feat) {
       if(layer.layerObject.arcgisProps.title !== "Dirty Areas") {
-        var symbols = layer.layerObject.renderer.infos;
-        var symbol = symbols.filter(function(sym) {
-          var assetgroup = "";
-          if(feat.attributes.hasOwnProperty("assetgroup")) {
-            assetgroup = feat.attributes.assetgroup;
-          } else if(feat.attributes.hasOwnProperty("ASSETGROUP")) {
-            assetgroup = feat.attributes.ASSETGROUP;
-          } else {}
-          return parseInt(sym.value) === parseInt(assetgroup);
-        });
-        if(symbol.length > 0) {
-          return symbol[0];
+        if(layer.layerObject.renderer.hasOwnProperty("infos")) {
+          var symbols = layer.layerObject.renderer.infos;
+          var symbol = symbols.filter(function(sym) {
+            var assetgroup = "";
+            if(feat.attributes.hasOwnProperty("assetgroup")) {
+              assetgroup = feat.attributes.assetgroup;
+            } else if(feat.attributes.hasOwnProperty("ASSETGROUP")) {
+              assetgroup = feat.attributes.ASSETGROUP;
+            } else {}
+            return parseInt(sym.value) === parseInt(assetgroup);
+          });
+          if(symbol.length > 0) {
+            return symbol[0];
+          } else {
+            return symbol;
+          }
         } else {
+          var symbol = layer.layerObject.renderer.getSymbol();
           return symbol;
         }
       }

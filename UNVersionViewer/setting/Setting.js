@@ -143,7 +143,9 @@ function(declare,
       LayerInfos.getInstance(this.map, itemInfo)
         .then(lang.hitch(this, function(operLayerInfos) {
           var filteredLayers = operLayerInfos._operLayers.filter(function(opl) {
-            return(opl.url.indexOf("FeatureServer") > -1);
+            if(opl.hasOwnProperty("url")) {
+              return(opl.url.indexOf("FeatureServer") > -1);
+            }
           });
           if(filteredLayers.length > 0) {
             array.forEach(filteredLayers, lang.hitch(this, function(fl) {
