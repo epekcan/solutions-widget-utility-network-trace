@@ -1,0 +1,19 @@
+.UNVersionViewer-setting .flex-container-row {
+  display: flex;
+  flex-direction: row;
+}
+
+.UNVersionViewer-setting .mapChooserIcon{
+  width: 150px;
+  height: 150px;
+  background-image: url("../images/selectFS.png");
+  background-repeat: no-repeat;
+}
+
+.UNVersionViewer-setting .spacer {
+  height: 15px;
+}
+
+.UNVersionViewer-setting .checkBoxOption {
+  padding-right: 10px;
+}

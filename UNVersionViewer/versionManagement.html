@@ -1,0 +1,18 @@
+<div class="versionOptionDiv" data-dojo-attach-point="versionOptionDiv">
+  <div class="versionChooserOptions" data-dojo-attach-point="versionChooserOptions">
+      <fieldset class="versionOptionFieldSet">
+          <div data-dojo-attach-point="versionChooserTextHolder">
+            <div class="versionCreationText" data-dojo-attach-point="versionCreationText"></div>
+          </div>
+      </fieldset>
+      <fieldset class="versionOptionFieldSet" data-dojo-attach-point="scopeSet">
+          <legend class="versionHeaderLegend">
+              Choose the scope of this version
+          </legend>
+          <div><input type="radio" class="scopeRadio" data-dojo-type="dijit/form/RadioButton" name="versionScope" checked value="public"/> <label class="radioSize">Public</label></div>
+          <div><input type="radio" class="scopeRadio" data-dojo-type="dijit/form/RadioButton" name="versionScope" value="private"/> <label class="radioSize">Private</label></div>
+          <div><input type="radio" class="scopeRadio" data-dojo-type="dijit/form/RadioButton" name="versionScope" value="protected"/> <label class="radioSize">Protected</label></div>
+          <div><input type="radio" class="scopeRadio" data-dojo-type="dijit/form/RadioButton" name="versionScope" value="hidden"/> <label class="radioSize">Hidden</label></div>
+      </fieldset>
+  </div>
+</div>

@@ -403,10 +403,12 @@ function(declare, BaseWidgetSetting, _TemplatedMixin, registry, on, Deferred, do
         layers.map(function(lyr) {
           if(lyr.layerType.indexOf("Map") < 0 || lyr.layerType.indexOf("Tile") < 0) {
           //if(lyr.hasOwnProperty("itemProperties")) {
-            var cleanURL = lyr.url.substring(0, lyr.url.lastIndexOf("/"));
-            if(distinctURLs.indexOf(cleanURL) <= -1) {
-              distinctURLs.push(cleanURL);
-            };
+            if(lyr.hasOwnProperty("url")) {
+              var cleanURL = lyr.url.substring(0, lyr.url.lastIndexOf("/"));
+              if(distinctURLs.indexOf(cleanURL) <= -1) {
+                distinctURLs.push(cleanURL);
+              };
+            }
           }
         });
         if(distinctURLs.length > 0) {

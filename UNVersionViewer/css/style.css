@@ -1,0 +1,239 @@
+.jimu-widget-demo div:first-child{
+  color: red;
+}
+
+.UNVersionViewer .flex-container-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.UNVersionViewer .flex-container-row {
+  display: flex;
+  flex-direction: row;
+}
+
+.UNVersionViewer .flex-grow-1 {
+  /*flex-grow: 1;*/
+  width: 100%;
+}
+
+.UNVersionViewer .flex-grow-2 {
+  flex-grow: 2;
+}
+
+.UNVersionViewer .flex-align-end {
+  /*justify-content: flex-end;*/
+  width: 50px;
+}
+
+.UNVersionViewer .active-align-first {
+  /*justify-content: flex-end;*/
+  text-align: right;
+  width: 25px;
+}
+
+.UNVersionViewer .details-align-end {
+  /*justify-content: flex-end;*/
+  text-align: right;
+  width: 25px;
+}
+
+.UNVersionViewer .bottom-padding-10 {
+  padding-bottom: 10px;
+}
+
+.UNVersionViewer .padding-5 {
+  padding-bottom: 5px;
+  padding-top: 5px;
+}
+
+.UNVersionViewer .hide {
+  display: none;
+}
+
+.UNVersionViewer .show {
+  display: block;
+}
+
+.UNVersionViewer .bgArrowRight {
+  height: 24px;
+  background-image: url(../images/arrow-right.png);
+  background-position: 0 0;
+  background-repeat: no-repeat; /* Do not repeat the image */
+  cursor: pointer;
+}
+
+.UNVersionViewer .bgArrowLeft {
+  height: 24px;
+  background-image: url(../images/arrow-left.png);
+  background-position: 0 0;
+  background-repeat: no-repeat; /* Do not repeat the image */
+  cursor: pointer;
+  padding-left: 25px;
+}
+
+.UNVersionViewer .bgZoom {
+  height: 24px;
+  background-image: url(../images/grey_pin.png);
+  background-position: 0 0;
+  background-position: center; /* Center the image */
+  background-repeat: no-repeat; /* Do not repeat the image */
+  cursor: pointer;
+}
+
+.UNVersionViewer .bgEdit {
+  height: 24px;
+  background-image: url(../images/edit_default.png);
+  background-position: 0 0;
+  background-position: center; /* Center the image */
+  background-repeat: no-repeat; /* Do not repeat the image */
+}
+
+.UNVersionViewer .bgView {
+  height: 24px;
+  background-image: url(../images/view.png);
+  background-position: 0 0;
+  background-position: center; /* Center the image */
+  background-repeat: no-repeat; /* Do not repeat the image */
+}
+
+.UNVersionViewer .bgDetails {
+  height: 24px;
+  background-image: url(../images/details.png);
+  background-position: 0 0;
+  background-position: center; /* Center the image */
+  background-repeat: no-repeat; /* Do not repeat the image */
+}
+
+.UNVersionViewer .bgValidate {
+  height: 24px;
+  background-image: url(../images/validating.png);
+  background-position: 0 0;
+  background-position: center; /* Center the image */
+  background-repeat: no-repeat; /* Do not repeat the image */
+}
+
+.UNVersionViewer .loading {
+  background-image: url(../images/loading.gif);
+  background-position: 0 0;
+  background-repeat: no-repeat; /* Do not repeat the image */
+  vertical-align: top;
+}
+
+.UNVersionViewer .calendar {
+  background-image: url(../images/calendar.png);
+  background-position: 0 0;
+  background-position: center; /* Center the image */
+  background-repeat: no-repeat; /* Do not repeat the image */
+  cursor: pointer;
+}
+
+.UNVersionViewer .cud {
+  background-image: url(../images/cud.png);
+  background-position: 0 0;
+  background-repeat: no-repeat; /* Do not repeat the image */
+  cursor: pointer;
+}
+
+.UNVersionViewer .validating {
+  background-image: url(../images/validating.png);
+  background-position: 0 0;
+  background-repeat: no-repeat; /* Do not repeat the image */
+  cursor: pointer;
+}
+
+.UNVersionViewer .notValid {
+  background-image: url(../images/not-valid.png);
+  background-position: 0 0;
+  background-repeat: no-repeat; /* Do not repeat the image */
+  cursor: pointer;
+}
+
+.UNVersionViewer .valid {
+  background-image: url(../images/valid.png);
+  background-position: 0 0;
+  background-position: center; /* Center the image */
+  background-repeat: no-repeat; /* Do not repeat the image */
+  cursor: pointer;
+}
+
+.UNVersionViewer .bgAddVersion {
+  background-image: url(../images/add_default.png);
+  background-position: 0 0;
+  background-position: center; /* Center the image */
+  background-repeat: no-repeat; /* Do not repeat the image */
+  cursor: pointer;
+}
+
+.UNVersionViewer .bgDeleteVersion {
+  background-image: url(../images/delete.png);
+  background-position: 0 0;
+  background-repeat: no-repeat; /* Do not repeat the image */
+  cursor: pointer;
+}
+
+.UNVersionViewer .alignCenter {
+  vertical-align: center;
+}
+
+.UNVersionViewer .noLoading {
+  vertical-align: top;
+}
+
+.UNVersionViewer .bgRowColor {
+  background-color: rgba(128,128,128, 0.15);
+}
+
+.UNVersionViewer .underlineTopBorder {
+  border-top-width: 3px;
+  border-top-style: solid;
+  border-top-color: rgba(0,0,0, 1);
+}
+
+.UNVersionViewer .underlineBottomBorder {
+  border-bottom-width: 3px;
+  border-bottom-style: solid;
+  border-bottom-color: rgba(0,0,0, 1);
+}
+
+.UNVersionViewer .leftBorderInsert {
+  border-left-width: 5px;
+  border-left-style: solid;
+  border-left-color: rgba(0,255,0, 1);
+  padding-left: 5px;
+}
+
+.UNVersionViewer .leftBorderUpdate {
+  border-left-width: 5px;
+  border-left-style: solid;
+  border-left-color: rgba(255,255,0, 1);
+  padding-left: 5px;
+}
+
+.UNVersionViewer .leftBorderDelete {
+  border-left-width: 5px;
+  border-left-style: solid;
+  border-left-color: rgba(255,0,0, 1);
+  padding-left: 5px;
+}
+
+.UNVersionViewer .header {
+  font-size: large;
+  font-weight: bold;
+}
+
+.create-version .radioSize {
+  font-size: small;
+}
+
+.create-version .versionHeaderLegend {
+  font-weight: bold;
+}
+
+.create-version .versionOptionFieldSet {
+  padding-bottom: 10px;
+}
+
+.UNVersionViewer .hideHeader {
+  display: none;
+}

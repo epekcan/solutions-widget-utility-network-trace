@@ -105,12 +105,12 @@ function(declare,
       console.log('postCreate');
 
       //load flag images
-      domAttr.set(this.btnClearTraceLocations, "src", this.folderUrl + "/images/delete.png" );
-      domAttr.set(this.btnStartingPoint, "src", this.folderUrl + "/images/flag.png" );
-      domAttr.set(this.btnBarriers, "src", this.folderUrl + "/images/add-barriers-select.png" );
-      domAttr.set(this.btnPoint, "src", this.folderUrl + "/images/add.png" );
-      domAttr.set(this.btnPolygon, "src", this.folderUrl + "/images/polygon.png" );
-      domAttr.set(this.btnRun, "src", this.folderUrl + "/images/run.png" );
+      domAttr.set(this.btnClearTraceLocations, "src", this.folderUrl + "images/delete.png" );
+      domAttr.set(this.btnStartingPoint, "src", this.folderUrl + "images/flag.png" );
+      domAttr.set(this.btnBarriers, "src", this.folderUrl + "images/add-barriers-select.png" );
+      domAttr.set(this.btnPoint, "src", this.folderUrl + "images/add.png" );
+      domAttr.set(this.btnPolygon, "src", this.folderUrl + "images/polygon.png" );
+      domAttr.set(this.btnRun, "src", this.folderUrl + "images/run.png" );
 
       this.un = UtilityNetwork;
       this.token = this.generateToken();
@@ -286,11 +286,11 @@ function(declare,
 
                     let img = document.createElement("img");
                     if (this.activeTraceLocation === this.config.TRACELOCATION_START) {
-                        img.src = this.folderUrl + "/images/flag.png";
+                        img.src = this.folderUrl + "images/flag.png";
                         img.className = "btnStartItems";
                     }
                     else {
-                        img.src = this.folderUrl + "/images/add-barriers-select.png";
+                        img.src = this.folderUrl + "images/add-barriers-select.png";
                         img.className = "btnBarrierItems";
                     }
                     let rowTraceLocation = document.createElement("tr");
@@ -308,7 +308,7 @@ function(declare,
                     let columnBtn = document.createElement("td");
                     rowTraceLocation.appendChild(columnBtn);
                     let deleteTraceLocation = document.createElement("img");
-                    deleteTraceLocation.src = this.folderUrl + "/images/delete.png"
+                    deleteTraceLocation.src = this.folderUrl + "images/delete.png"
                     deleteTraceLocation.className = "btnX";
                     deleteTraceLocation.addEventListener("click", lang.hitch(this, function(e){
                         traceLocations.removeChild(rowTraceLocation);
@@ -427,7 +427,7 @@ function(declare,
       this.traceCounter = 0;
       this.traceMax = parseInt(param.count);
       this.traceLocationsParam = [];
-      if(this.config.userTraces[param.value].traces[0].traceConfig.domainNetwork !== "") {
+      if(this.config.userTraces[param.value].traces[0].traceConfig.domainNetwork !== "" || this.config.userTraces[param.value].traces[0].traceConfig.domainNetwork !== "''") {
         this.currentDomainNetwork = this.config.userTraces[param.value].traces[0].traceConfig.domainNetwork;
       } else {
         this.currentDomainNetwork = this.config.domainNetwork;
@@ -536,7 +536,9 @@ function(declare,
             }
             this.drawTraceResults(this.un, traceResults, this.resultHighlightColor, false);
             this.tempRecordSet = traceResults;
-            this.commulativeRecordSet = this.commulativeRecordSet.concat(traceResults.traceResults.elements);
+            if(traceResults.success) {
+              this.commulativeRecordSet = this.commulativeRecordSet.concat(traceResults.traceResults.elements);
+            }
           })
         .then(a => {
             domAttr.set(this.btnRun, "class", "button_nonactive");
@@ -1014,9 +1016,23 @@ function(declare,
       dom.byId("lblExport").textContent = params;
     },
 
+    _getDescriptions: function(results) {
+      var finalList = [];
+      array.forEach(results, lang.hitch(this, function(item) {
+        var unLayer = this.un.getLayerIdfromSourceId(item.networkSourceId);
+        var types = this.un.getAssetType(unLayer.layerId, item.assetGroupCode, item.assetTypeCode);
+        item["assetGroupName"] = types.assetGroupName;
+        item["assetTypeName"] = types.assetTypeName;
+        item["layerId"] = unLayer.layerId;
+        finalList.push(item);
+      }));
+      return finalList;
+    },
+
     exportResults: function() {
       if(this.commulativeRecordSet.length > 0) {
-        var exportData = this._createCSVContent(this.commulativeRecordSet, "traceResult");
+        var finalList = this._getDescriptions(this.commulativeRecordSet);
+        var exportData = this._createCSVContent(finalList, "traceResult");
         this._exportToCSVComplete(exportData, "TraceResult");
       }
     },

@@ -1,0 +1,6 @@
+{
+  "serviceURL": "",
+  "geometryService": "https://utility.arcgisonline.com/ArcGIS/rest/services/Geometry/GeometryServer",
+  "allowVersionSwitch": true,
+  "allowVersionCreation": true
+}
