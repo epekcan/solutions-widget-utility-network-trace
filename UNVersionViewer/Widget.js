@@ -825,8 +825,10 @@ function(declare, BaseWidget,
 
     _lookupLayer: function(layerId) {
       var layer = this.operLayerInfos.filter(function(ol) {
-        if(typeof(ol.layerObject.layerId) !== "undefined") {
-          return parseInt(ol.layerObject.layerId) === parseInt(layerId);
+        if(ol.hasOwnProperty("layerObject")) {
+          if(typeof(ol.layerObject.layerId) !== "undefined") {
+            return parseInt(ol.layerObject.layerId) === parseInt(layerId);
+          }
         }
       });
       return layer[0];
