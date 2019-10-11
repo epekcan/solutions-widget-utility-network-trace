@@ -38,6 +38,10 @@
 
 /* ESRI */
 
+.esriPopupWrapper .titlePane {
+  cursor: move;
+}
+
 .jimu-widget-untrace .esri-ui-top-left {
   left: 330px;
 }

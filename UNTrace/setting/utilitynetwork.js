@@ -116,8 +116,8 @@ define([
         {
 
             let webMercSpatialReference = {
-                "wkid": 102100,
-                "latestWkid": 3857,
+                "wkid": this.featureServiceJson.spatialReference.wkid,
+                "latestWkid": this.featureServiceJson.spatialReference.wkid,
                 "xyTolerance": 0.001,
                 "zTolerance": 0.001,
                 "mTolerance": 0.001,

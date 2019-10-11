@@ -7,6 +7,8 @@
   "FSurl": null,
   "locationId": 0,
   "QUERY_PAGE": 100,
+  "TRACE_RESULT_TO_FEATURELAYER": true,
+  "TRACE_COLOR": [20, 158, 29, 191],
   "SELECTION_COLOR": [27, 227, 251, 0.4],
   "SELECTION_SIZE": 24,
   "CUSTOMER_COLOR": [250, 240, 29, 0.7],
@@ -17,8 +19,8 @@
   "TRACELOCATION_START": "startingPoint",
   "TRACELOCATION_BARRIER": "barrier",
   "DEFAULT_SPATIAL_REFERENCE": {
-    "wkid": 102100,
-    "latestWkid": 3857
+    "wkid": 28992,
+    "latestWkid": 28992
   },
   "emptyTraceConfiguration": {
       "includeContainers":false,
