@@ -109,9 +109,9 @@ define([
     };
     mo.query = function (layerId, where, obj, objectids) {
 
-      let webMercSpatialReference = {
-        "wkid": 102100,
-        "latestWkid": 3857,
+      let outSRSpatialReference = {
+        "wkid": this.featureServiceJson.spatialReference.wkid,
+        "latestWkid": this.featureServiceJson.spatialReference.wkid,
         "xyTolerance": 0.001,
         "zTolerance": 0.001,
         "mTolerance": 0.001,
@@ -129,7 +129,7 @@ define([
         token: this.token,
         outFields: "*",
         where: where,
-        outSR: JSON.stringify(webMercSpatialReference)
+        outSR: JSON.stringify(outSRSpatialReference)
       }
 
       if (objectids != undefined)
@@ -389,6 +389,7 @@ define([
 
     mo.makeRequest = async function (opts) {
       return new Promise(function (resolve, reject) {
+		    var requestOptions = opts;
         let xhr = new XMLHttpRequest();
         console.log(opts.url);
         xhr.open(opts.method, opts.url);
@@ -397,6 +398,7 @@ define([
           if (this.status >= 200 && this.status < 300) {
             let jsonRes = xhr.response;
             if (typeof jsonRes !== "object") jsonRes = JSON.parse(xhr.response);
+            jsonRes.requestOptions = requestOptions;
             resolve(jsonRes);
           } else {
             reject({

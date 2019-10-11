@@ -24,6 +24,7 @@ define([
   'dojo/dom-attr',
   'dojo/dom-style',
   'dojo/query',
+  'dojo/dnd/Moveable',
   "esri/layers/FeatureLayer",
   "esri/layers/GraphicsLayer",
   "esri/graphic",
@@ -37,9 +38,14 @@ define([
   "esri/symbols/PictureMarkerSymbol",
   "esri/symbols/SimpleFillSymbol",
   "esri/Color",
+  "esri/SpatialReference",
+  "esri/renderers/SimpleRenderer",
+  "esri/renderers/UniqueValueRenderer",
+  "esri/InfoTemplate",
   'jimu/tokenUtils',
   'jimu/CSVUtils',
   'jimu/MapManager',
+  'jimu/LayerInfos/LayerInfos',
   "./utilitynetwork",
   'dijit/form/TextBox',
   'dijit/form/Select'
@@ -53,6 +59,7 @@ function(declare,
   domAttr,
   domStyle,
   domQuery,
+  Moveable,
   FeatureLayer,
   GraphicsLayer,
   Graphic,
@@ -66,9 +73,14 @@ function(declare,
   PictureMarkerSymbol,
   SimpleFillSymbol,
   Color,
+  SpatialReference,
+  SimpleRenderer,
+  UniqueValueRenderer,
+  InfoTemplate,
   tokenUtils,
   CSVUtils,
   MapManager,
+  LayerInfos,
   UtilityNetwork
 ) {
   //To create a widget, you need to derive from BaseWidget.
@@ -99,6 +111,7 @@ function(declare,
     currentDomainNetwork: null,
     resultHighlightColor: [27,227,251,0.4],
     layerPopupState: [],
+    resultLayers: [],
 
     postCreate: function() {
       this.inherited(arguments);
@@ -121,6 +134,13 @@ function(declare,
     startup: function() {
       this.inherited(arguments);
       console.log('startup');
+
+      var handle = Query(".titlePane", this.map.infoWindow.domNode)[0];
+      new Moveable(this.map.infoWindow.domNode, {
+        handle: handle
+      });
+      this.map.infoWindow.resize(400, 300);
+
       this.loadUN();
 
       this.own(on(this.btnStartingPoint, "click", lang.hitch(this, this.btnStartingPointClick)));
@@ -153,6 +173,7 @@ function(declare,
         if(traceLocations !== null) {
             while (traceLocations.firstChild) traceLocations.removeChild(traceLocations.firstChild);
         }
+
         domAttr.set(this.btnStartingPoint, "class", "button_nonactive");
         domAttr.set(this.btnBarriers, "class", "button_nonactive");
         domQuery(".traceLocations").style("display", "none");
@@ -160,6 +181,10 @@ function(declare,
         domStyle.set(this.runButtonHolder, "display", "none");
         this.map.graphics.clear();
         //this.gl.graphics.clear();
+        this.resultLayers.map(layer => {
+          let graphics = layer.graphics;
+          layer.applyEdits(null, null, graphics);
+        });
         this.selectionMode = "none";
         this.updateStatus("");
         this.updateExportText("");
@@ -167,6 +192,12 @@ function(declare,
 
       this.own(on(this.btnRun, "click", lang.hitch(this, function() {
         domAttr.set(this.btnRun, "class", "button_active");
+
+        this.resultLayers.map(layer => {
+          let graphics = layer.graphics;
+          layer.applyEdits(null, null, graphics);
+        });
+
         currOption = this.cmbUserTraces.options[this.cmbUserTraces.selectedIndex];
         this.prepTraceParams(currOption);
         this.determineTracesToRun({'groupName':this.currentGroup});
@@ -270,7 +301,7 @@ function(declare,
       var fl = new FeatureLayer(this.un.featureServiceUrl + "/" + tc);
       this.own(on(fl, "load", lang.hitch(this, function() {
         const query = new Query();
-        query.outSpatialReference = { wkid: 102100 };
+        query.outSpatialReference = { wkid: this.un.featureServiceJson.spatialReference.wkid };
         query.returnGeometry = true;
         query.outFields = [ "*" ];
         query.distance = 10;
@@ -534,6 +565,7 @@ function(declare,
             } else {
               this.traceCounter++;
             }
+            //TODO this.drawTraceResults(this.un, traceResults, this.resultHighlightColor, false);
             this.drawTraceResults(this.un, traceResults, this.resultHighlightColor, false);
             this.tempRecordSet = traceResults;
             if(traceResults.success) {
@@ -800,8 +832,16 @@ function(declare,
     },
 
     drawTraceResults: function(un, traceResults, color = this.resultHighlightColor, clearGraphics = false) {
+      if(this.config.TRACE_RESULT_TO_FEATURELAYER){
+        return this.drawTraceResultsToFeatureLayer(un, traceResults, color , clearGraphics);
+      }
+        return this.drawTraceResultsTographics(un, traceResults, color , clearGraphics);
+    },
+
+    drawTraceResultsTographics: function(un, traceResults, color = this.resultHighlightColor, clearGraphics = false) {
       //console.log(JSON.stringify(traceResults))
       let selectionTraceResult = this.buildTraceResults(traceResults);
+	  
 
       let promises = [];
       for (let layerId in selectionTraceResult.layers) {
@@ -826,6 +866,59 @@ function(declare,
           }
           //this.map.graphics.add(graphics);
       }));
+    },
+
+   drawTraceResultsToFeatureLayer: function(un, traceResults, color = this.resultHighlightColor, clearGraphics = false) {
+      let selectionTraceResult = this.buildTraceResults(traceResults);
+
+      selectionTraceResult.layers.forEach((objects, layerId) => {
+        if(this.resultLayers[layerId] === undefined){
+          console.log("add an new layer to the map", layerId);
+          LayerInfos.getInstance(this.map, this.map.itemInfo).then( (layerInfosObject) => {
+            layerInfosObject.getLayerInfoArray().forEach((layerInfo) => {
+              if(layerInfo.layerObject.layerId === layerId){
+                this.resultLayers[layerId] = this._createFeatureLayer(layerInfo.layerObject);
+              }
+            });
+          });
+        }
+      });
+
+      let promises = [];
+      for (let layerId in selectionTraceResult.layers) {
+          let layerObj = selectionTraceResult.layers[layerId];
+          layerObj.layerId = layerId;
+          let subOids = this.createGroupedArray(layerObj.objectIds, this.config.QUERY_PAGE);
+          subOids.forEach(oidGroup => 
+            promises.push(this.un.query(layerId, "1=1", layerObj, oidGroup.join(",")))
+          );
+      }
+
+      Promise.all(promises).then(lang.hitch(this, function(rows) {
+          if (clearGraphics) this.map.graphics.clear();
+          rows.map((featureSet) => {  
+              let features = [];
+              if (featureSet.features != undefined){
+                  for (let g of featureSet.features) {
+                      if(featureSet.geometryType === "esriGeometryPoint"){
+                            var geom = new Point(g.geometry.x, g.geometry.y, new SpatialReference(this.un.featureServiceJson.spatialReference.wkid));
+                            var graphic = new Graphic(geom);
+                            graphic.setAttributes(g.attributes);
+                            features.push(graphic);
+                      }
+                      else{
+                            var geom = new Polyline(new SpatialReference(this.un.featureServiceJson.spatialReference.wkid));
+                            g.geometry.paths.map(path => geom.addPath(path));
+                            var graphic = new Graphic(geom);
+                            graphic.setAttributes(g.attributes);
+                            features.push(graphic);
+                      }
+                  }
+                  const layerId = parseInt(featureSet.requestOptions.params.layerId);
+                  this.resultLayers[layerId].applyEdits(features, null, null);
+                }
+          });
+        }));
     },
 
     /********SUPPORT FUNCTIONS
@@ -1004,7 +1097,7 @@ function(declare,
     generateToken: function() {
       var tokenTool = tokenUtils;
       tokenTool.portalUrl = this.appConfig.portalUrl;
-      console.log(tokenTool.getPortalCredential(this.appConfig.portalUrl));
+      //console.log(tokenTool.getPortalCredential(this.appConfig.portalUrl));
       return tokenTool.getPortalCredential(this.appConfig.portalUrl).token;
     },
 
@@ -1036,6 +1129,7 @@ function(declare,
         this._exportToCSVComplete(exportData, "TraceResult");
       }
     },
+
     _exportToCSVComplete: function (csvdata, fileName) {
       CSVUtils._download(fileName + '.csv', csvdata);
     },
@@ -1098,6 +1192,120 @@ function(declare,
       mapManager.enableWebMapPopup();
     },
 
+    _createFeatureLayer: function(layerObject) {
+
+     let featureCollection = {
+      "layerDefinition": null,
+      "featureSet": {
+        "features": [],
+        "geometryType": layerObject.geometryType,
+      }
+    };
+
+      //var arcade = `if($feature.active == 1){ return true; } return false;`;
+      var arcade = `if(1 == 1){ return true; } return false;`;
+
+      let color = typeof(this.config.TRACE_COLOR) !== "undefined" ? this.config.TRACE_COLOR :  [210, 105, 30, 191];
+      
+      let renderer = new UniqueValueRenderer({
+        "valueExpression": arcade,
+        "valueExpressionTitle": "",
+        "uniqueValueInfos": [{
+          "value": true,
+          //"symbol": this.createSymbol([210, 105, 30, 191], layerObject.geometryType),
+          "symbol": this.createSymbol(color, layerObject.geometryType),
+          "label": layerObject.description
+        }]
+      });
+    
+
+
+    //let infoTemplate = new InfoTemplate("Attributes", "${*}");
+    let infoTemplate = layerObject.infoTemplate;
+    let = featureCollection.layerDefinition = {
+      "geometryType": "esriGeometryPoint",
+      "objectIdField": "ObjectID",
+      "infoTemplate": infoTemplate,
+      "drawingInfo": {
+        "renderer": renderer
+      },
+      "fields": layerObject.fields
+    };
+
+    let featureLayer = new FeatureLayer(featureCollection, {
+      id: `${layerObject.name}-Result`,
+      ObjectIdField: layerObject.objectIdField,
+      spatialReference: {
+        wkid: layerObject.spatialReference.wkid
+      },
+      mode: FeatureLayer.MODE_ONDEMAND
+    });
+    featureLayer.arcgisProps = {title: `${layerObject.name}-Result`};
+
+    featureLayer.setRenderer(renderer);
+
+    this.map.addLayers([featureLayer]);
+
+    featureLayer.on('load', () => {
+      LayerInfos.getInstance(this.map, this.map.itemInfo).then( (layerInfosObject) => {
+        var featureLayerInfo = layerInfosObject.getLayerInfoById(featureLayer.id);
+        featureLayerInfo.loadInfoTemplate().then(() => 
+          featureLayerInfo.enablePopup()
+        );
+      });
+    });
+
+    return featureLayer;
+    },
+
+    createSymbol: function(color, geometryType){
+      var symbol;
+      switch (geometryType) {
+        case "esriGeometrypoint":
+            symbol = this.createPointSymbol(color);
+          break;
+        case "esriGeometryPolyline":
+            symbol = this.createLineSymbol(color);
+          break;
+        default:
+            symbol = this.createPointSymbol(color);
+          break;
+      }
+      return symbol;
+    },
+
+    createPointSymbol: function (color) {
+      return {
+        "color": color,
+        "size": 14,
+        "angle": 0,
+        "xoffset": 0,
+        "yoffset": 0,
+        "type": "esriSMS",
+        "style": "esriSMSCircle",
+        "outline": {
+          "color": [255, 255, 255, 255],
+          "width": 1,
+          "type": "esriSLS",
+          "style": "esriSLSSolid"
+        }
+      };
+    },
+
+    createLineSymbol: function (color) {
+      return {
+        "type": "esriSLS",
+        "style": "esriSLSSolid",
+        "color": color,
+        "width": 3,
+        "outline": {
+          "color": [255, 255, 255, 255],
+          "width": 1,
+          "type": "esriSLS",
+          "style": "esriSLSSolid"
+        }
+        };
+    },
 
     onOpen: function(){
       console.log('onOpen');
