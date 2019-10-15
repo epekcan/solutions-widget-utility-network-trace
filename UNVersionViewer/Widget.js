@@ -508,6 +508,11 @@ function(declare, BaseWidget,
 
     //CREATE GRAPHIC TO SHOW DIFFERENCES
     _createGraphic: function(features, diffVer) {
+      array.forEach(this.operLayerInfos, lang.hitch(this, function(lyrInf) {
+        if(lyrInf.hasOwnProperty("layerObject")) {
+          console.log(lyrInf.layerObject.layerId + " : " + lyrInf.layerObject.description);
+        }
+      }));
       if(features.length > 0) {
         features.map(lang.hitch(this, function(feat) {
           if(feat.hasOwnProperty("inserts")) {
@@ -535,6 +540,11 @@ function(declare, BaseWidget,
             //it's a line
             var geom = new Polyline(layerObj.layerObject.spatialReference);
             geom.addPath(act.geometry.paths[0]);
+          } else if (act.geometry.hasOwnProperty("curvePaths")) {
+            //it's a curve path
+            var newPath = this._curvePathToPath(act.geometry.curvePaths[0]);
+            var geom = new Polyline(layerObj.layerObject.spatialReference);
+            geom.addPath(newPath);
           } else {
             //it's a point
             var geom = new Point(act.geometry.x, act.geometry.y, layerObj.layerObject.spatialReference);
@@ -721,7 +731,12 @@ function(declare, BaseWidget,
         //it's a line
         var geom = new Polyline(layerObj.layerObject.spatialReference);
         geom.addPath(feature.geometry.paths[0]);
-      } else {
+      } else if (feature.geometry.hasOwnProperty("curvePaths")) {
+        //it's a curve path
+        var newPath = this._curvePathToPath(feature.geometry.curvePaths[0]);
+        var geom = new Polyline(layerObj.layerObject.spatialReference);
+        geom.addPath(newPath);
+      }  else {
         //it's a point
         var geom = new Point(feature.geometry.x, feature.geometry.y, layerObj.layerObject.spatialReference);
       }
@@ -946,6 +961,30 @@ function(declare, BaseWidget,
         );
       };
     },
+
+    _curvePathToPath: function(geom) {
+      var newGeom = [];
+      array.forEach(geom, lang.hitch(this, function(g) {
+        if(Array.isArray(g)) {
+          var newSlot = [g[0],g[1]];
+          newGeom.push(newSlot);
+        } else {
+          //has an inner object, reverse the order becaus ethe lower coordinate is last.
+          for(key in g) {
+            var pair = g[key].reverse();
+            array.forEach(pair, lang.hitch(this, function(p) {
+              var newSlot = [p[0],p[1]];
+              newGeom.push(newSlot);
+            }));
+          }
+        }
+      }));
+      if(newGeom.length === 0) {
+        newGeom = geom;
+      }
+      return newGeom;
+    },
+
     //END SUPPORT FUNCTIONS
 
     onOpen: function(){
