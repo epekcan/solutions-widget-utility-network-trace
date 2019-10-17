@@ -184,6 +184,13 @@
   background-color: rgba(128,128,128, 0.15);
 }
 
+.UNVersionViewer .bgDefaultRowColor {
+  background-color: rgba(66, 66, 66, 0.25);
+  border-bottom-width: 2px;
+  border-bottom-color: black;
+  border-bottom-style: solid;
+}
+
 .UNVersionViewer .underlineTopBorder {
   border-top-width: 3px;
   border-top-style: solid;

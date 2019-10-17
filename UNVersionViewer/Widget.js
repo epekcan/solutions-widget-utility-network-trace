@@ -300,8 +300,23 @@ function(declare, BaseWidget,
       if(params.hasOwnProperty("success")) {
         if(params.hasOwnProperty("versions") && params.versions.length > 0) {
           domConstruct.empty(this.UNVersionList);
+          params.versions.sort(this._compareValues("modifiedDate", "desc"));
+
+          var defaultVersion = params.versions.filter(function(v) {
+            return v.versionName.toLowerCase() === "sde.default";
+          });
+          var allOtherVersions = params.versions.filter(function(v) {
+            return v.versionName.toLowerCase() !== "sde.default";
+          });
+
+          params.versions = defaultVersion.concat(allOtherVersions);
+
           params.versions.map(lang.hitch(this, function(ver, i) {
-            var rowCSS = (i % 2 === 0)?"bgRowColor":"";
+            if(ver.versionName.toLowerCase() === "sde.default") {
+              var rowCSS = "bgDefaultRowColor";
+            } else {
+              var rowCSS = (i % 2 === 0)?"bgRowColor":"";
+            }
             var versionInfoHolder = domConstruct.create("div", {'class': 'flex-container-row padding-5 ' + rowCSS});
             domConstruct.place(versionInfoHolder, this.UNVersionList);
             //create Delete version spot
@@ -330,13 +345,20 @@ function(declare, BaseWidget,
             var versionChangeDetails = domConstruct.create("div", {'class': 'flex-grow-1 details-align-end'});
             domConstruct.place(versionChangeDetails, versionInfoHolder);
             //create Version info details spot
-            var versionInfoName = domConstruct.create("div", {'class': '', innerHTML: ver.versionName});
+            var infoBlock = ver.versionName;
+            if(ver.versionName.indexOf(".") > 0) {
+              var lastPeriod = ver.versionName.lastIndexOf(".");
+              var versionName = ver.versionName.substring(lastPeriod+1);
+              var userName = ver.versionName.substring(0, lastPeriod);
+              infoBlock = "<span style='font-weight:bold'>Name:</span> " + versionName + "<br><span style='font-weight:bold'>Owner:</span> " + userName;
+            }
+            var versionInfoName = domConstruct.create("div", {'class': '', innerHTML: infoBlock});
             domConstruct.place(versionInfoName, versionInfo);
             //create version info description spot
-            var versionInfoDesc = domConstruct.create("div", {'class': '', innerHTML: ver.description});
-            domConstruct.place(versionInfoDesc, versionInfo);
+            //var versionInfoDesc = domConstruct.create("div", {'class': '', innerHTML: ver.description});
+            //domConstruct.place(versionInfoDesc, versionInfo);
             //create version info dates
-            var versionInfoLastUpdate = domConstruct.create("div", {'class': '', innerHTML: "modified: " + new Date(ver.modifiedDate).toDateString()});
+            var versionInfoLastUpdate = domConstruct.create("div", {'class': '', innerHTML: "<span style='font-weight:bold'>Modified:</span> " + new Date(ver.modifiedDate).toDateString()});
             domConstruct.place(versionInfoLastUpdate, versionInfo);
 
             this._createVersionToggle(ver, versionToggle, versionLoading, versionChangeDetails);
@@ -398,7 +420,7 @@ function(declare, BaseWidget,
 
     //CREATE TOGGLE VERSION BUTTON
     _createVersionToggle: function(version, node, loadingNode, detailsNode) {
-      if(version.versionName !== "sde.DEFAULT") {
+      if(version.versionName.toLowerCase() !== "sde.default") {
         var toggleOptions = {
           toggleTips: {
             toggleOn: "Turn on version",
@@ -411,6 +433,7 @@ function(declare, BaseWidget,
           if(val) {
             domClass.remove(loadingNode, "noLoading");
             domClass.add(loadingNode, "loading");
+            toggleButton.disabled = true;
             this.requestStartRead(version, loadingNode, detailsNode, "view");
           } else {
             domClass.remove(detailsNode, "bgArrowRight");
@@ -942,13 +965,23 @@ function(declare, BaseWidget,
 
     _compareValues: function(key, order='asc') {
       return function(a, b) {
-        if(!a.attributes.hasOwnProperty(key) || !b.attributes.hasOwnProperty(key)) {
-          // property doesn't exist on either object
-          return 0;
+        var varA = a;
+        var varB = b;
+        if(a.hasOwnProperty("attributes")) {
+          if(!a.attributes.hasOwnProperty(key) || !b.attributes.hasOwnProperty(key)) {
+            // property doesn't exist on either object
+            return 0;
+          }
+          varA = (typeof a.attributes[key] === 'string') ?a.attributes[key].toUpperCase() : a.attributes[key];
+          varB = (typeof b.attributes[key] === 'string') ?b.attributes[key].toUpperCase() : b.attributes[key];
+        } else {
+          if(!a.hasOwnProperty(key) || !b.hasOwnProperty(key)) {
+            // property doesn't exist on either object
+            return 0;
+          }
+          varA = (typeof a[key] === 'string') ?a[key].toUpperCase() : a[key];
+          varB = (typeof b[key] === 'string') ?b[key].toUpperCase() : b[key];
         }
-
-        const varA = (typeof a.attributes[key] === 'string') ?a.attributes[key].toUpperCase() : a.attributes[key];
-        const varB = (typeof b.attributes[key] === 'string') ?b.attributes[key].toUpperCase() : b.attributes[key];
 
         let comparison = 0;
         if (varA > varB) {
