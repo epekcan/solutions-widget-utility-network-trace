@@ -30,6 +30,8 @@ define([
   "esri/geometry/Point",
   "esri/geometry/Polygon",
   "esri/geometry/Polyline",
+  "esri/geometry/projection",
+  "esri/geometry/geometryEngineAsync",
   "esri/tasks/query",
   'esri/toolbars/draw',
   "esri/symbols/SimpleMarkerSymbol",
@@ -59,6 +61,8 @@ function(declare,
   Point,
   Polygon,
   Polyline,
+  projection,
+  geometryEngineAsync,
   Query,
   Draw,
   SimpleMarkerSymbol,
@@ -239,6 +243,7 @@ function(declare,
     and map action after drawing is done to get start and barriers
     *******/
     btnBarriersClick: function(params) {
+      this.un.getValidAssets(this.currentDomainNetwork);
       domAttr.set(this.btnStartingPoint, "class", "button_nonactive");
       domAttr.set(this.btnBarriers, "class", "button_active");
       //if (this.activeTraceLocation == undefined) {
@@ -251,7 +256,6 @@ function(declare,
     },
 
     btnStartingPointClick: function(params) {
-      console.log(this.currentDomainNetwork);
       this.un.getValidAssets(this.currentDomainNetwork);
       domAttr.set(this.btnStartingPoint, "class", "button_active");
       domAttr.set(this.btnBarriers, "class", "button_nonactive");
@@ -268,129 +272,132 @@ function(declare,
       let color = this.activeTraceLocation === this.config.TRACELOCATION_START ? this.config.TRACING_STARTPOINT_COLOR : this.config.TRACING_BARRIER_COLOR;
       this.un.traceControls.forEach(tc => {
       var fl = new FeatureLayer(this.un.featureServiceUrl + "/" + tc);
-      this.own(on(fl, "load", lang.hitch(this, function() {
-        const query = new Query();
-        query.outSpatialReference = { wkid: 102100 };
-        query.returnGeometry = true;
-        query.outFields = [ "*" ];
-        query.distance = 10;
-        query.units = "feet"
-        query.geometry = event;
-        fl.queryFeatures(query, lang.hitch(this, function(hitResults){
-            console.log(hitResults.features);  // prints the array of features to the console
-            domQuery(".traceLocations").style("display", "block");
+      geometryEngineAsync.buffer(event, this.config.TRACING_STARTLOCATION_BUFFER)
+      .then(lang.hitch(this, function(geom){
+        this.own(on(fl, "load", lang.hitch(this, function() {
+          const query = new Query();
+          query.outSpatialReference = { wkid: 102100 };
+          query.returnGeometry = true;
+          query.outFields = [ "*" ];
+          query.distance = 10;
+          query.units = "feet"
+          query.geometry = geom;
+          fl.queryFeatures(query, lang.hitch(this, function(hitResults){
+              console.log(hitResults.features);  // prints the array of features to the console
+              domQuery(".traceLocations").style("display", "block");
 
-            let supportedClasses = ["esriUNFCUTDevice", "esriUNFCUTJunction", "esriUNFCUTLine"] //, "esriUNFCUTLine" ]
-            if (hitResults.features.length) {
-                hitResults.features.forEach(g => {
+              let supportedClasses = ["esriUNFCUTDevice", "esriUNFCUTJunction", "esriUNFCUTLine"] //, "esriUNFCUTLine" ]
+              if (hitResults.features.length) {
+                  hitResults.features.forEach(g => {
 
-                    let img = document.createElement("img");
-                    if (this.activeTraceLocation === this.config.TRACELOCATION_START) {
-                        img.src = this.folderUrl + "images/flag.png";
-                        img.className = "btnStartItems";
-                    }
-                    else {
-                        img.src = this.folderUrl + "images/add-barriers-select.png";
-                        img.className = "btnBarrierItems";
-                    }
-                    let rowTraceLocation = document.createElement("tr");
-                    let columnImg = document.createElement("td");
-                    rowTraceLocation.appendChild(columnImg);
-                    columnImg.appendChild(img);
-                    let columnElement = document.createElement("td");
-                    // let columntraceLocationType = document.createElement("td");
-                    let columnTerminal = document.createElement("td");
-                    columnTerminal.className = "col120";
-                    //rowTraceLocation.appendChild(img)
-                    rowTraceLocation.appendChild(columnElement);
-                    //   rowTraceLocation.appendChild(columntraceLocationType);
-                    rowTraceLocation.appendChild(columnTerminal);
-                    let columnBtn = document.createElement("td");
-                    rowTraceLocation.appendChild(columnBtn);
-                    let deleteTraceLocation = document.createElement("img");
-                    deleteTraceLocation.src = this.folderUrl + "images/delete.png"
-                    deleteTraceLocation.className = "btnX";
-                    deleteTraceLocation.addEventListener("click", lang.hitch(this, function(e){
-                        traceLocations.removeChild(rowTraceLocation);
-                        //try to remove the graphic
-                        for (let i = 0; i < this.map.graphics.graphics.length; i++) {
-                            let g = this.map.graphics.graphics[i];
-                            if(typeof(g.attributes) !== "undefined") {
-                              if (g.attributes.name === rowTraceLocation.globalId) {
+                      let img = document.createElement("img");
+                      if (this.activeTraceLocation === this.config.TRACELOCATION_START) {
+                          img.src = this.folderUrl + "images/flag.png";
+                          img.className = "btnStartItems";
+                      }
+                      else {
+                          img.src = this.folderUrl + "images/add-barriers-select.png";
+                          img.className = "btnBarrierItems";
+                      }
+                      let rowTraceLocation = document.createElement("tr");
+                      let columnImg = document.createElement("td");
+                      rowTraceLocation.appendChild(columnImg);
+                      columnImg.appendChild(img);
+                      let columnElement = document.createElement("td");
+                      // let columntraceLocationType = document.createElement("td");
+                      let columnTerminal = document.createElement("td");
+                      columnTerminal.className = "col120";
+                      //rowTraceLocation.appendChild(img)
+                      rowTraceLocation.appendChild(columnElement);
+                      //   rowTraceLocation.appendChild(columntraceLocationType);
+                      rowTraceLocation.appendChild(columnTerminal);
+                      let columnBtn = document.createElement("td");
+                      rowTraceLocation.appendChild(columnBtn);
+                      let deleteTraceLocation = document.createElement("img");
+                      deleteTraceLocation.src = this.folderUrl + "images/delete.png"
+                      deleteTraceLocation.className = "btnX";
+                      deleteTraceLocation.addEventListener("click", lang.hitch(this, function(e){
+                          traceLocations.removeChild(rowTraceLocation);
+                          //try to remove the graphic
+                          for (let i = 0; i < this.map.graphics.graphics.length; i++) {
+                              let g = this.map.graphics.graphics[i];
+                              if(typeof(g.attributes) !== "undefined") {
+                                if (g.attributes.name === rowTraceLocation.globalId) {
+                                  this.map.graphics.remove(g);
+                                    break;
+                                }
+                              } else {
                                 this.map.graphics.remove(g);
-                                  break;
                               }
-                            } else {
-                              this.map.graphics.remove(g);
-                            }
-                        }
+                          }
 
-                        if(this.map.graphics.graphics.length <= 0) {
-                          domQuery(".traceLocations").style("display", "none");
-                          domStyle.set(this.runButtonHolder, "display", "none");
-                        }
+                          if(this.map.graphics.graphics.length <= 0) {
+                            domQuery(".traceLocations").style("display", "none");
+                            domStyle.set(this.runButtonHolder, "display", "none");
+                          }
 
-                    }));
-                    columnBtn.appendChild(deleteTraceLocation);
-                    let at = this.un.getAssetType(tc, this.getVal(g.attributes, "assetgroup"), this.getVal(g.attributes, "assettype"));
+                      }));
+                      columnBtn.appendChild(deleteTraceLocation);
+                      let at = this.un.getAssetType(tc, this.getVal(g.attributes, "assetgroup"), this.getVal(g.attributes, "assettype"));
 
-                    //if it is not a device or a junction or a line exit..
-                    if (!supportedClasses.find(c => c == at.utilityNetworkFeatureClassUsageType)) return;
-                    this.config.locationId++;
-                    rowTraceLocation.globalId = this.getVal(g.attributes, "globalid");
-                    rowTraceLocation.locationId = this.config.locationId;
-                    rowTraceLocation.isTerminalConfigurationSupported = at.isTerminalConfigurationSupported;
-                    rowTraceLocation.layerId = tc;
-                    rowTraceLocation.assetGroupCode = this.getVal(g.attributes, "assetgroup");
-                    rowTraceLocation.assetTypeCode = this.getVal(g.attributes, "assettype");
-                    columnElement.textContent = " (" + at.assetGroupName + "/" + at.assetTypeName + ") "
-                    // columntraceLocationType.textContent = activeTraceLocation;
-                    //if termianls supported show it
-                    if (at.isTerminalConfigurationSupported == true) {
-                        let terminalList = document.createElement("select");
-                        terminalList.className = "mini";
-                        terminalList.id = "cmbTerminalConfig" + this.config.locationId;
-                        let terminalConfiguration = this.un.getTerminalConfiguration(at.terminalConfigurationId);
-                        terminalConfiguration.terminals.forEach(t => {
-                            let terminalItem = document.createElement("option");
-                            terminalItem.textContent = t.terminalName;
-                            terminalItem.value = t.terminalId;
-                            terminalList.appendChild(terminalItem);
-                        })
-                        columnTerminal.appendChild(terminalList);
-                    }
-
-                    rowTraceLocation.traceLocationType = this.activeTraceLocation;
-                    traceLocations.appendChild(rowTraceLocation);
-                    domStyle.set(this.runButtonHolder, "display", "inline");
-
-                    //create graphic on the map
-                    //let bufferedGeo =  geometryEngineAsync.buffer(g.geometry, this.config.TRACING_STARTLOCATION_BUFFER)
-                    //    .then(lang.hitch(this, function(geom){
-                      if(g.geometry.type === "point") {
-                        this.map.graphics.add(this.getGraphic(g.geometry.type, g.geometry, color, rowTraceLocation.globalId, this.activeTraceLocation, false));
-                      } else if(g.geometry.type === "line" || g.geometry.type === "polyline") {
-                        var pntOnLine = g.geometry.getPoint(0,0);
-                        this.map.graphics.add(this.getGraphic("point", event, color, rowTraceLocation.globalId, this.activeTraceLocation, false));
-                      } else if(g.geometry.type === "polygon") {
-                        var pntInPoly = g.geometry.getCentroid();
-                        this.map.graphics.add(this.getGraphic("point", event, color, rowTraceLocation.globalId, this.activeTraceLocation, false));
-                      } else {
-
+                      //if it is not a device or a junction or a line exit..
+                      if (!supportedClasses.find(c => c == at.utilityNetworkFeatureClassUsageType)) return;
+                      this.config.locationId++;
+                      rowTraceLocation.globalId = this.getVal(g.attributes, "globalid");
+                      rowTraceLocation.locationId = this.config.locationId;
+                      rowTraceLocation.isTerminalConfigurationSupported = at.isTerminalConfigurationSupported;
+                      rowTraceLocation.layerId = tc;
+                      rowTraceLocation.assetGroupCode = this.getVal(g.attributes, "assetgroup");
+                      rowTraceLocation.assetTypeCode = this.getVal(g.attributes, "assettype");
+                      columnElement.textContent = " (" + at.assetGroupName + "/" + at.assetTypeName + ") "
+                      // columntraceLocationType.textContent = activeTraceLocation;
+                      //if termianls supported show it
+                      if (at.isTerminalConfigurationSupported == true) {
+                          let terminalList = document.createElement("select");
+                          terminalList.className = "mini";
+                          terminalList.id = "cmbTerminalConfig" + this.config.locationId;
+                          let terminalConfiguration = this.un.getTerminalConfiguration(at.terminalConfigurationId);
+                          terminalConfiguration.terminals.forEach(t => {
+                              let terminalItem = document.createElement("option");
+                              terminalItem.textContent = t.terminalName;
+                              terminalItem.value = t.terminalId;
+                              terminalList.appendChild(terminalItem);
+                          })
+                          columnTerminal.appendChild(terminalList);
                       }
 
-                      console.log(this.map.graphics.graphics);
-                      this.enableWebMapPopup();
-                    //this.map.graphics.add(this.getGraphic(g.geometry.type, g.geometry, color, rowTraceLocation.globalId, this.activeTraceLocation, false));
-                    //    }));
-                })
+                      rowTraceLocation.traceLocationType = this.activeTraceLocation;
+                      traceLocations.appendChild(rowTraceLocation);
+                      domStyle.set(this.runButtonHolder, "display", "inline");
 
-              //this.map.graphics.add(this.getGraphic(event.type, event, color, null, this.activeTraceLocation, false));
+                      //create graphic on the map
+                      //let bufferedGeo =  geometryEngineAsync.buffer(g.geometry, this.config.TRACING_STARTLOCATION_BUFFER)
+                      //    .then(lang.hitch(this, function(geom){
+                        if(g.geometry.type === "point") {
+                          this.map.graphics.add(this.getGraphic(g.geometry.type, g.geometry, color, rowTraceLocation.globalId, this.activeTraceLocation, false));
+                        } else if(g.geometry.type === "line" || g.geometry.type === "polyline") {
+                          var pntOnLine = g.geometry.getPoint(0,0);
+                          this.map.graphics.add(this.getGraphic("point", event, color, rowTraceLocation.globalId, this.activeTraceLocation, false));
+                        } else if(g.geometry.type === "polygon") {
+                          var pntInPoly = g.geometry.getCentroid();
+                          this.map.graphics.add(this.getGraphic("point", event, color, rowTraceLocation.globalId, this.activeTraceLocation, false));
+                        } else {
 
-            }
+                        }
 
-        }));
-      })));
+                        console.log(this.map.graphics.graphics);
+                        this.enableWebMapPopup();
+                      //this.map.graphics.add(this.getGraphic(g.geometry.type, g.geometry, color, rowTraceLocation.globalId, this.activeTraceLocation, false));
+                      //    }));
+                  })
+
+                //this.map.graphics.add(this.getGraphic(event.type, event, color, null, this.activeTraceLocation, false));
+
+              }
+
+          }));
+        })));
+      }));
       /*
       this.map.hitTest({ x: event.x, y: event.y }).then(lang.hitch(this,function(hitResults) {
           //console.log(hitResults);
@@ -818,11 +825,21 @@ function(declare,
           for (let featureSet of rows) {
               let layerObj = featureSet.obj;
               if (featureSet.features != undefined)
+              projection.load().then(lang.hitch(this, function() {
+                let validTransform = projection.getTransformations(this.config.DEFAULT_SPATIAL_REFERENCE, this.map.spatialReference);
                   for (let g of featureSet.features) {
-                      let graphic = this.getGraphic(layerObj.type, g.geometry, color, null, this.activeTraceLocation, true);
-                      //graphics.push(graphic);
-                      this.map.graphics.add(graphic);
+                    let newGeom = g.geometry;
+                    if(g.geometry.hasOwnProperty("paths")) {
+
+                    } else {
+                      newGeom = new Point(g.geometry.x, g.geometry.y, this.config.DEFAULT_SPATIAL_REFERENCE);
+                    }
+                    let newGeom2 = projection.project(newGeom, this.map.spatialReference, validTransform[0]);
+                    let graphic = this.getGraphic(layerObj.type, newGeom2, color, null, this.activeTraceLocation, true);
+                    //graphics.push(graphic);
+                    this.map.graphics.add(graphic);
                   }
+              }));
           }
           //this.map.graphics.add(graphics);
       }));
@@ -860,9 +877,10 @@ function(declare,
       switch (type) {
           case "point":
             if(isResult) {
-              var pntGeom = new Point(geometry.x, geometry.y, this.config.DEFAULT_SPATIAL_REFERENCE);
+              //this.config.DEFAULT_SPATIAL_REFERENCE
+              var pntGeom = new Point(geometry.x, geometry.y, this.map.spatialReference);
               var sms = new SimpleMarkerSymbol().setColor(color);
-              geometryObject = pntGeom;
+              geometryObject = geometry;
               symbol = sms;
             } else {
               var imgIcon = this.folderUrl + "images/startPoint.png";
@@ -879,12 +897,14 @@ function(declare,
           case "line":
           case "polyline":
               if(isResult) {
+                /*
                 var polylineJson = {
                   "paths":geometry.paths,
                   "spatialReference":this.config.DEFAULT_SPATIAL_REFERENCE
                 };
                 var polyline = new Polyline(polylineJson);
-                geometryObject = polyline;
+                */
+                geometryObject = geometry;
               } else {
                 geometryObject = geometry;
               }
