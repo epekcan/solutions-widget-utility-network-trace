@@ -838,18 +838,25 @@ function(declare,
                   for (let g of featureSet.features) {
                     let newGeom = g.geometry;
                     if(g.geometry.hasOwnProperty("paths")) {
-
+                      var polylineJson = {
+                        "paths":g.geometry.paths,
+                        "spatialReference":this.config.DEFAULT_SPATIAL_REFERENCE
+                      };
+                      newGeom = new Polyline(polylineJson);
                     } else {
                       newGeom = new Point(g.geometry.x, g.geometry.y, this.config.DEFAULT_SPATIAL_REFERENCE);
                     }
                     if(validTransform.length > 0) {
                       let newGeom2 = projection.project(newGeom, this.map.spatialReference, validTransform[0]);
+                      let graphic = this.getGraphic(layerObj.type, newGeom2, color, null, this.activeTraceLocation, true);
+                      //graphics.push(graphic);
+                      this.map.graphics.add(graphic);
                     } else {
                       let newGeom2 = projection.project(newGeom, this.map.spatialReference);
+                      let graphic = this.getGraphic(layerObj.type, newGeom2, color, null, this.activeTraceLocation, true);
+                      //graphics.push(graphic);
+                      this.map.graphics.add(graphic);
                     }
-                    let graphic = this.getGraphic(layerObj.type, newGeom2, color, null, this.activeTraceLocation, true);
-                    //graphics.push(graphic);
-                    this.map.graphics.add(graphic);
                   }
               }));
           }
