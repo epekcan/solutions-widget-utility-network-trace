@@ -31,6 +31,7 @@ define([
   "esri/geometry/Polygon",
   "esri/geometry/Polyline",
   "esri/geometry/projection",
+  "esri/geometry/geometryEngine",
   "esri/geometry/geometryEngineAsync",
   "esri/tasks/query",
   'esri/toolbars/draw',
@@ -62,6 +63,7 @@ function(declare,
   Polygon,
   Polyline,
   projection,
+  geometryEngine,
   geometryEngineAsync,
   Query,
   Draw,
@@ -370,8 +372,6 @@ function(declare,
                         }
 
                         rowTraceLocation.traceLocationType = this.activeTraceLocation;
-                        traceLocations.appendChild(rowTraceLocation);
-                        domStyle.set(this.runButtonHolder, "display", "inline");
 
                         //create graphic on the map
                         //let bufferedGeo =  geometryEngineAsync.buffer(g.geometry, this.config.TRACING_STARTLOCATION_BUFFER)
@@ -381,6 +381,7 @@ function(declare,
                           } else if(g.geometry.type === "line" || g.geometry.type === "polyline") {
                             var pntOnLine = g.geometry.getPoint(0,0);
                             this.map.graphics.add(this.getGraphic("point", event, color, rowTraceLocation.globalId, this.activeTraceLocation, false));
+                            rowTraceLocation.percentAlong = this.getPercentageAlong(g.geometry, event, g.geometry.spatialReference.wkid);
                           } else if(g.geometry.type === "polygon") {
                             var pntInPoly = g.geometry.getCentroid();
                             this.map.graphics.add(this.getGraphic("point", event, color, rowTraceLocation.globalId, this.activeTraceLocation, false));
@@ -392,6 +393,10 @@ function(declare,
                           this.enableWebMapPopup();
                         //this.map.graphics.add(this.getGraphic(g.geometry.type, g.geometry, color, rowTraceLocation.globalId, this.activeTraceLocation, false));
                         //    }));
+
+                        traceLocations.appendChild(rowTraceLocation);
+                        domStyle.set(this.runButtonHolder, "display", "inline");
+
                     })
 
                   //this.map.graphics.add(this.getGraphic(event.type, event, color, null, this.activeTraceLocation, false));
@@ -404,8 +409,6 @@ function(declare,
 
       })));
 
-
-
       /*
       this.map.hitTest({ x: event.x, y: event.y }).then(lang.hitch(this,function(hitResults) {
           //console.log(hitResults);
@@ -413,6 +416,38 @@ function(declare,
       });
 
     },
+
+    getPercentageAlong: function(sourceGeom, flagGeom, inSR) {
+      //[1029437.0469165109,1859984.5320274457];
+
+      const sourceLine = this._createPolyline(sourceGeom.paths, inSR);
+      const padFlagXMin = flagGeom.x - 50;
+      const padFlagXMax = flagGeom.x + 50;
+      const padFlagYMin = flagGeom.y - 50;
+      const padFlagYMax = flagGeom.y + 50;
+      var newCoodsForLine = [];
+      newCoodsForLine[0] = [];
+      newCoodsForLine[0].push([padFlagXMin,padFlagYMin]);
+      newCoodsForLine[0].push([padFlagXMax,padFlagYMax]);
+       const flagLine = this._createPolyline(newCoodsForLine, inSR);
+      const newGeom = geometryEngine.cut(sourceLine,flagLine);
+      const sourceLength = geometryEngine.planarLength(sourceLine,'feet');
+      const piece1Length = geometryEngine.planarLength(newGeom[0],'feet');
+      const percentage = piece1Length / sourceLength;
+      return(percentage);
+    },
+
+    //create a polyline to use tor percentage along calculation
+    _createPolyline: function(geom, inSR) {
+      const newLine = new Polyline({
+        hasZ: false,
+        hasM: true,
+        paths: geom,
+        spatialReference: { wkid: inSR }
+      });
+      return newLine;
+    },
+
 
     getTraceLocationsParam: function() {
       let traceLocationsParam = [];
@@ -422,6 +457,9 @@ function(declare,
           startLocation.layerId = li.layerId;
           startLocation.assetGroupCode = li.assetGroupCode;
           startLocation.assetTypeCode = li.assetTypeCode;
+          if(li.hasOwnProperty("percentAlong")) {
+            startLocation.percentAlong = li.percentAlong;
+          }
           if (li.isTerminalConfigurationSupported == true) {
               let cmbTerminalConfig = document.getElementById("cmbTerminalConfig" + li.locationId);
               startLocation.terminalId = cmbTerminalConfig.options[cmbTerminalConfig.selectedIndex].value;

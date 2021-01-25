@@ -301,7 +301,11 @@ define([
         //if layerid doesn't exists get it from the sourceid..
         if (s.layerId === undefined) s.layerId = this.getLayerIdfromSourceId(s.networkSourceId);
         if (this.isLayerEdge(s.layerId[0]) === true)
-          traceLocations.push({ traceLocationType: s.traceLocationType, globalId: s.globalId, percentAlong: 0.5 }) //add the starting point to themiddle of the line temporary
+          if(s.hasOwnProperty("percentAlong")) {
+            traceLocations.push({ traceLocationType: s.traceLocationType, globalId: s.globalId, percentAlong: s.percentAlong }) //add the starting point to themiddle of the line temporary
+          } else {
+            traceLocations.push({ traceLocationType: s.traceLocationType, globalId: s.globalId, percentAlong: 0.5 }) //add the starting point to themiddle of the line temporary
+          }
         else {
           //if its a junction, check if a terminalid is passed if not then get the terminal configuration and add all possible terminals temrporary..
           if (s.terminalId === undefined && s.terminalId != -1) {
