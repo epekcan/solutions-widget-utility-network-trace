@@ -842,7 +842,11 @@ function(declare,
                     } else {
                       newGeom = new Point(g.geometry.x, g.geometry.y, this.config.DEFAULT_SPATIAL_REFERENCE);
                     }
-                    let newGeom2 = projection.project(newGeom, this.map.spatialReference, validTransform[0]);
+                    if(validTransform.length > 0) {
+                      let newGeom2 = projection.project(newGeom, this.map.spatialReference, validTransform[0]);
+                    } else {
+                      let newGeom2 = projection.project(newGeom, this.map.spatialReference);
+                    }
                     let graphic = this.getGraphic(layerObj.type, newGeom2, color, null, this.activeTraceLocation, true);
                     //graphics.push(graphic);
                     this.map.graphics.add(graphic);
