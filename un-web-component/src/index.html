@@ -1,0 +1,196 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0" />
+    <title>Stencil Component Starter</title>
+
+    <script type="module" src="/build/stencil-starter-project-name.esm.js"></script>
+    <script nomodule src="/build/stencil-starter-project-name.js"></script>
+
+    <link rel="stylesheet" href="https://js.arcgis.com/4.18/esri/themes/light/main.css" />
+    <script src="https://js.arcgis.com/4.18/"></script>
+
+    <script type="module" src="https://unpkg.com/@esri/calcite-components@1.0.0-beta.49/dist/calcite/calcite.esm.js"></script>
+    <script nomodule="" src="https://unpkg.com/@esri/calcite-components@1.0.0-beta.49/dist/calcite/calcite.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/@esri/calcite-components@1.0.0-beta.49/dist/calcite/calcite.css" />
+
+    <style>
+      html,
+      body {
+      height: 100%;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      }
+      #viewDiv {
+      height: 50%;
+      width: 50%;
+      margin: 0;
+      padding: 0;
+      }
+      #optionsDiv {
+      background-color: white;
+      color: black;
+      padding: 6px;
+      max-width: 400px;
+      }
+    </style>
+    <script>
+      require([
+        "esri/Map",
+        "esri/Graphic",
+        "esri/views/MapView",
+        "esri/layers/FeatureLayer",
+        "esri/widgets/Legend",
+        "esri/identity/IdentityManager"
+      ], function(Map, Graphic, MapView, FeatureLayer, Legend, IdentityManager) {
+        // Crime in SF
+        IdentityManager.registerToken({
+          server: "https://dev0010161.esri.com/server/rest/services/Water_Distribution_Utility_Network_34/FeatureServer",
+          token: "dUcjzR3DQco4DS8LOVZ5on8pypAaHlC5RokgQVa-QqFxo4xvtwklLvMB0OCY6pBoL25GLeZn_FRzwXkvYYDrXJCQyGyzDnL1jsSCAhJnA6qiRK7zfzIJmOz2KlHdxSozSorf6_KYG3W2KoKVoEDV2ZnnvQwFKQmbO2bLDespL-JzVgTGDnb5qg30jSKiGAPA-nBY60M0pd96Mex22aUt-dYzdGv-L17i_W-XvN4970k."
+        });
+        // Carbon storage of trees in Warren Wilson College.
+        var layer = new FeatureLayer({
+          url: "https://dev0010161.esri.com/server/rest/services/Water_Distribution_Utility_Network_34/FeatureServer/515",
+          gdbVersion: "sde.DEFAULT"
+        });
+
+        var map = new Map({
+          basemap: "gray-vector",
+          layers: [layer]
+        });
+
+        var view = new MapView({
+          container: "viewDiv",
+          map: map,
+          zoom: 15,
+          center: [-88.1663, 41.772275]
+        });
+
+        var legend = new Legend({
+          view: view,
+          layerInfos: [{
+            layer: layer
+          }]
+        });
+
+        // additional query fields initially set to null for basic query
+        var distance = null;
+        var units = null;
+
+        //create graphic for mouse point click
+        var pointGraphic = new Graphic({
+          symbol: {
+            type: "simple-marker", // autocasts as new SimpleMarkerSymbol()
+            color: [0, 0, 139],
+            outline: {
+              color: [255,255,255],
+              width: 1.5
+            }
+          }
+        });
+
+        // Create graphic for distance buffer
+        var bufferGraphic = new Graphic({
+          symbol: {
+            type: "simple-fill", // autocasts as new SimpleFillSymbol()
+            color: [173, 216, 230, 0.2],
+            outline: {
+              // autocasts as new SimpleLineSymbol()
+              color: [255, 255, 255],
+              width: 1
+            }
+          }
+        });
+
+
+        layer.load()
+        .then(function() {
+          // Set the view extent to the data extent
+          layer.popupTemplate = layer.createPopupTemplate();
+        });
+
+        function queryFeatures(screenPoint, componentProps) {
+          const point = view.toMap(screenPoint);
+          layer.queryFeatures({
+            geometry: point,
+            // distance and units will be null if basic query selected
+            distance: 10,
+            units: 'feet',
+            spatialRelationship: "intersects",
+            returnGeometry: true,
+            returnQueryGeometry: true,
+            outFields: ["*"],
+          })
+          .then(function(featureSet) {
+            // set graphic location to mouse pointer and add to mapview
+            //console.log(featureSet.features);
+            console.log("Outside component: click on map, query, send back to component");
+            componentProps.detail.callback(point);
+            pointGraphic.geometry = point;
+            view.graphics.add(pointGraphic);
+            // open popup of query result
+            view.popup.open({
+              location: point,
+              features: featureSet.features,
+              featureMenuOpen: true
+            });
+          });
+        }
+
+
+        setTimeout(() => {
+          const domElement = document.querySelector('un-trace-manager');
+          domElement.addEventListener('emitQueryTrace', event => {
+            console.log('query traces emit');
+            console.log(event);
+          });
+
+          domElement.addEventListener('emitSelectedTrace', event => {
+            console.log('Selected trace emit');
+            console.log(event);
+          });
+
+          domElement.addEventListener('emitTraceResults', event => {
+            console.log('query traces results');
+            console.log(event);
+          });
+
+          domElement.addEventListener('emitFlagChange', event => {
+            console.log('Outside Component: receive flag button click, activate map click');
+            //console.log(event);
+            view.on("click", function(e) {
+              view.graphics.remove(pointGraphic);
+              queryFeatures(e,event);
+            });
+          });
+
+          /*
+          setTimeout(function() {
+            const domElement2 = document.querySelector('un-trace-manager');
+            domElement2.setAttribute("in-points", '[{"coord":[999,111], "layerId":950, "type":"startingPoint"}]');
+          },5000);
+
+          setTimeout(function() {
+            const domElement3 = document.querySelector('un-trace-manager');
+            domElement3.setAttribute("in-assets", '[{"globalId":"C1E54746-6772-4E77-8753-3B95D8DF34F1", "layerId":501, "type":"startingPoint"}]');
+          },6000);
+          */
+        },1000);
+
+
+
+      });
+    </script>
+  </head>
+  <body>
+      <un-trace-manager
+      show-terminals=true
+      in-points='[{"coord":[123,456], "layerId":515, "type":"startingPoint"}]'
+      in-assets='[{"globalId":"DB331F49-422D-4067-992E-8091D11E479C", "layerId":515, "type":"startingPoint"}]'
+      host="https://dev0010161.esri.com"
+      name="Water_Distribution_Utility_Network_34" >
+    </un-trace-manager>
+    <div id="viewDiv"></div>
+  </body>
+</html>
