@@ -33,6 +33,8 @@ export class UnTraceManager {
   @Event({eventName: 'emitFlagChange', composed: true, bubbles: true}) emitFlagChange: EventEmitter<any>;
   @Event({eventName: 'emitTraceResults', composed: true, bubbles: true}) emitTraceResults: EventEmitter<any>;
 
+  @Event({eventName: 'emitDrawComplete', composed: true, bubbles: true}) emitDrawComplete: EventEmitter<any>;
+
   @State() unHandler: any;
   @State() token: string;
   @State() searchByUser: string = "";
@@ -254,10 +256,12 @@ export class UnTraceManager {
                   });
                   //if line on line, send back the intersected point for flag graphic
                   if(res.flagGeom.type === "polyline") {
-                    this.intersectToPoint(feat.geometry, res.flagGeom, res.result.spatialReference).then((point:any) => {
+                    this.intersectToPoint(feat.geometry, res.flagGeom, res.result.spatialReference).then((points:any) => {
                       console.log("line/line to point");
-                      console.log(point);
+                      this.emitDrawComplete.emit({type:'start', geometry: points});
                     });
+                  } else {
+                    this.emitDrawComplete.emit({type:'start', geometry: res.flagGeom});
                   }
                 } else if(res.result.geometryType === 'esriGeometryPoint') {
                   //get terminals
@@ -328,10 +332,55 @@ export class UnTraceManager {
   }
 
   async intersectToPoint(geometry:any, flagGeom: any, sourceSR:any) {
+    let flagPointArray = [];
     const sourceLine = await this.unHandler._createPolyline(geometry.paths, sourceSR.wkid);
     const flagToProjected = await this.unHandler.projectGeometry(flagGeom, sourceSR);
-    const newGeom = GeometryEngine.intersect(sourceLine,flagToProjected);
-    return newGeom;
+    //since intersecting lines do not return the point, have to cut line and then check start/end points to get points.
+    const cutGeoms = GeometryEngine.cut(sourceLine,flagToProjected);
+    //check start/end points if they intersect flag line, if they do consider it flag
+    if(cutGeoms && cutGeoms.length > 0) {
+      const [
+        {default: Point}
+      ] = await Promise.all([
+        import('@arcgis/core/geometry/Point')
+      ]);
+      cutGeoms.map((cg:any) => {
+        cg.paths.map((p:any) => {
+          //get first point and last points and see if they intersect flag geom
+          const firstCoord = p[0];
+          const firstPoint = new Point({x: firstCoord[0], y:firstCoord[1], spatialReference: cg.spatialReference});
+          const lastCoord = p[p.length - 1];
+          const lastPoint = new Point({x: lastCoord[0], y:lastCoord[1], spatialReference: cg.spatialReference});
+          const doesFirstIntersect = GeometryEngine.intersects(flagToProjected, firstPoint);
+          const doesLastIntersect = GeometryEngine.intersects(flagToProjected, lastPoint);
+          if(doesFirstIntersect) {
+            if(flagPointArray.length > 0) {
+              const found = flagPointArray.indexOf((fp:any) => {
+                return(GeometryEngine.equals(fp, firstPoint))
+              });
+              if(found === -1) {
+                flagPointArray.push(firstPoint);
+              }
+            } else {
+              flagPointArray.push(firstPoint);
+            }
+          }
+          if(doesLastIntersect) {
+            if(flagPointArray.length > 0) {
+              const found = flagPointArray.indexOf((fp:any) => {
+                return(GeometryEngine.equals(fp, lastPoint))
+              });
+              if(found === -1) {
+                flagPointArray.push(lastPoint);
+              }
+            } else {
+              flagPointArray.push(lastPoint);
+            }
+          }
+        });
+      });
+    }
+    return flagPointArray;
   }
 
 }

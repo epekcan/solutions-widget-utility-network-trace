@@ -46,8 +46,9 @@
         "esri/layers/GraphicsLayer",
         "esri/widgets/Legend",
         "esri/identity/IdentityManager",
-        "esri/widgets/Sketch"
-      ], function(Map, esriConfig, Graphic, WebMap, MapView, FeatureLayer, GraphicsLayer, Legend, IdentityManager, Sketch) {
+        "esri/widgets/Sketch",
+        "esri/geometry/projection"
+      ], function(Map, esriConfig, Graphic, WebMap, MapView, FeatureLayer, GraphicsLayer, Legend, IdentityManager, Sketch, projection) {
         // Crime in SF
         IdentityManager.registerToken({
           server: "https://dev0016770.esri.com/portal",
@@ -111,7 +112,7 @@
         var pointGraphic = new Graphic({
           symbol: {
             type: "simple-marker", // autocasts as new SimpleMarkerSymbol()
-            color: [0, 0, 139],
+            color: [255, 0, 0],
             outline: {
               color: [255,255,255],
               width: 1.5
@@ -223,9 +224,34 @@
               getDataForComponent(e,event);
             });
           });
+
+          domElement.addEventListener('emitDrawComplete', event => {
+            console.log('query complete from drawn input inside component.  flags are returned');
+            console.log(event.detail);
+            projection.load().then(() => {
+              if(event.detail.geometry.length > 0) {
+                event.detail.geometry.map((e) => {
+                  const projGeom = projection.project(e, MapView.spatialReference);
+                  var flagGraphic = new Graphic({
+                    symbol: {
+                      type: "simple-marker", // autocasts as new SimpleMarkerSymbol()
+                      color: [255, 0, 0],
+                      outline: {
+                        color: [255,255,255],
+                        width: 1.5
+                      }
+                    }
+                  });
+                  flagGraphic.geometry = projGeom;
+                  view.graphics.add(flagGraphic);
+                });
+              }
+            });
+          });
+
         },1000);
 
-        //[{"type":start, "geom":null, "validLayers":[{"layerId":0, "assetGroups":[0,1,2], "globalIds":[e123]}]}]
+        //[{"type":start, "geom":null, "layers":[{"layerId":0, "assetGroups":[0,1,2], "objectId":[e123]}]}]
 
       });
     </script>
