@@ -49,21 +49,25 @@ export class UnTraceManager {
   @State() terminals: Array<any> = [];
   @State() layersForFlagLookup: Array<any> = [];
   @State() controllerLayer: any;
+  @State() traces:any;
 
   componentWillLoad() {
     this.unHandler = new UnTraceHandler(this.host, this.name);
     this.unHandler.getToken().then((response:any) => {
       this.token = response.token;
 
-      this.unHandler.queryDataElement(this.token).then((dataElement:any) => {
+      this.unHandler.queryDataElement(this.token).then(async(dataElement:any) => {
         this.controllerLayer = this.unHandler.findControllerLayer(dataElement);
         this.layersForFlagLookup = this.unHandler.queryLayersForFlag(this.controllerLayer);
         this.terminals = this.unHandler.queryATAGTerminals(this.controllerLayer);
+        this.traces = await this.unHandler.getTraces(this.token);
+
         console.log(this.controllerLayer);
         console.log(this.layersForFlagLookup);
         console.log(this.terminals);
+        console.log(this.traces);
 
-        if(this.inAssets) {this.assetPropsChange();}
+        //if(this.inAssets) {this.assetPropsChange();}
 
       });
 
@@ -90,8 +94,6 @@ export class UnTraceManager {
           dir="ltr"
           calcite-hydrated=""
           onClick={(evt:any) =>{
-            console.log(evt);
-            console.log('inside component: click flag');
             this.emitFlagChange.emit({type:'start',tool:'point', callback:this.assetPropsChange});
           }}
         >
@@ -240,7 +242,6 @@ export class UnTraceManager {
         if(response.length > 0) {
           response.map((res:any) => {
             if(res.result.features.length > 0) {
-              console.log(res);
               res.result.features.map((feat:any) => {
                 if(res.result.geometryType === 'esriGeometryPolyline') {
                   //get percent along
@@ -250,14 +251,13 @@ export class UnTraceManager {
                     });
                     if(flagExists === -1) {
                       this.flags.push(
-                        {"traceLocationType":"start","globalId": feat.attributes.globalid, "percentAlong":result}
+                        {traceLocationType:'startingPoint',globalId: feat.attributes.globalid, percentAlong:result}
                       );
                     }
                   });
                   //if line on line, send back the intersected point for flag graphic
                   if(res.flagGeom.type === "polyline") {
                     this.intersectToPoint(feat.geometry, res.flagGeom, res.result.spatialReference).then((points:any) => {
-                      console.log("line/line to point");
                       this.emitDrawComplete.emit({type:'start', geometry: points});
                     });
                   } else {
@@ -278,7 +278,7 @@ export class UnTraceManager {
                     });
                     if(flagExists === -1) {
                       this.flags.push(
-                        {"traceLocationType":"start", "globalId": feat.attributes.globalid, "terminal":terminalList[0].terminalConfiguration.terminals[0], "allTerminals":terminalList[0].terminalConfiguration}
+                        {traceLocationType:'startingPoint', globalId: feat.attributes.globalid, terminal:terminalList[0].terminalConfiguration.terminals[0], allTerminals:terminalList[0].terminalConfiguration}
                       );
                     }
                   }
@@ -288,7 +288,9 @@ export class UnTraceManager {
               });
             }
           });
-          console.log(this.flags);
+          setTimeout(()=> {
+            this.executeTrace();
+          },1000);
         }
       });
     }
@@ -297,13 +299,15 @@ export class UnTraceManager {
   //SUPPORT FUNCTIONS
   lookupAsset(lyr?:any, geom?: any): Promise<any> {
     return new Promise(async(resolve, reject) => {
-      let geomObj = geom;
-      if(geom.type === "polygon") {
-        //convert it to polyline and reproject it.
-        const rings = geom.rings;
-        geomObj = await this.unHandler._createPolyline(rings, geom.spatialReference.wkid);
-      } else {
-        //polyline and point, just reproject
+      let geomObj = (geom)?geom:null;
+      if(geomObj !== null) {
+        if(geomObj.type === "polygon") {
+          //convert it to polyline and reproject it.
+          const rings = geomObj.rings;
+          geomObj = await this.unHandler._createPolyline(rings, geomObj.spatialReference.wkid);
+        } else {
+          //polyline and point, just reproject
+        }
       }
       this.unHandler.queryForFeature(this.token, lyr, geomObj).then((response:any)=> {
         //console.log(response);
@@ -382,5 +386,61 @@ export class UnTraceManager {
     }
     return flagPointArray;
   }
+
+  executeTrace() {
+    if(this.traces.hasOwnProperty('traceConfigurations')) {
+      if(this.traces.traceConfigurations.length > 0) {
+        this.traces.traceConfigurations.map((tc:any) => {
+          if(tc.traceType === 'isolation') {
+            this.unHandler.executeTrace(this.token, tc.traceType, this.flags, '', tc.globalId).then((results:any) => {
+              this.processResults(tc.traceConfiguration.includeIsolated, results.traceResults);
+              //this.emitTraceResults.emit({isIsolated:tc.traceConfiguration.includeIsolated, results:results.traceResults});
+            });
+
+            //run again flipping the isolated parameters
+            const newTC = tc.traceConfiguration;
+            newTC.includeIsolated = !newTC.includeIsolated;
+            this.unHandler.executeTrace(this.token, tc.traceType, this.flags, newTC, tc.globalId).then((results:any) => {
+              this.processResults(newTC.includeIsolated, results.traceResults);
+              //this.emitTraceResults.emit({isIsolated:newTC.includeIsolated, results:results.traceResults});
+
+            });
+
+          }
+        });
+      }
+    }
+  }
+
+  processResults(isIsolated:boolean, results:any) {
+    if(results.hasOwnProperty("elements")) {
+      if(results.elements.length > 0) {
+        const grouped = [];
+        results.elements.map((el:any) => {
+          if(grouped[el.networkSourceId]) {
+            grouped[el.networkSourceId].push(el.objectId);
+          } else {
+            grouped[el.networkSourceId] = [];
+            grouped[el.networkSourceId].push(el.objectId);
+          }
+        });
+        for(const key in grouped) {
+          const findLayer = this.layersForFlagLookup.filter((lyr:any) => {
+            return(lyr.sourceId === parseInt(key));
+          });
+          if(findLayer.length > 0) {
+            const layerObj = {"layerId":findLayer[0].layerId, "subtypes":[], "ids":grouped[key]};
+            this.lookupAsset(layerObj).then((results:any) => {
+              console.log("results records");
+              console.log(results);
+              this.emitTraceResults.emit({isIsolated:isIsolated, results:results});
+            });
+          }
+        }
+
+      }
+    }
+  }
+
 
 }

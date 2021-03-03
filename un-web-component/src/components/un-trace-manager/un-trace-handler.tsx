@@ -48,15 +48,18 @@ export class UnTraceHandler {
       const requestURL = this.host + '/server/rest/services/'+this.unName+'/UtilityNetworkServer/traceConfigurations/query';
       let params = {};
       if(token) {
-        params = {f : 'json', globalIds:'', creators:(searchByUser !== '')?'['+ searchByUser + ']':'', tags:'', names:'', token:token};
+        if(searchByUser) {
+          params = {f : 'json', globalIds:'', creators:(searchByUser !== '')?'['+ searchByUser + ']':'', tags:'', names:'', token:token};
+        } else {
+          params = {f : 'json', globalIds:'', creators:'', tags:'', names:'', token:token};
+        }
       } else {
         resolve(false);
       }
-      //requestURL = requestURL + 'VersionManagementServer/versions';
       this._request({method: 'POST', url:requestURL, params: params})
       .then((result:any) => {
         if(result.hasOwnProperty('error')) {
-          resolve(false);
+          resolve([]);
         } else {
           resolve(result);
         }
@@ -79,13 +82,13 @@ export class UnTraceHandler {
       if(token) {
         params = {
           f : 'json',
-          gdbVersion:'',
+          gdbVersion:'sde.DEFAULT',
           sessionId:'',
           moment:'',
           traceType: traceType,
-          traceLocations: flags,
-          traceConfigurationGlobalId:(typeof traceConfig === 'object' && traceConfig !== null)?'':traceId,
-          traceConfiguration:(traceConfig)?traceConfig:'',
+          traceLocations: JSON.stringify(flags),
+          traceConfigurationGlobalId:(typeof traceConfig === 'object' && traceConfig !== null  && traceConfig !== '')?'':traceId,
+          traceConfiguration:(traceConfig)?JSON.stringify(traceConfig):'',
           token:token
         };
       } else {
@@ -246,7 +249,7 @@ export class UnTraceHandler {
 
   //create a buffer for clicked point
   _createBuffer(geom:any) {
-    return GeometryEngine.buffer(geom, 10, 'feet');
+    return GeometryEngine.buffer(geom, 25, 'feet');
   }
 
   //queryDataElement for various uses
