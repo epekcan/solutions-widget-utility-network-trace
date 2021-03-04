@@ -74,10 +74,6 @@ export class UnTraceManager {
     });
   }
 
-  processFlag1(geom:any) {
-    //this.clickPointPropsChange(geom);
-  }
-
   render() {
       return(
         <div style={{display:'flex', flexDirection:'row'}}>
@@ -173,55 +169,9 @@ export class UnTraceManager {
       </div>);
   }
 
-  renderTraceList(result:any): any {
-    let list = [];
-      result.map((r:any) => {
-        list.push(<calcite-card key={r.name}>
-          <h3 slot="title">{r.name}</h3>
-          <span slot="subtitle">{r.description}</span>
-          <calcite-link slot="footer-leading" onClick={
-            () => {
-              this.activeStep = 3;
-              this.activeTrace = r;
-              this.emitSelectedTrace.emit(r);
-            }
-          }>Select</calcite-link>
-          <calcite-link slot="footer-trailing">Edit Config</calcite-link>
-        </calcite-card>
-        );
-      })
-    return(
-      <div style={{height:"175px", overflow:"auto"}}><div>{list}</div></div>
-    )
-  }
-
-  renderTraceResults(): any {
-    if(this.traceResults !== null) {
-      let list = [];
-      if(this.traceResults.hasOwnProperty("message")) {
-        list.push(<calcite-card>
-          <h3 slot="title">{this.traceResults.message}</h3>
-        </calcite-card>
-        );
-      } else {
-        this.traceResults.traceResults.elements.map((r:any) => {
-          list.push(<calcite-card key={r.globalId}>
-            <h3 slot="title">{r.globalId}</h3>
-            <calcite-link slot="footer-leading">Hightlight</calcite-link>
-          </calcite-card>
-          );
-        })
-      }
-      return(
-        <div style={{height:"175px", overflow:"auto"}}><div>{list}</div></div>
-      )
-    } else {
-      return <div>Error</div>
-    }
-  }
-
   //Prop change updates
   assetPropsChange() {
+    this.flags = [];
     if(this.inAssets.length > 0) {
       console.log(this.inAssets);
       let assetList = [];
@@ -233,8 +183,11 @@ export class UnTraceManager {
         } else {
           // only geom is provided.  do lookup
           this.layersForFlagLookup.map((lyr:any) => {
-            const lyrObj = {layerId: lyr.layerId, ids:[], subtypes:[]};
-            assetList.push(this.lookupAsset(lyrObj, a.geometry));
+            const usage = lyr.utilityNetworkFeatureClassUsageType;
+            if(usage === 'esriUNFCUTJunction' || usage === 'esriUNFCUTDevice' || usage === 'esriUNFCUTLine') {
+              const lyrObj = {layerId: lyr.layerId, ids:[], subtypes:[]};
+              assetList.push(this.lookupAsset(lyrObj, a.geometry));
+            }
           });
         }
       });
@@ -280,6 +233,7 @@ export class UnTraceManager {
                       this.flags.push(
                         {traceLocationType:'startingPoint', globalId: feat.attributes.globalid, terminal:terminalList[0].terminalConfiguration.terminals[0], allTerminals:terminalList[0].terminalConfiguration}
                       );
+                      this.emitDrawComplete.emit({type:'start', geometry: res.flagGeom});
                     }
                   }
                 } else {
@@ -398,7 +352,7 @@ export class UnTraceManager {
             });
 
             //run again flipping the isolated parameters
-            const newTC = tc.traceConfiguration;
+            const newTC = {...tc.traceConfiguration};
             newTC.includeIsolated = !newTC.includeIsolated;
             this.unHandler.executeTrace(this.token, tc.traceType, this.flags, newTC, tc.globalId).then((results:any) => {
               this.processResults(newTC.includeIsolated, results.traceResults);

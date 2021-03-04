@@ -52,10 +52,11 @@
         "esri/geometry/geometryEngine"
       ], function(Map, esriConfig, Graphic, WebMap, MapView, FeatureLayer, GraphicsLayer, Point, Legend, IdentityManager, Sketch, projection, geometryEngine) {
         // Crime in SF
-        IdentityManager.registerToken({
-          server: "https://dev0016770.esri.com/portal",
-          token: "_pNHgZFzgcjkhhHIp3jKdZyvhU88nb88BYI3WKh42wmrL-IaXjT_NUUns0NlYBjtPQNzxtenWqKYjEX2iNjG4kyGiZt2F3T3CELpIYaICFmyORcxyUmputs2axXFcMCSuyLWMRMiUv94FgOGmgeR3BEMeyCzNoNgBlOP5yGfV05XqGq7NsWbqVBQbpdlVsjz"
-        });
+
+        //IdentityManager.registerToken({
+        //  server: "https://dev0016770.esri.com/portal",
+        //  token: "enBdmobtbOLrsgVeFMlX1W8CifYVPt0gQC8HiyCM5Rue22__6-dARzO8RnIp0PQan8fZDtWMWqc2_5bqhvAyk1XZxM-q6tJP-Jpebb_4x_oSLUhMhnm9j5MkAbW9Vj8v-CdAIdtnigbKIxUmcJI7-zRFOrnSWElrPjXxNaUkHd9T5d5R2OCtebKBxhp3FW9d"
+        //s});
 
         const gl = new GraphicsLayer();
 
@@ -94,10 +95,8 @@
           // check if the create event's state has changed to complete indicating
           // the graphic create operation is completed.
           if (event.state === "complete") {
-            console.log(event.graphic);
-            // remove the graphic from the layer. Sketch adds
-            // the completed graphic to the layer by default.
-            //gl.remove(event.graphic);
+            //console.log(event.graphic);
+            gl.removeAll();
 
             // use the graphic.geometry to query features that intersect it
             //selectFeatures(event.graphic.geometry);
@@ -106,6 +105,9 @@
             const traceComponent = document.querySelector('un-trace-manager');
             traceComponent.inAssets = [{"type":'start', "geometry":event.graphic.geometry, "layers":layerGroup}];
 
+          }
+          if (event.state === "start") {
+            gl.removeAll();
           }
         });
 
@@ -249,9 +251,11 @@
 
           domElement.addEventListener('emitTraceResults', event => {
             console.log(event.detail);
+            const details = event.detail;
             const data = event.detail.results;
             const dataFeat = data.result;
             if(dataFeat.hasOwnProperty("features")) {
+              const resultsGraphics = [];
               dataFeat.features.map((feat) => {
                 if(dataFeat.geometryType === "esriGeometryPolyline") {
 
@@ -259,14 +263,23 @@
                   projection.load().then(() => {
                     const pnt = new Point({x: feat.geometry.x, y:feat.geometry.y, spatialReference: dataFeat.spatialReference});
                     const projGeom = projection.project(pnt, MapView.spatialReference);
-                    const buffPoint = geometryEngine.buffer(projGeom, 25, 'feet');
-                    const graphic = polyonGraphic([0, 255, 0, 0.6], buffPoint);
-                    gl.add(graphic);
+                    if(details.isIsolated) {
+                      const buffPoint = geometryEngine.buffer(projGeom, 20, 'feet');
+                      const graphic = polyonGraphic([0, 255, 0, 0.6], buffPoint);
+                      resultsGraphics.push(graphic);
+                      gl.add(graphic);
+                    } else {
+                      const buffPoint = geometryEngine.buffer(projGeom, 25, 'feet');
+                      const graphic = polyonGraphic([255, 0, 0, 0.6], buffPoint);
+                      resultsGraphics.push(graphic);
+                      gl.add(graphic);
+                    }
                   });
                 } else {
 
                 }
               });
+              //gl.addMany(resultsGraphics);
             }
 
           });
@@ -291,6 +304,12 @@
                   gl.add(graphic);
                   //view.graphics.add(flagGraphic);
                 });
+              } else {
+                if(event.detail.hasOwnProperty("geometry")) {
+                  const projGeom = projection.project(event.detail.geometry, MapView.spatialReference);
+                  let graphic = pointGraphic([255, 0, 0], projGeom);
+                  gl.add(graphic);
+                }
               }
             });
           });

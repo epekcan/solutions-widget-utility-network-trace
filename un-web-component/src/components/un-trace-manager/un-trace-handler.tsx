@@ -110,18 +110,6 @@ export class UnTraceHandler {
   }
 
   //SUPPORT FUNCTIONS
-  //Switches the parameter for isolation trace so it can be ran twice
-  switchIsoTraceParameter(traceType:string, traceConfig:any) {
-    let updatedConfig = traceConfig;
-    if(traceType === 'isolation') {
-      if (updatedConfig.includeIsolated) {
-        updatedConfig.includeIsolated = false;
-      } else {
-        updatedConfig.includeIsolated = true;
-      }
-    }
-    return updatedConfig;
-  }
 
   //query for feature to use for various functions such as percentage along and terminal config
   queryForFeature(token, layer?:any, geom?:any, gdbVersion?:string, moment?:Date): Promise<any> {
