@@ -2,9 +2,8 @@ import { Component, Prop, h, State, Event, EventEmitter, Watch} from '@stencil/c
 import config from '@arcgis/core/config';
 config.assetsPath = 'https://cdn.jsdelivr.net/npm/@arcgis/core@4.18.1/assets';
 import {UnTraceHandler} from "./un-trace-handler";
+import {GeometryHandler} from "./geometry_handler";
 import "@esri/calcite-components";
-import * as GeometryEngine from '@arcgis/core/geometry/GeometryEngine';
-import * as projection from "@arcgis/core/geometry/projection";
 
 @Component({
   tag: 'un-trace-manager',
@@ -16,7 +15,7 @@ export class UnTraceManager {
   @Prop() name: string = "";
   @Prop() showTerminals: boolean;
   @Prop() appToken: string = "";
-  @Prop() gdbVersion: string = "sde.DEFAULT";
+  @Prop() gdbVersion: string = "";
   @Prop() inAssets: any;
   @Prop() inTC: any = {tc:{}, action:"update"};
   @Prop() runIsoTraceTwice: boolean = true;
@@ -24,6 +23,7 @@ export class UnTraceManager {
 
   @Watch('inAssets')
   watchHandler(newValue: any, oldValue: any, prop:any) {
+    console.log(oldValue);
     this[prop] = newValue;
     if(prop === 'inAssets') {this.assetPropsChange();}
   }
@@ -32,11 +32,10 @@ export class UnTraceManager {
   @Event({eventName: 'emitSelectedTrace', composed: true, bubbles: true}) emitSelectedTrace: EventEmitter<any>;
   @Event({eventName: 'emitFlagChange', composed: true, bubbles: true}) emitFlagChange: EventEmitter<any>;
   @Event({eventName: 'emitTraceResults', composed: true, bubbles: true}) emitTraceResults: EventEmitter<any>;
-
   @Event({eventName: 'emitDrawComplete', composed: true, bubbles: true}) emitDrawComplete: EventEmitter<any>;
 
   @State() unHandler: any;
-  @State() token: string;
+  @State() geometryHandler: any;
   @State() searchByUser: string = "";
   @State() traceList: Array<any> = [];
   @State() activeStep: number = 1;
@@ -44,129 +43,49 @@ export class UnTraceManager {
   @State() traceResults: any = null;
   @State() loader: boolean = false;
   @State() flags: Array<any> = [];
-  //@State() flags: string = '[{"traceLocationType":"startingPoint","globalId":"{DB331F49-422D-4067-992E-8091D11E479C}","percentAlong":0.5}]';
-  //@State() flags: string = '[{"traceLocationType":"startingPoint","globalId":"{DB331F49-422D-4067-992E-8091D11E479C}","percentAlong":0.5},{"traceLocationType":"barrier","globalId":"{24787450-40BE-44A3-BF1A-2F90630C5DD1}","percentAlong":0.5},{"traceLocationType":"barrier","globalId":"{309C3A4B-CC00-4393-8724-6DA5075BCB16}","percentAlong":0.5},{"traceLocationType":"barrier","globalId":"{074001AE-6A01-4440-A234-9A85C1F93740}","percentAlong":0.5},{"traceLocationType":"barrier","globalId":"{29A7D702-FBB2-46DF-A0FA-99F4D9615BEE}","percentAlong":0.5}]';
   @State() terminals: Array<any> = [];
   @State() layersForFlagLookup: Array<any> = [];
   @State() controllerLayer: any;
   @State() traces:any;
 
   componentWillLoad() {
-    this.unHandler = new UnTraceHandler(this.host, this.name);
-    this.unHandler.getToken().then((response:any) => {
-      this.token = response.token;
+    this.unHandler = new UnTraceHandler(this.host, this.name, this.gdbVersion, this.appToken);
+    this.geometryHandler = new GeometryHandler();
+    //this.unHandler.getToken().then((response:any) => {
+    //  this.token = response.token;
 
-      this.unHandler.queryDataElement(this.token).then(async(dataElement:any) => {
+      this.unHandler.queryDataElement().then(async(dataElement:any) => {
         this.controllerLayer = this.unHandler.findControllerLayer(dataElement);
         this.layersForFlagLookup = this.unHandler.queryLayersForFlag(this.controllerLayer);
         this.terminals = this.unHandler.queryATAGTerminals(this.controllerLayer);
-        this.traces = await this.unHandler.getTraces(this.token);
-
+        this.traces = await this.unHandler.getTraces();
         console.log(this.controllerLayer);
         console.log(this.layersForFlagLookup);
         console.log(this.terminals);
         console.log(this.traces);
-
-        //if(this.inAssets) {this.assetPropsChange();}
-
       });
 
-    });
+    //});
   }
 
   render() {
+
       return(
-        <div style={{display:'flex', flexDirection:'row'}}>
-        <div>
-        <calcite-split-button
-          style={{color:'#000'}}
-          appearance="solid"
-          color="dark"
-          primary-icon-start="search"
-          primary-text="Identify the leak"
-          primary-label="Identify the leak"
-          dropdown-label="Additional Options"
-          dropdown-icon-type="chevron"
-          dir="ltr"
-          calcite-hydrated=""
-          onClick={(evt:any) =>{
-            this.emitFlagChange.emit({type:'start',tool:'point', callback:this.assetPropsChange});
-          }}
-        >
-          <calcite-dropdown-group
-          style={{color:'#000'}}
-            selection-mode="none"
-            dir="ltr"
-            role="menu"
-            calcite-hydrated=""
-          >
-            <calcite-dropdown-item
-              style={{color:'#000'}}
-              dir="ltr"
-              role="menuitem"
-              selection-mode="none"
-              tabindex="0"
-              calcite-hydrated=""
-              icon-start="point"
-            >
-              Click a point on the map
-            </calcite-dropdown-item>
-            <calcite-dropdown-item
-              style={{color:'#000'}}
-              dir="ltr"
-              role="menuitem"
-              selection-mode="none"
-              tabindex="0"
-              calcite-hydrated=""
-              icon-start="polygonArea"
-            >
-              Draw an area of interest
-            </calcite-dropdown-item>
-            <calcite-dropdown-item
-              style={{color:'#000'}}
-              dir="ltr"
-              role="menuitem"
-              selection-mode="none"
-              tabindex="0"
-              calcite-hydrated=""
-              icon-start="list"
-            >
-              View list of leak locations
-            </calcite-dropdown-item>
-          </calcite-dropdown-group>
-        </calcite-split-button>
-        </div>
-        <div style={{width:"1%"}}></div>
-        <div>
-        <calcite-button
-          appearance="solid"
-          color="blue"
-          scale="m"
-          href=""
-          icon-start="caretRight"
-          dir="ltr"
-          width="auto"
-          calcite-hydrated=""
-        >
-          Run
-        </calcite-button>
-        </div>
-        <div style={{width:"1%"}}></div>
-        <div>
-        <calcite-button
-          appearance="solid"
-          color="light"
-          scale="m"
-          href=""
-          icon-start="xCircle"
-          dir="ltr"
-          width="auto"
-          calcite-hydrated=""
-        >
-          Clear
-        </calcite-button>
-        </div>
-      </div>);
+        <div style={{display:'flex', flexDirection:'row', flex:"1"}}>
+          <calcite-tabs position="above" layout="center">
+            <calcite-tab-nav slot="tab-nav">
+              <calcite-tab-title active={true}>Inputs</calcite-tab-title>
+              <calcite-tab-title>Outputs</calcite-tab-title>
+            </calcite-tab-nav>
+
+            <calcite-tab active={true} style={{backgroundColor:"#f8f8f8"}}>
+              <flag-handler />
+              <trace-selector />
+              <execute-handler />
+            </calcite-tab>
+            <calcite-tab>output tab</calcite-tab>
+          </calcite-tabs>
+        </div>);
   }
 
   //Prop change updates
@@ -195,24 +114,23 @@ export class UnTraceManager {
         if(response.length > 0) {
           response.map((res:any) => {
             if(res.result.features.length > 0) {
-              res.result.features.map((feat:any) => {
+              res.result.features.map(async(feat:any) => {
                 if(res.result.geometryType === 'esriGeometryPolyline') {
                   //get percent along
-                  this.getPercentAlong(feat.geometry,  res.flagGeom, res.result.spatialReference).then((result:any) => {
-                    const flagExists = this.flags.indexOf((f:any) => {
-                      return f.globalId === feat.attributes.globalid;
-                    });
-                    if(flagExists === -1) {
-                      this.flags.push(
-                        {traceLocationType:'startingPoint',globalId: feat.attributes.globalid, percentAlong:result}
-                      );
-                    }
+                  const perct = await this.geometryHandler.getPercentageAlong(feat.geometry,  res.flagGeom, res.result.spatialReference);
+                  console.log(perct);
+                  const flagExists = this.flags.indexOf((f:any) => {
+                    return f.globalId === feat.attributes.globalid;
                   });
+                  if(flagExists === -1) {
+                    this.flags.push(
+                      {traceLocationType:'startingPoint',globalId: feat.attributes.globalid, percentAlong:perct[0]}
+                    );
+                  }
                   //if line on line, send back the intersected point for flag graphic
                   if(res.flagGeom.type === "polyline") {
-                    this.intersectToPoint(feat.geometry, res.flagGeom, res.result.spatialReference).then((points:any) => {
-                      this.emitDrawComplete.emit({type:'start', geometry: points});
-                    });
+                    const points = await this.geometryHandler.intersectToPoint(feat.geometry, res.flagGeom, res.result.spatialReference);
+                    this.emitDrawComplete.emit({type:'start', geometry: points});
                   } else {
                     this.emitDrawComplete.emit({type:'start', geometry: res.flagGeom});
                   }
@@ -252,18 +170,18 @@ export class UnTraceManager {
 
   //SUPPORT FUNCTIONS
   lookupAsset(lyr?:any, geom?: any): Promise<any> {
-    return new Promise(async(resolve, reject) => {
+    return new Promise(async(resolve) => {
       let geomObj = (geom)?geom:null;
       if(geomObj !== null) {
         if(geomObj.type === "polygon") {
           //convert it to polyline and reproject it.
           const rings = geomObj.rings;
-          geomObj = await this.unHandler._createPolyline(rings, geomObj.spatialReference.wkid);
+          geomObj = await this.geometryHandler.createPolyline(rings, geomObj.spatialReference.wkid);
         } else {
           //polyline and point, just reproject
         }
       }
-      this.unHandler.queryForFeature(this.token, lyr, geomObj).then((response:any)=> {
+      this.unHandler.queryForFeature(lyr, geomObj).then((response:any)=> {
         //console.log(response);
         const resObj = {
           "result": response,
@@ -278,88 +196,15 @@ export class UnTraceManager {
     });
   }
 
-  getPercentAlong(geometry:any, flagGeom: any, sr:any) {
-    return new Promise((resolve, reject) => {
-      this.unHandler.getPercentageAlong(geometry,  flagGeom, sr).then((response:any) => {
-        resolve(response);
-      })
-      .catch((e: any) => {
-        resolve(e);
-      });
-    });
-  }
-
-  async intersectToPoint(geometry:any, flagGeom: any, sourceSR:any) {
-    let flagPointArray = [];
-    const sourceLine = await this.unHandler._createPolyline(geometry.paths, sourceSR.wkid);
-    const flagToProjected = await this.unHandler.projectGeometry(flagGeom, sourceSR);
-    //since intersecting lines do not return the point, have to cut line and then check start/end points to get points.
-    const cutGeoms = GeometryEngine.cut(sourceLine,flagToProjected);
-    //check start/end points if they intersect flag line, if they do consider it flag
-    if(cutGeoms && cutGeoms.length > 0) {
-      const [
-        {default: Point}
-      ] = await Promise.all([
-        import('@arcgis/core/geometry/Point')
-      ]);
-      cutGeoms.map((cg:any) => {
-        cg.paths.map((p:any) => {
-          //get first point and last points and see if they intersect flag geom
-          const firstCoord = p[0];
-          const firstPoint = new Point({x: firstCoord[0], y:firstCoord[1], spatialReference: cg.spatialReference});
-          const lastCoord = p[p.length - 1];
-          const lastPoint = new Point({x: lastCoord[0], y:lastCoord[1], spatialReference: cg.spatialReference});
-          const doesFirstIntersect = GeometryEngine.intersects(flagToProjected, firstPoint);
-          const doesLastIntersect = GeometryEngine.intersects(flagToProjected, lastPoint);
-          if(doesFirstIntersect) {
-            if(flagPointArray.length > 0) {
-              const found = flagPointArray.indexOf((fp:any) => {
-                return(GeometryEngine.equals(fp, firstPoint))
-              });
-              if(found === -1) {
-                flagPointArray.push(firstPoint);
-              }
-            } else {
-              flagPointArray.push(firstPoint);
-            }
-          }
-          if(doesLastIntersect) {
-            if(flagPointArray.length > 0) {
-              const found = flagPointArray.indexOf((fp:any) => {
-                return(GeometryEngine.equals(fp, lastPoint))
-              });
-              if(found === -1) {
-                flagPointArray.push(lastPoint);
-              }
-            } else {
-              flagPointArray.push(lastPoint);
-            }
-          }
-        });
-      });
-    }
-    return flagPointArray;
-  }
-
   executeTrace() {
     if(this.traces.hasOwnProperty('traceConfigurations')) {
       if(this.traces.traceConfigurations.length > 0) {
         this.traces.traceConfigurations.map((tc:any) => {
           if(tc.traceType === 'isolation') {
-            this.unHandler.executeTrace(this.token, tc.traceType, this.flags, '', tc.globalId).then((results:any) => {
+            this.unHandler.executeTrace(tc.traceType, this.flags, '', tc.globalId).then((results:any) => {
               this.processResults(tc.traceConfiguration.includeIsolated, results.traceResults);
               //this.emitTraceResults.emit({isIsolated:tc.traceConfiguration.includeIsolated, results:results.traceResults});
             });
-
-            //run again flipping the isolated parameters
-            const newTC = {...tc.traceConfiguration};
-            newTC.includeIsolated = !newTC.includeIsolated;
-            this.unHandler.executeTrace(this.token, tc.traceType, this.flags, newTC, tc.globalId).then((results:any) => {
-              this.processResults(newTC.includeIsolated, results.traceResults);
-              //this.emitTraceResults.emit({isIsolated:newTC.includeIsolated, results:results.traceResults});
-
-            });
-
           }
         });
       }

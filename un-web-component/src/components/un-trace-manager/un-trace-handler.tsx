@@ -1,21 +1,24 @@
-import { Prop} from '@stencil/core';
 import config from '@arcgis/core/config';
 config.assetsPath = 'https://cdn.jsdelivr.net/npm/@arcgis/core@4.18.1/assets';
 import {request} from '@esri/arcgis-rest-request';
-import * as GeometryEngine from '@arcgis/core/geometry/GeometryEngine';
-import * as projection from "@arcgis/core/geometry/projection";
-//import * as Polyline from '@arcgis/core/geometry/Polyline';
+import {GeometryHandler} from "./geometry_handler";
 
 export class UnTraceHandler {
-  host="";
-  unName="";
-  constructor(host, name) {
+  host:string = '';
+  unName:string = '';
+  gdbVersion:string = '';
+  token:string = '';
+  constructor(host, name, gdbVersion, token?) {
     this.host = host;
     this.unName = name;
+    this.gdbVersion = gdbVersion;
+    this.token = token
   }
 
+  geometryHandler = new GeometryHandler();
+
   getToken() {
-    return new Promise((resolve: any, reject: any) => {
+    return new Promise((resolve: any) => {
       const requestURL = this.host + '/portal/sharing/rest/generateToken';
       const params = {
         client_id: 'b97taLpupCPAd4AH',
@@ -43,15 +46,15 @@ export class UnTraceHandler {
     });
   }
 
-  getTraces(token:string, searchByUser?:string): Promise<any> {
-    return new Promise((resolve: any, reject: any) => {
+  getTraces(searchByUser?:string): Promise<any> {
+    return new Promise((resolve: any) => {
       const requestURL = this.host + '/server/rest/services/'+this.unName+'/UtilityNetworkServer/traceConfigurations/query';
       let params = {};
-      if(token) {
+      if(this.token !== '') {
         if(searchByUser) {
-          params = {f : 'json', globalIds:'', creators:(searchByUser !== '')?'['+ searchByUser + ']':'', tags:'', names:'', token:token};
+          params = {f : 'json', globalIds:'', creators:(searchByUser !== '')?'['+ searchByUser + ']':'', tags:'', names:'', token:this.token};
         } else {
-          params = {f : 'json', globalIds:'', creators:'', tags:'', names:'', token:token};
+          params = {f : 'json', globalIds:'', creators:'', tags:'', names:'', token:this.token};
         }
       } else {
         resolve(false);
@@ -70,26 +73,26 @@ export class UnTraceHandler {
     });
   }
 
-  executeTrace(token: string, traceType:string, flags:Array<any>, traceConfig?:any, traceId?:string): Promise<any> {
+  executeTrace(traceType:string, flags:Array<any>, traceConfig?:any, traceId?:string): Promise<any> {
     //traceConfigurationGlobalId:'{80DDAE15-2720-49CA-971F-FBA76AEBC075}'
     //with barriers
     //'[{'traceLocationType':'startingPoint','globalId':'{DB331F49-422D-4067-992E-8091D11E479C}','percentAlong':0.5},{'traceLocationType':'barrier','globalId':'{24787450-40BE-44A3-BF1A-2F90630C5DD1}','percentAlong':0.5},{'traceLocationType':'barrier','globalId':'{309C3A4B-CC00-4393-8724-6DA5075BCB16}','percentAlong':0.5},{'traceLocationType':'barrier','globalId':'{074001AE-6A01-4440-A234-9A85C1F93740}','percentAlong':0.5},{'traceLocationType':'barrier','globalId':'{29A7D702-FBB2-46DF-A0FA-99F4D9615BEE}','percentAlong':0.5}]'
     //just start
     ////'[{'traceLocationType':'startingPoint','globalId':'{DB331F49-422D-4067-992E-8091D11E479C}','percentAlong':0.5}]'
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const requestURL = this.host + '/server/rest/services/'+this.unName+'/UtilityNetworkServer/trace';
       let params = {};
-      if(token) {
+      if(this.token !== '') {
         params = {
           f : 'json',
-          gdbVersion:'sde.DEFAULT',
+          gdbVersion:(this.gdbVersion !== '')?this.gdbVersion:'sde.DEFAULT',
           sessionId:'',
           moment:'',
           traceType: traceType,
           traceLocations: JSON.stringify(flags),
           traceConfigurationGlobalId:(typeof traceConfig === 'object' && traceConfig !== null  && traceConfig !== '')?'':traceId,
           traceConfiguration:(traceConfig)?JSON.stringify(traceConfig):'',
-          token:token
+          token:this.token
         };
       } else {
         resolve(false);
@@ -109,14 +112,12 @@ export class UnTraceHandler {
     });
   }
 
-  //SUPPORT FUNCTIONS
-
   //query for feature to use for various functions such as percentage along and terminal config
-  queryForFeature(token, layer?:any, geom?:any, gdbVersion?:string, moment?:Date): Promise<any> {
-    return new Promise((resolve, reject) => {
+  queryForFeature(layer?:any, geom?:any, moment?:string): Promise<any> {
+    return new Promise((resolve) => {
       const requestURL = this.host + '/server/rest/services/'+this.unName+'/FeatureServer/'+ layer.layerId + '/query';
       let params = {};
-      if(token) {
+      if(this.token !== '') {
         let geomObj: any = '';
         let geometryType: string = 'esriGeometryPoint';
         let whereClause:string = '';
@@ -131,7 +132,7 @@ export class UnTraceHandler {
               geometryType = 'esriGeometryPolyline';
             } else {
               //it's leak point, buffer it
-              geomObj = this._createBuffer(geom);
+              geomObj = this.geometryHandler.createBuffer(geom, 25, 'feet');
               geometryType = 'esriGeometryPolygon';
             }
           }
@@ -147,9 +148,9 @@ export class UnTraceHandler {
           geometryType: geometryType,
           outFields: "*",
           returnGeometry: true,
-          gdbVersion: (gdbVersion)?gdbVersion:'sde.DEFAULT',
+          gdbVersion:(this.gdbVersion !== '')?this.gdbVersion:'sde.DEFAULT',
           historicMoment: (moment)?moment:'',
-          token:token
+          token:this.token
         };
         //console.log(params);
         //console.log(requestURL);
@@ -170,83 +171,13 @@ export class UnTraceHandler {
     });
   }
 
-  // calculate the percentage of where user clicked on the line
-  async getPercentageAlong(sourceGeom:any, flagGeom:any, inSR:any) {
-    let flagLine = flagGeom;
-    const sourceLine = await this._createPolyline(sourceGeom.paths, inSR.wkid);
-    if(flagGeom.type === 'point') {
-      const padFlagXMin = flagGeom.x - 50;
-      const padFlagXMax = flagGeom.x + 50;
-      const padFlagYMin = flagGeom.y - 50;
-      const padFlagYMax = flagGeom.y + 50;
-      const newCoodsForLine = [
-         [padFlagXMin,padFlagYMin],
-         [padFlagXMax,padFlagYMax]
-       ];
-      flagLine = await this._createPolyline(newCoodsForLine, flagGeom.spatialReference.wkid);
-      if(!projection.isLoaded()) {
-        await projection.load();
-      }
-      const projGeom = projection.project(flagLine, inSR);
-      flagLine = projGeom;
-      const newGeom = GeometryEngine.cut(sourceLine,flagLine);
-      if(newGeom.length > 0) {
-        const sourceLength = GeometryEngine.planarLength(sourceLine,'feet');
-        const piece1Length = GeometryEngine.planarLength(newGeom[0],'feet');
-        const percentage = piece1Length / sourceLength;
-        return(percentage);
-      } else {
-        return(0.5);
-      }
-    } else {
-      //it's a line, reproject it
-      if(!projection.isLoaded()) {
-        await projection.load();
-      }
-      const projGeom = projection.project(flagGeom, inSR);
-      flagLine = projGeom;
-      const newGeom = GeometryEngine.cut(sourceLine,flagLine);
-      if(newGeom.length > 0) {
-        const sourceLength = GeometryEngine.planarLength(sourceLine,'feet');
-        const piece1Length = GeometryEngine.planarLength(newGeom[0],'feet');
-        const percentage = piece1Length / sourceLength;
-        return(percentage);
-      } else {
-        return(0.5);
-      }
-    }
-  }
-
-  //create a polyline to use tor percentage along calculation
-  async _createPolyline(geom:any, inSR:any) {
-    //return new Promise(async(resolve, reject) => {
-      const [
-        {default: Polyline}
-      ] = await Promise.all([
-        import('@arcgis/core/geometry/Polyline')
-      ]);
-      const newLine = new Polyline({
-        hasZ: false,
-        hasM: true,
-        paths: geom,
-        spatialReference: { wkid: inSR }
-      });
-      return(newLine);
-    //});
-  }
-
-  //create a buffer for clicked point
-  _createBuffer(geom:any) {
-    return GeometryEngine.buffer(geom, 25, 'feet');
-  }
-
   //queryDataElement for various uses
-  queryDataElement(token:string) {
-    return new Promise((resolve: any, reject: any) => {
+  queryDataElement() {
+    return new Promise((resolve: any) => {
       const requestURL = this.host + '/server/rest/services/'+this.unName+'/FeatureServer/queryDataElements';
       let params = {};
-      if(token) {
-        params = {f : 'json', token:token};
+      if(this.token !== '') {
+        params = {f : 'json', token:this.token};
       } else {
         resolve(false);
       }
@@ -345,17 +276,8 @@ export class UnTraceHandler {
     }
   }
 
-  async projectGeometry(sourceGeom:any, targetSR:any) {
-    if(!projection.isLoaded()) {
-      await projection.load();
-    }
-    const projGeom = projection.project(sourceGeom, targetSR);
-    return projGeom;
-  }
-
-
   _request(requestObj:any): Promise<any> {
-    return new Promise((resolve: any, reject: any) => {
+    return new Promise((resolve: any) => {
       request(requestObj.url, {
         params: requestObj.params
       }).then((response:any) => {
