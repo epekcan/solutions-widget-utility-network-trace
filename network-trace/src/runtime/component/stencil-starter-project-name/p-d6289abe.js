@@ -1,0 +1,1 @@
+const a={container:"container",arrow:"arrow"},r="data-calcite-tooltip-reference",e="aria-describedby",o=500;export{e as A,a as C,r as T,o as a}
