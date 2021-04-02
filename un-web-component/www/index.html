@@ -1,4 +1,4 @@
-<!doctype html><html><head> <meta charset="utf-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0"> <title>Stencil Component Starter</title> <script type="module" src="/build/stencil-starter-project-name.esm.js" data-stencil></script> <script nomodule="" src="/build/stencil-starter-project-name.js" data-stencil></script> <link rel="stylesheet" href="https://js.arcgis.com/4.18/esri/themes/light/main.css"> <script src="https://js.arcgis.com/4.18/"></script> <script type="module" src="https://unpkg.com/@esri/calcite-components@1.0.0-beta.48/dist/calcite/calcite.esm.js"></script> <script nomodule="" src="https://unpkg.com/@esri/calcite-components@1.0.0-beta.48/dist/calcite/calcite.js"></script> <link rel="stylesheet" type="text/css" href="https://unpkg.com/@esri/calcite-components@1.0.0-beta.48/dist/calcite/calcite.css"> <style>html,
+<!doctype html><html><head> <meta charset="utf-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0"> <title>Stencil Component Starter</title> <link rel="modulepreload" href="/build/p-1e306849.js"><script type="module" src="/build/p-1e306849.js" data-stencil data-resources-url="/build/" data-stencil-namespace="stencil-starter-project-name"></script> <script nomodule="" src="/build/stencil-starter-project-name.js" data-stencil></script> <link rel="stylesheet" href="https://js.arcgis.com/4.18/esri/themes/light/main.css"> <script src="https://js.arcgis.com/4.18/"></script> <script type="module" src="https://unpkg.com/@esri/calcite-components@1.0.0-beta.48/dist/calcite/calcite.esm.js"></script> <script nomodule="" src="https://unpkg.com/@esri/calcite-components@1.0.0-beta.48/dist/calcite/calcite.js"></script> <link rel="stylesheet" type="text/css" href="https://unpkg.com/@esri/calcite-components@1.0.0-beta.48/dist/calcite/calcite.css"> <style>html,
       body {
       height: 100%;
       width: 100%;
@@ -6,8 +6,8 @@
       padding: 0;
       }
       #viewDiv {
-      height: 75%;
-      width: 75%;
+      height: 99%;
+      width: 100%;
       margin: 0;
       padding: 0;
       }
@@ -25,15 +25,19 @@
         "esri/views/MapView",
         "esri/layers/FeatureLayer",
         "esri/layers/GraphicsLayer",
+        "esri/geometry/Point",
         "esri/widgets/Legend",
         "esri/identity/IdentityManager",
-        "esri/widgets/Sketch"
-      ], function(Map, esriConfig, Graphic, WebMap, MapView, FeatureLayer, GraphicsLayer, Legend, IdentityManager, Sketch) {
+        "esri/widgets/Sketch",
+        "esri/geometry/projection",
+        "esri/geometry/geometryEngine"
+      ], function(Map, esriConfig, Graphic, WebMap, MapView, FeatureLayer, GraphicsLayer, Point, Legend, IdentityManager, Sketch, projection, geometryEngine) {
         // Crime in SF
-        IdentityManager.registerToken({
-          server: "https://dev0016770.esri.com/portal",
-          token: "_pNHgZFzgcjkhhHIp3jKdZyvhU88nb88BYI3WKh42wmrL-IaXjT_NUUns0NlYBjtPQNzxtenWqKYjEX2iNjG4kyGiZt2F3T3CELpIYaICFmyORcxyUmputs2axXFcMCSuyLWMRMiUv94FgOGmgeR3BEMeyCzNoNgBlOP5yGfV05XqGq7NsWbqVBQbpdlVsjz"
-        });
+
+        //IdentityManager.registerToken({
+        //  server: "https://dev0016770.esri.com/portal",
+        //  token: "enBdmobtbOLrsgVeFMlX1W8CifYVPt0gQC8HiyCM5Rue22__6-dARzO8RnIp0PQan8fZDtWMWqc2_5bqhvAyk1XZxM-q6tJP-Jpebb_4x_oSLUhMhnm9j5MkAbW9Vj8v-CdAIdtnigbKIxUmcJI7-zRFOrnSWElrPjXxNaUkHd9T5d5R2OCtebKBxhp3FW9d"
+        //s});
 
         const gl = new GraphicsLayer();
 
@@ -44,7 +48,7 @@
           }
         });
 
-        webmap.add(gl);
+        webmap.add(gl,0);
 
         var view = new MapView({
           container: "viewDiv",
@@ -58,7 +62,7 @@
           layer: gl,
           view: view,
           // graphic will be selected as soon as it is created
-          creationMode: "update"
+          //creationMode: "update"
         });
 
         view.ui.add(sketch, "top-right");
@@ -72,10 +76,8 @@
           // check if the create event's state has changed to complete indicating
           // the graphic create operation is completed.
           if (event.state === "complete") {
-            console.log(event.graphic);
-            // remove the graphic from the layer. Sketch adds
-            // the completed graphic to the layer by default.
-            //gl.remove(event.graphic);
+            //console.log(event.graphic);
+            gl.removeAll();
 
             // use the graphic.geometry to query features that intersect it
             //selectFeatures(event.graphic.geometry);
@@ -85,6 +87,9 @@
             traceComponent.inAssets = [{"type":'start', "geometry":event.graphic.geometry, "layers":layerGroup}];
 
           }
+          if (event.state === "start") {
+            gl.removeAll();
+          }
         });
 
 
@@ -92,7 +97,7 @@
         var pointGraphic = new Graphic({
           symbol: {
             type: "simple-marker", // autocasts as new SimpleMarkerSymbol()
-            color: [0, 0, 139],
+            color: [255, 0, 0],
             outline: {
               color: [255,255,255],
               width: 1.5
@@ -182,6 +187,39 @@
 
         }
 
+
+        pointGraphic = (color, geom) => {
+          let graphic = new Graphic({
+            symbol: {
+              type: "simple-marker", // autocasts as new SimpleMarkerSymbol()
+              color: color,
+              outline: {
+                color: [255,255,255],
+                width: 1.5
+              }
+            }
+          });
+          graphic.geometry = geom;
+          return graphic;
+        }
+
+        polyonGraphic = (color, geom) => {
+          const bufferGraphic = new Graphic({
+            symbol: {
+              type: "simple-fill", // autocasts as new SimpleFillSymbol()
+              color: color,
+              outline: {
+                // autocasts as new SimpleLineSymbol()
+                color: [255, 255, 255],
+                width: 1
+              }
+            }
+          });
+          bufferGraphic.geometry = geom;
+          return bufferGraphic;
+        }
+
+
         setTimeout(() => {
           const domElement = document.querySelector('un-trace-manager');
           domElement.addEventListener('emitQueryTrace', event => {
@@ -193,7 +231,38 @@
           });
 
           domElement.addEventListener('emitTraceResults', event => {
-            console.log('query traces results');
+            console.log(event.detail);
+            const details = event.detail;
+            const data = event.detail.results;
+            const dataFeat = data.result;
+            if(dataFeat.hasOwnProperty("features")) {
+              const resultsGraphics = [];
+              dataFeat.features.map((feat) => {
+                if(dataFeat.geometryType === "esriGeometryPolyline") {
+
+                } else if (dataFeat.geometryType === "esriGeometryPoint") {
+                  projection.load().then(() => {
+                    const pnt = new Point({x: feat.geometry.x, y:feat.geometry.y, spatialReference: dataFeat.spatialReference});
+                    const projGeom = projection.project(pnt, MapView.spatialReference);
+                    if(details.isIsolated) {
+                      const buffPoint = geometryEngine.buffer(projGeom, 20, 'feet');
+                      const graphic = polyonGraphic([0, 255, 0, 0.6], buffPoint);
+                      resultsGraphics.push(graphic);
+                      gl.add(graphic);
+                    } else {
+                      const buffPoint = geometryEngine.buffer(projGeom, 25, 'feet');
+                      const graphic = polyonGraphic([255, 0, 0, 0.6], buffPoint);
+                      resultsGraphics.push(graphic);
+                      gl.add(graphic);
+                    }
+                  });
+                } else {
+
+                }
+              });
+              //gl.addMany(resultsGraphics);
+            }
+
           });
 
           domElement.addEventListener('emitFlagChange', event => {
@@ -204,18 +273,32 @@
               getDataForComponent(e,event);
             });
           });
+
+          domElement.addEventListener('emitDrawComplete', event => {
+            console.log('query complete from drawn input inside component.  flags are returned');
+            console.log(event.detail);
+            projection.load().then(() => {
+              if(event.detail.geometry.length > 0) {
+                event.detail.geometry.map((e) => {
+                  const projGeom = projection.project(e, MapView.spatialReference);
+                  let graphic = pointGraphic([255, 0, 0], projGeom);
+                  gl.add(graphic);
+                  //view.graphics.add(flagGraphic);
+                });
+              } else {
+                if(event.detail.hasOwnProperty("geometry")) {
+                  const projGeom = projection.project(event.detail.geometry, MapView.spatialReference);
+                  let graphic = pointGraphic([255, 0, 0], projGeom);
+                  gl.add(graphic);
+                }
+              }
+            });
+          });
+
         },1000);
 
-        //[{"type":start, "geom":null, "validLayers":[{"layerId":0, "assetGroups":[0,1,2], "globalIds":[e123]}]}]
+
+        //[{"type":start, "geom":null, "layers":[{"layerId":0, "assetGroups":[0,1,2], "objectId":[e123]}]}]
 
       });
-    </script> </head> <body> <un-trace-manager show-terminals="true" host="https://dev0016770.esri.com" webmap="a80e69210ed34485995f0aa8362f539b" name="Water_Distribution_Utility_Network"></un-trace-manager> <div id="viewDiv"></div> <script>
-if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-  // auto-unregister service worker during dev mode
-  navigator.serviceWorker.getRegistration().then(function(registration) {
-  if (registration) {
-    registration.unregister().then(function() { location.reload(true) });
-  }
-  });
-}
-</script></body></html>
+    </script> </head> <body> <un-trace-manager show-terminals="true" host="https://dev0016770.esri.com" webmap="a80e69210ed34485995f0aa8362f539b" name="Water_Distribution_Utility_Network"></un-trace-manager> <div id="viewDiv"></div> </body></html>
