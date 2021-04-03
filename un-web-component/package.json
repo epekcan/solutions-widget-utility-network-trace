@@ -25,13 +25,14 @@
   "dependencies": {
     "@arcgis/core": "^4.18.0-next.20201202",
     "@esri/arcgis-rest-request": "^2.21.0",
-    "@esri/calcite-components": "^1.0.0-beta.46",
+    "@esri/calcite-components": "^1.0.0-beta.51",
     "@stencil/core": "^2.0.1",
     "arcgis-js-api": "^4.18.0-next.20201202"
   },
   "license": "MIT",
   "devDependencies": {
     "@arcgis/webpack-plugin": "^4.18.0-next.20201201",
+    "@stencil/sass": "^1.4.1",
     "calcite-web": "github:Esri/calcite-web#v1.2.5"
   }
 }

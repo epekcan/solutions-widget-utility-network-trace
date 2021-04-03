@@ -1,10 +1,11 @@
 import { Component, Prop, h, State, Event, EventEmitter, Watch} from '@stencil/core';
 import {UnTraceHandler} from "./un-trace-handler";
 import "@esri/calcite-components";
+import { defineCustomElements } from "@esri/calcite-components/dist/loader";
 
 @Component({
   tag: 'un-trace-manager',
-  styleUrl: 'un-trace-manager.css',
+  styleUrl: 'un-trace-manager.scss',
   shadow: true,
 })
 export class UnTraceManager {
@@ -47,6 +48,10 @@ export class UnTraceManager {
   @State() terminals: Array<any> = [];
   @State() layersForFlagLookup: Array<any> = [];
   @State() controllerLayer: any;
+
+  connectedCallback() {
+    defineCustomElements(window);
+  }
 
   componentWillLoad() {
     this.unHandler = new UnTraceHandler(this.host, this.name);
