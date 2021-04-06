@@ -4,10 +4,11 @@ config.assetsPath = 'https://cdn.jsdelivr.net/npm/@arcgis/core@4.18.1/assets';
 import {UnTraceHandler} from "./un-trace-handler";
 import {GeometryHandler} from "./geometry_handler";
 import "@esri/calcite-components";
+import { defineCustomElements } from "@esri/calcite-components/dist/loader";
 
 @Component({
   tag: 'un-trace-manager',
-  styleUrl: 'un-trace-manager.css',
+  styleUrl: 'un-trace-manager.scss',
   shadow: true,
 })
 export class UnTraceManager {
@@ -47,6 +48,10 @@ export class UnTraceManager {
   @State() layersForFlagLookup: Array<any> = [];
   @State() controllerLayer: any;
   @State() traces:any;
+
+  connectedCallback() {
+    defineCustomElements(window);
+  }
 
   componentWillLoad() {
     this.unHandler = new UnTraceHandler(this.host, this.name, this.gdbVersion, this.appToken);
