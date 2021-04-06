@@ -1,0 +1,38 @@
+import { EventEmitter } from '../../stencil-public-runtime';
+import "@esri/calcite-components";
+export declare class UnTraceManager {
+  host: string;
+  name: string;
+  showTerminals: boolean;
+  appToken: string;
+  gdbVersion: string;
+  inAssets: any;
+  inTC: any;
+  runIsoTraceTwice: boolean;
+  isBasic: boolean;
+  watchHandler(newValue: any, oldValue: any, prop: any): void;
+  emitQueryTrace: EventEmitter<any>;
+  emitSelectedTrace: EventEmitter<any>;
+  emitFlagChange: EventEmitter<any>;
+  emitTraceResults: EventEmitter<any>;
+  emitDrawComplete: EventEmitter<any>;
+  unHandler: any;
+  geometryHandler: any;
+  searchByUser: string;
+  traceList: Array<any>;
+  activeStep: number;
+  activeTrace: any;
+  traceResults: any;
+  loader: boolean;
+  flags: Array<any>;
+  terminals: Array<any>;
+  layersForFlagLookup: Array<any>;
+  controllerLayer: any;
+  traces: any;
+  componentWillLoad(): void;
+  render(): any;
+  assetPropsChange(): void;
+  lookupAsset(lyr?: any, geom?: any): Promise<any>;
+  executeTrace(): void;
+  processResults(isIsolated: boolean, results: any): void;
+}
