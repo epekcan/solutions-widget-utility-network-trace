@@ -1,13 +1,14 @@
 import { r as registerInstance, c as createEvent, h, H as Host, g as getElement } from './index-cbdbef9d.js';
-import { h as hasLabel } from './dom-b2b7d90d.js';
-import { g as getKey } from './key-040272ec.js';
+import { i as hasLabel } from './dom-558ef00c.js';
+import { g as getKey } from './key-6f340c70.js';
 import { g as guid } from './guid-9ad8042d.js';
 
-const calciteSliderCss = "@charset \"UTF-8\";@keyframes calcite-fade-in{0%{opacity:0}100%{opacity:1}}@keyframes calcite-fade-in-down{0%{opacity:0;transform:translate3D(0, -5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes calcite-fade-in-up{0%{opacity:0;transform:translate3D(0, 5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes calcite-fade-in-scale{0%{opacity:0;transform:scale3D(0.95, 0.95, 1)}100%{opacity:1;transform:scale3D(1, 1, 1)}}:root{--calcite-popper-transition:150ms ease-in-out}:host([hidden]){display:none}:host-context([theme=dark]){--calcite-ui-blue-1:#00A0FF;--calcite-ui-blue-2:#0087D7;--calcite-ui-blue-3:#47BBFF;--calcite-ui-green-1:#36DA43;--calcite-ui-green-2:#11AD1D;--calcite-ui-green-3:#44ED51;--calcite-ui-yellow-1:#FFC900;--calcite-ui-yellow-2:#F4B000;--calcite-ui-yellow-3:#FFE24D;--calcite-ui-red-1:#FE583E;--calcite-ui-red-2:#F3381B;--calcite-ui-red-3:#FF7465;--calcite-ui-background:#202020;--calcite-ui-foreground-1:#2b2b2b;--calcite-ui-foreground-2:#353535;--calcite-ui-foreground-3:#404040;--calcite-ui-text-1:#ffffff;--calcite-ui-text-2:#bfbfbf;--calcite-ui-text-3:#9f9f9f;--calcite-ui-border-1:#4a4a4a;--calcite-ui-border-2:#404040;--calcite-ui-border-3:#353535;--calcite-ui-border-4:#757575;--calcite-ui-border-5:#9f9f9f}:host{display:block;padding:7px 0;margin:7px 0;position:relative}:host([disabled]){opacity:0.4;pointer-events:none}:host([disabled]) .track__range,:host([disabled]) .tick--active{background-color:var(--calcite-ui-text-3)}:host([disabled]) .graph .graph-path--highlight{fill:var(--calcite-ui-text-3)}:host([label-handles]),:host([precise]:not([precise=false])){margin-top:21px}:host([label-ticks]),:host([precise]:not([precise=false])[is-range]){margin-bottom:21px}:host([precise]:not([precise=false])[label-handles]){margin-top:35px}:host([precise]:not([precise=false])[label-handles][is-range]){margin-bottom:35px}.thumb{position:absolute;border:none;background:transparent;cursor:pointer;font-family:inherit;z-index:2;outline:none;padding:0;display:flex;flex-direction:column;align-items:center;transform:translate(7px, -8px)}.thumb .handle__label{font-size:0.75rem;line-height:1.5;font-weight:500;line-height:1;color:var(--calcite-ui-text-2);margin-bottom:5px}.thumb .handle__label.static,.thumb .handle__label.transformed{opacity:0;position:absolute;top:0;bottom:0}.thumb .handle__label--minValue.hyphen::after{content:\"—\";display:inline-block;width:1em}.thumb .handle{outline-offset:0;outline-color:transparent;transition:outline-offset 100ms ease-in-out, outline-color 100ms ease-in-out;height:14px;width:14px;box-sizing:border-box;border-radius:100%;background-color:var(--calcite-ui-foreground-1);box-shadow:0 0 0 2px var(--calcite-ui-text-3) inset;transition:border 0.25s ease, background-color 0.25s ease, box-shadow 0.25s ease}.thumb .handle-extension{width:2px;height:7px;background-color:var(--calcite-ui-text-3)}.thumb:hover .handle{box-shadow:0 0 0 3px var(--calcite-ui-blue-1) inset}.thumb:hover .handle-extension{background-color:var(--calcite-ui-blue-1)}.thumb:focus .handle{outline:2px solid var(--calcite-ui-blue-1);outline-offset:2px;outline-offset:2px}.thumb:focus .handle-extension{background-color:var(--calcite-ui-blue-1)}.thumb--minValue{transform:translate(-7px, -8px)}:host([label-handles]) .thumb{transform:translate(50%, -25px)}:host([label-handles]) .thumb--minValue{transform:translate(-50%, -25px)}:host([has-histogram][label-handles]) .thumb{transform:translate(50%, -8px)}:host([has-histogram][label-handles]) .thumb .handle__label{margin-bottom:unset;margin-top:5px}:host([has-histogram][label-handles]) .thumb--minValue{transform:translate(-50%, -8px)}:host([precise]:not([precise=false])) .thumb{transform:translate(7px, -21px)}:host([precise]:not([precise=false])) .thumb--minValue{transform:translate(-7px, -2px)}:host([precise]:not([precise=false])) .thumb--minValue .handle__label{margin-bottom:unset;margin-top:5px}:host([has-histogram][precise]:not([precise=false])) .thumb{transform:translate(7px, -2px)}:host([has-histogram][precise]:not([precise=false])) .thumb--minValue{transform:translate(-50%, -2px)}:host([ticks][precise]:not([precise=false])) .thumb{transform:translate(7px, -20px)}:host([ticks][precise]:not([precise=false])) .thumb--minValue{transform:translate(-7px, -3px)}:host([has-histogram][ticks][precise]:not([precise=false])) .thumb{transform:translate(7px, -3px)}:host([has-histogram][ticks][precise]:not([precise=false])) .thumb--minValue{transform:translate(-50%, -3px)}:host([label-handles][precise]:not([precise=false])) .thumb{transform:translate(50%, -38px)}:host([label-handles][precise]:not([precise=false])) .thumb--minValue{transform:translate(-50%, -2px)}:host([has-histogram][label-handles][precise]:not([precise=false])) .thumb{transform:translate(50%, -2px)}:host([has-histogram][label-handles][precise]:not([precise=false])) .thumb--minValue{transform:translate(-50%, -2px)}:host([ticks][label-handles][precise]:not([precise=false])) .thumb{transform:translate(50%, -37px)}:host([ticks][label-handles][precise]:not([precise=false])) .thumb--minValue{transform:translate(-50%, -3px)}:host([has-histogram][ticks][label-handles][precise]:not([precise=false])) .thumb{transform:translate(50%, -3px)}:host([has-histogram][ticks][label-handles][precise]:not([precise=false])) .thumb--minValue{transform:translate(-50%, -3px)}.thumb:focus,.thumb--active{z-index:3}.thumb:focus .handle,.thumb--active .handle{background-color:var(--calcite-ui-blue-1);box-shadow:0 0 8px 0 rgba(0, 0, 0, 0.16)}.thumb:hover.thumb--precise:after,.thumb:focus.thumb--precise:after,.thumb--active.thumb--precise:after{background-color:var(--calcite-ui-blue-1)}.track{height:2px;border-radius:0;z-index:1;background-color:var(--calcite-ui-border-2);transition:all 250ms ease-in;position:relative}.track__range{position:absolute;top:0;height:2px;background-color:var(--calcite-ui-blue-1)}:host([is-range]) .track__range:hover{cursor:ew-resize}:host([is-range]) .track__range:after{content:\"\";position:absolute;top:-5px;width:100%;height:14px}.tick{position:absolute;top:-2px;width:2px;height:4px;left:var(--calcite-ui-border-1-offset);margin-left:-2px;border:1px solid var(--calcite-ui-foreground-1);background-color:var(--calcite-ui-border-1)}.tick--active{background-color:var(--calcite-ui-blue-1)}.tick__label{position:absolute;font-size:0.75rem;line-height:1.5;font-weight:500;color:var(--calcite-ui-text-2);width:4em;margin:14px -2em;text-align:center;display:block;pointer-events:none}.tick__label--min{left:0;margin:14px -3px;text-align:left;transition:opacity 150ms}.tick__label--max{left:unset;right:0;margin:14px -3px;text-align:right;transition:opacity 50ms}:host([has-histogram][label-handles]) .tick__label--min,:host([has-histogram][label-handles]) .tick__label--max{margin:6px -3px;font-weight:300;color:var(--calcite-ui-text-3)}:host([has-histogram][precise]:not([precise=false])) .tick__label--min,:host([has-histogram][precise]:not([precise=false])) .tick__label--max{margin:6px -3px;font-weight:300;color:var(--calcite-ui-text-3)}.graph{width:100%;height:48px;position:relative;color:var(--calcite-ui-foreground-2)}.graph svg{position:absolute;width:100%;height:48px}.graph .graph-path--highlight{fill:var(--calcite-ui-blue-1);opacity:0.25}";
+const calciteSliderCss = "@charset \"UTF-8\";@keyframes in{0%{opacity:0}100%{opacity:1}}@keyframes in-down{0%{opacity:0;transform:translate3D(0, -5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes in-up{0%{opacity:0;transform:translate3D(0, 5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes in-scale{0%{opacity:0;transform:scale3D(0.95, 0.95, 1)}100%{opacity:1;transform:scale3D(1, 1, 1)}}:root{--calcite-popper-transition:150ms ease-in-out}:host([hidden]){display:none}:host{display:block;padding:7px 0;margin:7px 0;position:relative}:host([disabled]){opacity:var(--calcite-ui-opacity-disabled);pointer-events:none}:host([disabled]) .track__range,:host([disabled]) .tick--active{background-color:var(--calcite-ui-text-3)}:host([disabled]) .graph .graph-path--highlight{fill:var(--calcite-ui-text-3)}:host([label-handles]),:host([precise]:not([precise=false])){margin-top:21px}:host([label-ticks]),:host([precise]:not([precise=false])[is-range]){margin-bottom:21px}:host([precise]:not([precise=false])[label-handles]){margin-top:35px}:host([precise]:not([precise=false])[label-handles][is-range]){margin-bottom:35px}.thumb{position:absolute;border:none;background:transparent;cursor:pointer;font-family:inherit;z-index:2;outline:none;padding:0;display:flex;flex-direction:column;align-items:center;transform:translate(7px, -8px)}.thumb .handle__label{font-size:0.75rem;line-height:1.5;font-weight:500;line-height:1;color:var(--calcite-ui-text-2);margin-bottom:5px}.thumb .handle__label.static,.thumb .handle__label.transformed{opacity:0;position:absolute;top:0;bottom:0}.thumb .handle__label--minValue.hyphen::after{content:\"—\";display:inline-block;width:1em}.thumb .handle{outline-offset:0;outline-color:transparent;transition:outline-offset 100ms ease-in-out, outline-color 100ms ease-in-out;height:14px;width:14px;box-sizing:border-box;border-radius:100%;background-color:var(--calcite-ui-foreground-1);box-shadow:0 0 0 2px var(--calcite-ui-text-3) inset;transition:border 0.25s ease, background-color 0.25s ease, box-shadow 0.25s ease}.thumb .handle-extension{width:2px;height:7px;background-color:var(--calcite-ui-text-3)}.thumb:hover .handle{box-shadow:0 0 0 3px var(--calcite-ui-brand) inset}.thumb:hover .handle-extension{background-color:var(--calcite-ui-brand)}.thumb:focus .handle{outline:2px solid var(--calcite-ui-brand);outline-offset:2px;outline-offset:2px}.thumb:focus .handle-extension{background-color:var(--calcite-ui-brand)}.thumb--minValue{transform:translate(-7px, -8px)}:host([label-handles]) .thumb{transform:translate(50%, -25px)}:host([label-handles]) .thumb--minValue{transform:translate(-50%, -25px)}:host([has-histogram][label-handles]) .thumb{transform:translate(50%, -8px)}:host([has-histogram][label-handles]) .thumb .handle__label{margin-bottom:unset;margin-top:5px}:host([has-histogram][label-handles]) .thumb--minValue{transform:translate(-50%, -8px)}:host([precise]:not([precise=false])) .thumb{transform:translate(7px, -21px)}:host([precise]:not([precise=false])) .thumb--minValue{transform:translate(-7px, -2px)}:host([precise]:not([precise=false])) .thumb--minValue .handle__label{margin-bottom:unset;margin-top:5px}:host([has-histogram][precise]:not([precise=false])) .thumb{transform:translate(7px, -2px)}:host([has-histogram][precise]:not([precise=false])) .thumb--minValue{transform:translate(-50%, -2px)}:host([ticks][precise]:not([precise=false])) .thumb{transform:translate(7px, -20px)}:host([ticks][precise]:not([precise=false])) .thumb--minValue{transform:translate(-7px, -3px)}:host([has-histogram][ticks][precise]:not([precise=false])) .thumb{transform:translate(7px, -3px)}:host([has-histogram][ticks][precise]:not([precise=false])) .thumb--minValue{transform:translate(-50%, -3px)}:host([label-handles][precise]:not([precise=false])) .thumb{transform:translate(50%, -38px)}:host([label-handles][precise]:not([precise=false])) .thumb--minValue{transform:translate(-50%, -2px)}:host([has-histogram][label-handles][precise]:not([precise=false])) .thumb{transform:translate(50%, -2px)}:host([has-histogram][label-handles][precise]:not([precise=false])) .thumb--minValue{transform:translate(-50%, -2px)}:host([ticks][label-handles][precise]:not([precise=false])) .thumb{transform:translate(50%, -37px)}:host([ticks][label-handles][precise]:not([precise=false])) .thumb--minValue{transform:translate(-50%, -3px)}:host([has-histogram][ticks][label-handles][precise]:not([precise=false])) .thumb{transform:translate(50%, -3px)}:host([has-histogram][ticks][label-handles][precise]:not([precise=false])) .thumb--minValue{transform:translate(-50%, -3px)}.thumb:focus,.thumb--active{z-index:3}.thumb:focus .handle,.thumb--active .handle{background-color:var(--calcite-ui-brand);box-shadow:0 0 8px 0 rgba(0, 0, 0, 0.16)}.thumb:hover.thumb--precise:after,.thumb:focus.thumb--precise:after,.thumb--active.thumb--precise:after{background-color:var(--calcite-ui-brand)}.track{height:2px;border-radius:0;z-index:1;background-color:var(--calcite-ui-border-2);transition:all 250ms ease-in;position:relative}.track__range{position:absolute;top:0;height:2px;background-color:var(--calcite-ui-brand)}:host([is-range]) .track__range:hover{cursor:ew-resize}:host([is-range]) .track__range:after{content:\"\";position:absolute;top:-5px;width:100%;height:14px}.tick{position:absolute;top:-2px;width:2px;height:4px;left:var(--calcite-ui-border-1-offset);margin-left:-2px;border:1px solid var(--calcite-ui-foreground-1);background-color:var(--calcite-ui-border-1)}.tick--active{background-color:var(--calcite-ui-brand)}.tick__label{position:absolute;font-size:0.75rem;line-height:1.5;font-weight:500;color:var(--calcite-ui-text-2);width:4em;margin:14px -2em;text-align:center;display:block;pointer-events:none}.tick__label--min{left:0;margin:14px -3px;text-align:left;transition:opacity 150ms}.tick__label--max{left:unset;right:0;margin:14px -3px;text-align:right;transition:opacity 50ms}:host([has-histogram][label-handles]) .tick__label--min,:host([has-histogram][label-handles]) .tick__label--max{margin:6px -3px;font-weight:300;color:var(--calcite-ui-text-3)}:host([has-histogram][precise]:not([precise=false])) .tick__label--min,:host([has-histogram][precise]:not([precise=false])) .tick__label--max{margin:6px -3px;font-weight:300;color:var(--calcite-ui-text-3)}.graph{width:100%;height:48px;position:relative;color:var(--calcite-ui-foreground-2)}.graph svg{position:absolute;width:100%;height:48px}.graph .graph-path--highlight{fill:var(--calcite-ui-brand);opacity:0.25}";
 
 const CalciteSlider = class {
   constructor(hostRef) {
     registerInstance(this, hostRef);
+    this.calciteSliderChange = createEvent(this, "calciteSliderChange", 7);
     this.calciteSliderUpdate = createEvent(this, "calciteSliderUpdate", 7);
     /** Disable and gray out the slider */
     this.disabled = false;
@@ -17,8 +18,8 @@ const CalciteSlider = class {
     this.max = 100;
     /** Currently selected number (if single select) */
     this.value = null;
-    /** Snap selection along the step interval */
-    this.snap = true;
+    /** When true, enables snap selection along the step interval */
+    this.snap = false;
     /** Interval to move on up/down keys */
     this.step = 1;
     /** Indicates if a histogram is present */
@@ -61,7 +62,7 @@ const CalciteSlider = class {
     if (this.histogram) {
       this.hasHistogram = true;
     }
-    this.calciteSliderUpdate.emit();
+    this.emitChange();
   }
   componentDidRender() {
     if (this.labelHandles) {
@@ -242,37 +243,37 @@ const CalciteSlider = class {
       case "ArrowRight":
         e.preventDefault();
         this[this.activeProp] = this.bound(value + this.step, this.activeProp);
-        this.calciteSliderUpdate.emit();
+        this.emitChange();
         break;
       case "ArrowDown":
       case "ArrowLeft":
         e.preventDefault();
         this[this.activeProp] = this.bound(value - this.step, this.activeProp);
-        this.calciteSliderUpdate.emit();
+        this.emitChange();
         break;
       case "PageUp":
         if (this.pageStep) {
           e.preventDefault();
           this[this.activeProp] = this.bound(value + this.pageStep, this.activeProp);
-          this.calciteSliderUpdate.emit();
+          this.emitChange();
         }
         break;
       case "PageDown":
         if (this.pageStep) {
           e.preventDefault();
           this[this.activeProp] = this.bound(value - this.pageStep, this.activeProp);
-          this.calciteSliderUpdate.emit();
+          this.emitChange();
         }
         break;
       case "Home":
         e.preventDefault();
         this[this.activeProp] = this.bound(this.min, this.activeProp);
-        this.calciteSliderUpdate.emit();
+        this.emitChange();
         break;
       case "End":
         e.preventDefault();
         this[this.activeProp] = this.bound(this.max, this.activeProp);
-        this.calciteSliderUpdate.emit();
+        this.emitChange();
         break;
     }
   }
@@ -290,7 +291,7 @@ const CalciteSlider = class {
       }
     }
     this[prop] = this.bound(num, prop);
-    this.calciteSliderUpdate.emit();
+    this.emitChange();
     switch (prop) {
       default:
       case "maxValue":
@@ -370,8 +371,12 @@ const CalciteSlider = class {
       else {
         this[this.dragProp] = this.bound(value, this.dragProp);
       }
-      this.calciteSliderUpdate.emit();
+      this.emitChange();
     }
+  }
+  emitChange() {
+    this.calciteSliderChange.emit();
+    this.calciteSliderUpdate.emit();
   }
   dragEnd() {
     this.dragProp = null;

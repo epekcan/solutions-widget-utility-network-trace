@@ -3,8 +3,8 @@
 Object.defineProperty(exports, '__esModule', { value: true });
 
 const index = require('./index-adeb0063.js');
-const dom = require('./dom-38a6a540.js');
-const key = require('./key-214fea4a.js');
+const dom = require('./dom-c66de328.js');
+const key = require('./key-d6a0381e.js');
 
 const STYLES = {
   display: "flex",
@@ -15,12 +15,11 @@ const STYLES = {
 };
 const IESTYLES = JSON.stringify(STYLES)
   .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
-  .replace(/:/g, ":")
   .replace(/[,]/g, ";")
   .replace(/["{}]/g, "")
   .toLowerCase();
 
-const calciteStepperCss = "@keyframes calcite-fade-in{0%{opacity:0}100%{opacity:1}}@keyframes calcite-fade-in-down{0%{opacity:0;transform:translate3D(0, -5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes calcite-fade-in-up{0%{opacity:0;transform:translate3D(0, 5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes calcite-fade-in-scale{0%{opacity:0;transform:scale3D(0.95, 0.95, 1)}100%{opacity:1;transform:scale3D(1, 1, 1)}}:root{--calcite-popper-transition:150ms ease-in-out}:host([hidden]){display:none}:host{display:flex;flex-direction:row;flex-wrap:wrap;position:relative;justify-content:space-between;align-items:stretch;width:100%;min-width:100%}:host([layout=vertical]){flex-direction:column;flex:1 auto auto}:host ::slotted(.calcite-stepper-content){display:flex;flex-direction:column;flex-wrap:wrap;width:100%;min-width:100%}";
+const calciteStepperCss = "@keyframes in{0%{opacity:0}100%{opacity:1}}@keyframes in-down{0%{opacity:0;transform:translate3D(0, -5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes in-up{0%{opacity:0;transform:translate3D(0, 5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes in-scale{0%{opacity:0;transform:scale3D(0.95, 0.95, 1)}100%{opacity:1;transform:scale3D(1, 1, 1)}}:root{--calcite-popper-transition:150ms ease-in-out}:host([hidden]){display:none}:host{display:flex;flex-direction:row;flex-wrap:wrap;position:relative;justify-content:space-between;align-items:stretch;width:100%;min-width:100%}:host([layout=vertical]){flex-direction:column;flex:1 auto auto}:host ::slotted(.calcite-stepper-content){display:flex;flex-direction:column;flex-wrap:wrap;width:100%;min-width:100%}";
 
 const CalciteStepper = class {
   constructor(hostRef) {

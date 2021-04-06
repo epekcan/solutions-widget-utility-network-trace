@@ -3,12 +3,12 @@
 Object.defineProperty(exports, '__esModule', { value: true });
 
 const index = require('./index-adeb0063.js');
-require('./dom-38a6a540.js');
-require('lodash-es');
-const array = require('./array-3f4409d6.js');
+require('./dom-c66de328.js');
+require('./debounce-28722521.js');
 require('./resources-1447adb6.js');
-const sharedListRender = require('./shared-list-render-195d2a1c.js');
-const sortable_esm = require('./sortable.esm-00feadfc.js');
+const array = require('./array-3f4409d6.js');
+const sharedListRender = require('./shared-list-render-df2ec5b8.js');
+const sortable_esm = require('./sortable.esm-5fb79563.js');
 
 const CSS = {
   container: "container",
@@ -19,7 +19,7 @@ var ICON_TYPES;
   ICON_TYPES["grip"] = "grip";
 })(ICON_TYPES || (ICON_TYPES = {}));
 
-const calciteValueListCss = "@keyframes calcite-fade-in{0%{opacity:0}100%{opacity:1}}@keyframes calcite-fade-in-down{0%{opacity:0;transform:translate3D(0, -5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes calcite-fade-in-up{0%{opacity:0;transform:translate3D(0, 5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes calcite-fade-in-scale{0%{opacity:0;transform:scale3D(0.95, 0.95, 1)}100%{opacity:1;transform:scale3D(1, 1, 1)}}:host{box-sizing:border-box;background-color:var(--calcite-ui-foreground-1);color:var(--calcite-ui-text-2);font-size:0.875rem;line-height:1.5}:host *{box-sizing:border-box}:root{--calcite-popper-transition:150ms ease-in-out}:host([hidden]){display:none}:host{align-items:stretch;background-color:transparent;display:flex;flex:0 0 auto;flex-flow:column;position:relative}calcite-value-list-item:last-of-type{box-shadow:none}header{background-color:var(--calcite-ui-foreground-1);display:flex;justify-content:flex-end;align-items:center;margin-bottom:var(--calcite-spacing-quarter);box-shadow:0 1px 0 var(--calcite-ui-border-3)}header.sticky{position:sticky;top:0;z-index:1}calcite-filter{margin-bottom:1px}calcite-scrim{display:flex;flex:0 0 auto;flex-flow:column;pointer-events:none}";
+const calciteValueListCss = "@keyframes in{0%{opacity:0}100%{opacity:1}}@keyframes in-down{0%{opacity:0;transform:translate3D(0, -5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes in-up{0%{opacity:0;transform:translate3D(0, 5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes in-scale{0%{opacity:0;transform:scale3D(0.95, 0.95, 1)}100%{opacity:1;transform:scale3D(1, 1, 1)}}:host{box-sizing:border-box;background-color:var(--calcite-ui-foreground-1);color:var(--calcite-ui-text-2);font-size:var(--calcite-font-size--1)}:host *{box-sizing:border-box}:host{--calcite-icon-size:1rem;--calcite-spacing-quarter:0.25rem;--calcite-spacing-half:0.5rem;--calcite-spacing-three-quarters:0.75rem;--calcite-spacing:1rem;--calcite-spacing-plus-quarter:1.25rem;--calcite-spacing-plus-half:1.5rem;--calcite-spacing-double:2rem;--calcite-menu-min-width:10rem;--calcite-header-min-height:3rem;--calcite-footer-min-height:3rem}:root{--calcite-popper-transition:150ms ease-in-out}:host([hidden]){display:none}:host{align-items:stretch;background-color:transparent;display:flex;flex:0 0 auto;flex-flow:column;position:relative}calcite-value-list-item:last-of-type{box-shadow:none}header{background-color:var(--calcite-ui-foreground-1);display:flex;justify-content:flex-end;align-items:center;margin-bottom:var(--calcite-spacing-quarter);box-shadow:0 1px 0 var(--calcite-ui-border-3)}header.sticky{position:sticky;top:0;z-index:1}calcite-filter{margin-bottom:1px}calcite-scrim{display:flex;flex:0 0 auto;flex-flow:column;pointer-events:none}";
 
 const CalciteValueList = class {
   constructor(hostRef) {
@@ -70,7 +70,7 @@ const CalciteValueList = class {
     this.keyDownHandler = (event) => {
       const handleElement = event
         .composedPath()
-        .find((item) => { var _a; return (_a = item.dataset) === null || _a === void 0 ? void 0 : _a.jsHandle; });
+        .find((item) => { var _a; return ((_a = item.dataset) === null || _a === void 0 ? void 0 : _a.jsHandle) !== undefined; });
       const item = event
         .composedPath()
         .find((item) => { var _a; return ((_a = item.tagName) === null || _a === void 0 ? void 0 : _a.toLowerCase()) === "calcite-value-list-item"; });

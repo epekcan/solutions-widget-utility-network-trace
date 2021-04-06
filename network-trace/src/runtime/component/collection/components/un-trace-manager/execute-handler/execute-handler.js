@@ -1,5 +1,9 @@
 import { Component, Host, h } from '@stencil/core';
+import { defineCustomElements } from "@esri/calcite-components/dist/loader";
 export class ExecuteHandler {
+  connectedCallback() {
+    defineCustomElements(window);
+  }
   render() {
     return (h(Host, null,
       h("div", { style: { height: "10px", width: "100%" } }),

@@ -1,5 +1,5 @@
 import { r as registerInstance, c as createEvent, h, H as Host, g as getElement } from './index-cbdbef9d.js';
-import { S as Sortable } from './sortable.esm-12e4e153.js';
+import { S as Sortable } from './sortable.esm-38f1297e.js';
 
 const CalciteSortableList = class {
   constructor(hostRef) {

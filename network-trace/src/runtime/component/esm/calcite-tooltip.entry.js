@@ -1,19 +1,14 @@
 import { r as registerInstance, h, H as Host, g as getElement } from './index-cbdbef9d.js';
-import './dom-b2b7d90d.js';
+import './dom-558ef00c.js';
 import { g as guid } from './guid-9ad8042d.js';
-import { d as defaultOffsetDistance, u as updatePopper, c as createPopper, C as CSS } from './popper-47c2d00a.js';
-import { T as TOOLTIP_REFERENCE, A as ARIA_DESCRIBED_BY, C as CSS$1 } from './resources-8385d367.js';
+import { d as defaultOffsetDistance, u as updatePopper, c as createPopper, C as CSS } from './popper-8707be6e.js';
+import { T as TOOLTIP_REFERENCE, A as ARIA_DESCRIBED_BY, C as CSS$1 } from './resources-2498fe08.js';
 
-const calciteTooltipCss = "@keyframes calcite-fade-in{0%{opacity:0}100%{opacity:1}}@keyframes calcite-fade-in-down{0%{opacity:0;transform:translate3D(0, -5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes calcite-fade-in-up{0%{opacity:0;transform:translate3D(0, 5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes calcite-fade-in-scale{0%{opacity:0;transform:scale3D(0.95, 0.95, 1)}100%{opacity:1;transform:scale3D(1, 1, 1)}}:root{--calcite-popper-transition:150ms ease-in-out}:host([hidden]){display:none}:host{display:block;position:absolute;z-index:999;top:-999999px;left:-999999px}.calcite-popper-anim{position:relative;z-index:1;transition:var(--calcite-popper-transition);visibility:hidden;transition-property:transform, visibility, opacity;opacity:0;box-shadow:0 0 16px 0 rgba(0, 0, 0, 0.16);border-radius:var(--calcite-border-radius)}:host([data-popper-placement^=bottom]) .calcite-popper-anim{transform:translateY(-5px)}:host([data-popper-placement^=top]) .calcite-popper-anim{transform:translateY(5px)}:host([data-popper-placement^=left]) .calcite-popper-anim{transform:translateX(5px)}:host([data-popper-placement^=right]) .calcite-popper-anim{transform:translateX(-5px)}:host([data-popper-placement]) .calcite-popper-anim--active{opacity:1;visibility:visible;transform:translate(0)}.arrow,.arrow::before{position:absolute;width:8px;height:8px;z-index:-1}.arrow::before{content:\"\";box-shadow:var(--calcite-shadow-1);transform:rotate(45deg);background:var(--calcite-ui-foreground-1)}:host([data-popper-placement^=top]) .arrow{bottom:-4px}:host([data-popper-placement^=bottom]) .arrow{top:-4px}:host([data-popper-placement^=left]) .arrow{right:-4px}:host([data-popper-placement^=right]) .arrow{left:-4px}.container{position:relative;background:var(--calcite-ui-foreground-1);max-width:300px;max-height:300px;display:flex;justify-content:flex-start;flex-direction:column;font-weight:500;color:var(--calcite-ui-text-1);padding:12px 16px;overflow:hidden;font-size:0.8125rem;line-height:1.5}:host([theme=dark]) .container{background:var(--calcite-ui-foreground-2)}";
+const calciteTooltipCss = "@keyframes in{0%{opacity:0}100%{opacity:1}}@keyframes in-down{0%{opacity:0;transform:translate3D(0, -5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes in-up{0%{opacity:0;transform:translate3D(0, 5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes in-scale{0%{opacity:0;transform:scale3D(0.95, 0.95, 1)}100%{opacity:1;transform:scale3D(1, 1, 1)}}:root{--calcite-popper-transition:150ms ease-in-out}:host([hidden]){display:none}:host{display:block;position:absolute;z-index:999;transform:scale(0)}.calcite-popper-anim{position:relative;z-index:1;transition:var(--calcite-popper-transition);visibility:hidden;transition-property:transform, visibility, opacity;opacity:0;box-shadow:0 0 16px 0 rgba(0, 0, 0, 0.16);border-radius:var(--calcite-border-radius)}:host([data-popper-placement^=bottom]) .calcite-popper-anim{transform:translateY(-5px)}:host([data-popper-placement^=top]) .calcite-popper-anim{transform:translateY(5px)}:host([data-popper-placement^=left]) .calcite-popper-anim{transform:translateX(5px)}:host([data-popper-placement^=right]) .calcite-popper-anim{transform:translateX(-5px)}:host([data-popper-placement]) .calcite-popper-anim--active{opacity:1;visibility:visible;transform:translate(0)}.arrow,.arrow::before{position:absolute;width:8px;height:8px;z-index:-1}.arrow::before{content:\"\";box-shadow:0 4px 8px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);transform:rotate(45deg);background:var(--calcite-ui-foreground-1)}:host([data-popper-placement^=top]) .arrow{bottom:-4px}:host([data-popper-placement^=bottom]) .arrow{top:-4px}:host([data-popper-placement^=left]) .arrow{right:-4px}:host([data-popper-placement^=right]) .arrow{left:-4px}.container{position:relative;background:var(--calcite-ui-foreground-1);max-width:300px;max-height:300px;display:flex;justify-content:flex-start;flex-direction:column;font-weight:500;color:var(--calcite-ui-text-1);padding:12px 16px;overflow:hidden;font-size:0.8125rem;line-height:1.5}";
 
 const CalciteTooltip = class {
   constructor(hostRef) {
     registerInstance(this, hostRef);
-    // --------------------------------------------------------------------------
-    //
-    //  Properties
-    //
-    // --------------------------------------------------------------------------
     /**
      * Offset the position of the popover away from the reference element.
      */
@@ -45,18 +40,17 @@ const CalciteTooltip = class {
       if (!_referenceElement) {
         return;
       }
-      _referenceElement.setAttribute(TOOLTIP_REFERENCE, "");
-      if (!_referenceElement.hasAttribute(ARIA_DESCRIBED_BY)) {
-        _referenceElement.setAttribute(ARIA_DESCRIBED_BY, this.getId());
-      }
+      const id = this.getId();
+      _referenceElement.setAttribute(TOOLTIP_REFERENCE, id);
+      _referenceElement.setAttribute(ARIA_DESCRIBED_BY, id);
     };
     this.removeReferences = () => {
       const { _referenceElement } = this;
       if (!_referenceElement) {
         return;
       }
-      _referenceElement.removeAttribute(ARIA_DESCRIBED_BY);
       _referenceElement.removeAttribute(TOOLTIP_REFERENCE);
+      _referenceElement.removeAttribute(ARIA_DESCRIBED_BY);
     };
     this.show = () => {
       this.open = true;
@@ -161,9 +155,10 @@ const CalciteTooltip = class {
   //
   // --------------------------------------------------------------------------
   render() {
-    const { _referenceElement, open } = this;
+    const { _referenceElement, label, open } = this;
     const displayed = _referenceElement && open;
-    return (h(Host, { "aria-hidden": !displayed ? "true" : "false", id: this.getId(), role: "tooltip" }, h("div", { class: {
+    const hidden = !displayed;
+    return (h(Host, { "aria-hidden": hidden.toString(), "aria-label": label, "calcite-hydrated-hidden": hidden, id: this.getId(), role: "tooltip" }, h("div", { class: {
         [CSS.animation]: true,
         [CSS.animationActive]: displayed
       } }, h("div", { class: CSS$1.arrow, ref: (arrowEl) => (this.arrowEl = arrowEl) }), h("div", { class: CSS$1.container }, h("slot", null)))));

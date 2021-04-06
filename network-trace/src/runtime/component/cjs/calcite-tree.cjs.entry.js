@@ -3,10 +3,10 @@
 Object.defineProperty(exports, '__esModule', { value: true });
 
 const index = require('./index-adeb0063.js');
-const dom = require('./dom-38a6a540.js');
-const TreeSelectionMode = require('./TreeSelectionMode-efd20d8f.js');
+const dom = require('./dom-c66de328.js');
+const interfaces = require('./interfaces-8710f3f8.js');
 
-const calciteTreeCss = "@keyframes calcite-fade-in{0%{opacity:0}100%{opacity:1}}@keyframes calcite-fade-in-down{0%{opacity:0;transform:translate3D(0, -5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes calcite-fade-in-up{0%{opacity:0;transform:translate3D(0, 5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes calcite-fade-in-scale{0%{opacity:0;transform:scale3D(0.95, 0.95, 1)}100%{opacity:1;transform:scale3D(1, 1, 1)}}:root{--calcite-popper-transition:150ms ease-in-out}:host([hidden]){display:none}:host{display:block;outline:none}";
+const calciteTreeCss = "@keyframes in{0%{opacity:0}100%{opacity:1}}@keyframes in-down{0%{opacity:0;transform:translate3D(0, -5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes in-up{0%{opacity:0;transform:translate3D(0, 5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes in-scale{0%{opacity:0;transform:scale3D(0.95, 0.95, 1)}100%{opacity:1;transform:scale3D(1, 1, 1)}}:root{--calcite-popper-transition:150ms ease-in-out}:host([hidden]){display:none}:host{display:block;outline:none}";
 
 const CalciteTree = class {
   constructor(hostRef) {
@@ -19,22 +19,12 @@ const CalciteTree = class {
     //--------------------------------------------------------------------------
     /** Display indentation guide lines */
     this.lines = false;
+    /** @internal If this tree is nested within another tree, set to false */
+    this.root = true;
     /** Specify the scale of the tree, defaults to m */
     this.scale = "m";
     /** Customize how tree selection works (single, multi, children, multi-children) */
-    this.selectionMode = TreeSelectionMode.TreeSelectionMode.Single;
-    //--------------------------------------------------------------------------
-    //
-    //  Public Methods
-    //
-    //--------------------------------------------------------------------------
-    //--------------------------------------------------------------------------
-    //
-    //  Private State/Props
-    //
-    //--------------------------------------------------------------------------
-    /** @internal If this tree is nested within another tree, set to false */
-    this.root = true;
+    this.selectionMode = interfaces.TreeSelectionMode.Single;
   }
   //--------------------------------------------------------------------------
   //
@@ -50,8 +40,8 @@ const CalciteTree = class {
     this.root = parent ? false : true;
   }
   render() {
-    return (index.h(index.Host, { "aria-multiselectable": this.selectionMode === TreeSelectionMode.TreeSelectionMode.Multi ||
-        this.selectionMode === TreeSelectionMode.TreeSelectionMode.MultiChildren, role: this.root ? "tree" : undefined, tabindex: this.root ? "0" : undefined }, index.h("slot", null)));
+    return (index.h(index.Host, { "aria-multiselectable": this.selectionMode === interfaces.TreeSelectionMode.Multi ||
+        this.selectionMode === interfaces.TreeSelectionMode.MultiChildren, role: this.root ? "tree" : undefined, tabindex: this.root ? "0" : undefined }, index.h("slot", null)));
   }
   //--------------------------------------------------------------------------
   //
@@ -71,21 +61,21 @@ const CalciteTree = class {
     const shouldSelect = this.selectionMode !== null &&
       (!target.hasChildren ||
         (target.hasChildren &&
-          (this.selectionMode === TreeSelectionMode.TreeSelectionMode.Children ||
-            this.selectionMode === TreeSelectionMode.TreeSelectionMode.MultiChildren)));
+          (this.selectionMode === interfaces.TreeSelectionMode.Children ||
+            this.selectionMode === interfaces.TreeSelectionMode.MultiChildren)));
     const shouldModifyToCurrentSelection = e.detail.modifyCurrentSelection &&
-      (this.selectionMode === TreeSelectionMode.TreeSelectionMode.Multi ||
-        this.selectionMode === TreeSelectionMode.TreeSelectionMode.MultiChildren);
-    const shouldSelectChildren = this.selectionMode === TreeSelectionMode.TreeSelectionMode.MultiChildren ||
-      this.selectionMode === TreeSelectionMode.TreeSelectionMode.Children;
+      (this.selectionMode === interfaces.TreeSelectionMode.Multi ||
+        this.selectionMode === interfaces.TreeSelectionMode.MultiChildren);
+    const shouldSelectChildren = this.selectionMode === interfaces.TreeSelectionMode.MultiChildren ||
+      this.selectionMode === interfaces.TreeSelectionMode.Children;
     const shouldClearCurrentSelection = !shouldModifyToCurrentSelection &&
-      (((this.selectionMode === TreeSelectionMode.TreeSelectionMode.Single ||
-        this.selectionMode === TreeSelectionMode.TreeSelectionMode.Multi) &&
+      (((this.selectionMode === interfaces.TreeSelectionMode.Single ||
+        this.selectionMode === interfaces.TreeSelectionMode.Multi) &&
         childItems.length <= 0) ||
-        this.selectionMode === TreeSelectionMode.TreeSelectionMode.Children ||
-        this.selectionMode === TreeSelectionMode.TreeSelectionMode.MultiChildren);
-    const shouldExpandTarget = this.selectionMode === TreeSelectionMode.TreeSelectionMode.Children ||
-      this.selectionMode === TreeSelectionMode.TreeSelectionMode.MultiChildren;
+        this.selectionMode === interfaces.TreeSelectionMode.Children ||
+        this.selectionMode === interfaces.TreeSelectionMode.MultiChildren);
+    const shouldExpandTarget = this.selectionMode === interfaces.TreeSelectionMode.Children ||
+      this.selectionMode === interfaces.TreeSelectionMode.MultiChildren;
     if (this.root) {
       const targetItems = [];
       if (shouldSelect) {

@@ -29,6 +29,7 @@ export declare class UnTraceManager {
   layersForFlagLookup: Array<any>;
   controllerLayer: any;
   traces: any;
+  connectedCallback(): void;
   componentWillLoad(): void;
   render(): any;
   assetPropsChange(): void;

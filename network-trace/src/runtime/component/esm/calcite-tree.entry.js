@@ -1,8 +1,8 @@
 import { r as registerInstance, c as createEvent, h, H as Host, g as getElement } from './index-cbdbef9d.js';
-import { n as nodeListToArray } from './dom-b2b7d90d.js';
-import { T as TreeSelectionMode } from './TreeSelectionMode-80f3ce9c.js';
+import { n as nodeListToArray } from './dom-558ef00c.js';
+import { T as TreeSelectionMode } from './interfaces-fd8e1b64.js';
 
-const calciteTreeCss = "@keyframes calcite-fade-in{0%{opacity:0}100%{opacity:1}}@keyframes calcite-fade-in-down{0%{opacity:0;transform:translate3D(0, -5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes calcite-fade-in-up{0%{opacity:0;transform:translate3D(0, 5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes calcite-fade-in-scale{0%{opacity:0;transform:scale3D(0.95, 0.95, 1)}100%{opacity:1;transform:scale3D(1, 1, 1)}}:root{--calcite-popper-transition:150ms ease-in-out}:host([hidden]){display:none}:host{display:block;outline:none}";
+const calciteTreeCss = "@keyframes in{0%{opacity:0}100%{opacity:1}}@keyframes in-down{0%{opacity:0;transform:translate3D(0, -5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes in-up{0%{opacity:0;transform:translate3D(0, 5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes in-scale{0%{opacity:0;transform:scale3D(0.95, 0.95, 1)}100%{opacity:1;transform:scale3D(1, 1, 1)}}:root{--calcite-popper-transition:150ms ease-in-out}:host([hidden]){display:none}:host{display:block;outline:none}";
 
 const CalciteTree = class {
   constructor(hostRef) {
@@ -15,22 +15,12 @@ const CalciteTree = class {
     //--------------------------------------------------------------------------
     /** Display indentation guide lines */
     this.lines = false;
+    /** @internal If this tree is nested within another tree, set to false */
+    this.root = true;
     /** Specify the scale of the tree, defaults to m */
     this.scale = "m";
     /** Customize how tree selection works (single, multi, children, multi-children) */
     this.selectionMode = TreeSelectionMode.Single;
-    //--------------------------------------------------------------------------
-    //
-    //  Public Methods
-    //
-    //--------------------------------------------------------------------------
-    //--------------------------------------------------------------------------
-    //
-    //  Private State/Props
-    //
-    //--------------------------------------------------------------------------
-    /** @internal If this tree is nested within another tree, set to false */
-    this.root = true;
   }
   //--------------------------------------------------------------------------
   //

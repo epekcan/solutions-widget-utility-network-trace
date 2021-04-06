@@ -1,6 +1,6 @@
 import { r as registerInstance, h, g as getElement, H as Host } from './index-cbdbef9d.js';
-import { e as getDescribedByElement } from './dom-b2b7d90d.js';
-import { P as POPOVER_REFERENCE } from './resources-fd284007.js';
+import { h as getElementByAttributeId } from './dom-558ef00c.js';
+import { P as POPOVER_REFERENCE } from './resources-f3ad7abe.js';
 
 const CalcitePopoverManager = class {
   constructor(hostRef) {
@@ -14,6 +14,14 @@ const CalcitePopoverManager = class {
      * CSS Selector to match reference elements for popovers.
      */
     this.selector = `[${POPOVER_REFERENCE}]`;
+    //--------------------------------------------------------------------------
+    //
+    //  Private Methods
+    //
+    //--------------------------------------------------------------------------
+    this.getRelatedPopover = (el) => {
+      return getElementByAttributeId(el.closest(this.selector), POPOVER_REFERENCE);
+    };
   }
   // --------------------------------------------------------------------------
   //
@@ -30,21 +38,19 @@ const CalcitePopoverManager = class {
   //--------------------------------------------------------------------------
   closeOpenPopovers(event) {
     const target = event.target;
-    const { autoClose, el, selector } = this;
+    const { autoClose, el } = this;
     const popoverSelector = "calcite-popover";
     const isTargetInsidePopover = target.closest(popoverSelector);
-    const describedByElement = getDescribedByElement(target.closest(selector));
+    const relatedPopover = this.getRelatedPopover(target);
     if (autoClose && !isTargetInsidePopover) {
       Array.from(document.body.querySelectorAll(popoverSelector))
-        .filter((popover) => popover.open && popover !== describedByElement)
+        .filter((popover) => popover.open && popover !== relatedPopover)
         .forEach((popover) => popover.toggle(false));
     }
-    if (!el.contains(target)) {
+    if (!el.contains(target) || !relatedPopover) {
       return;
     }
-    if (describedByElement) {
-      describedByElement.toggle();
-    }
+    relatedPopover.toggle();
   }
   get el() { return getElement(this); }
 };

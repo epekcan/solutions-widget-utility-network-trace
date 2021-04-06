@@ -4,6 +4,7 @@ config.assetsPath = 'https://cdn.jsdelivr.net/npm/@arcgis/core@4.18.1/assets';
 import { UnTraceHandler } from "./un-trace-handler";
 import { GeometryHandler } from "./geometry_handler";
 import "@esri/calcite-components";
+import { defineCustomElements } from "@esri/calcite-components/dist/loader";
 export class UnTraceManager {
   constructor() {
     this.host = "";
@@ -29,6 +30,9 @@ export class UnTraceManager {
     if (prop === 'inAssets') {
       this.assetPropsChange();
     }
+  }
+  connectedCallback() {
+    defineCustomElements(window);
   }
   componentWillLoad() {
     this.unHandler = new UnTraceHandler(this.host, this.name, this.gdbVersion, this.appToken);
@@ -210,7 +214,7 @@ export class UnTraceManager {
   static get is() { return "un-trace-manager"; }
   static get encapsulation() { return "shadow"; }
   static get originalStyleUrls() { return {
-    "$": ["un-trace-manager.css"]
+    "$": ["un-trace-manager.scss"]
   }; }
   static get styleUrls() { return {
     "$": ["un-trace-manager.css"]

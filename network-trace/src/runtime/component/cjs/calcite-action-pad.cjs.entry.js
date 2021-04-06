@@ -3,8 +3,8 @@
 Object.defineProperty(exports, '__esModule', { value: true });
 
 const index = require('./index-adeb0063.js');
-const dom = require('./dom-38a6a540.js');
-const CalciteExpandToggle = require('./CalciteExpandToggle-203d145d.js');
+const dom = require('./dom-c66de328.js');
+const CalciteExpandToggle = require('./CalciteExpandToggle-a6d5df0d.js');
 const resources = require('./resources-c7d5cc25.js');
 
 const CSS = {
@@ -16,7 +16,7 @@ const TEXT = {
   collapse: "Collapse"
 };
 
-const calciteActionPadCss = "@keyframes calcite-fade-in{0%{opacity:0}100%{opacity:1}}@keyframes calcite-fade-in-down{0%{opacity:0;transform:translate3D(0, -5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes calcite-fade-in-up{0%{opacity:0;transform:translate3D(0, 5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes calcite-fade-in-scale{0%{opacity:0;transform:scale3D(0.95, 0.95, 1)}100%{opacity:1;transform:scale3D(1, 1, 1)}}:host{box-sizing:border-box;background-color:var(--calcite-ui-foreground-1);color:var(--calcite-ui-text-2);font-size:0.875rem;line-height:1.5}:host *{box-sizing:border-box}:root{--calcite-popper-transition:150ms ease-in-out}:host([hidden]){display:none}:host{animation:calcite-fade-in 150ms ease-in-out}:host([expanded]){max-width:20vw}::slotted(calcite-action-group){border-bottom:1px solid var(--calcite-ui-border-2);padding-bottom:0;padding-top:0}.container{display:inline-flex;flex-direction:column;box-shadow:var(--calcite-shadow-2);max-width:15vw;overflow-y:auto}.action-group--bottom{padding-bottom:0;flex-grow:1;justify-content:flex-end}:host([layout=horizontal]) .container{flex-direction:row;max-width:unset}:host([layout=horizontal]) .container .action-group--bottom{padding:0}:host([layout=horizontal]) .container ::slotted(calcite-action-group){border-right:1px solid var(--calcite-ui-border-3);border-bottom:none;flex-direction:row;padding:0}:host([layout=horizontal]) .container.calcite--rtl ::slotted(calcite-action-group){border-right:none;border-left:1px solid var(--calcite-ui-border-3)}::slotted(calcite-action-group:last-child){border-bottom:none}";
+const calciteActionPadCss = "@keyframes in{0%{opacity:0}100%{opacity:1}}@keyframes in-down{0%{opacity:0;transform:translate3D(0, -5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes in-up{0%{opacity:0;transform:translate3D(0, 5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes in-scale{0%{opacity:0;transform:scale3D(0.95, 0.95, 1)}100%{opacity:1;transform:scale3D(1, 1, 1)}}:host{box-sizing:border-box;background-color:var(--calcite-ui-foreground-1);color:var(--calcite-ui-text-2);font-size:var(--calcite-font-size--1)}:host *{box-sizing:border-box}:host{--calcite-icon-size:1rem;--calcite-spacing-quarter:0.25rem;--calcite-spacing-half:0.5rem;--calcite-spacing-three-quarters:0.75rem;--calcite-spacing:1rem;--calcite-spacing-plus-quarter:1.25rem;--calcite-spacing-plus-half:1.5rem;--calcite-spacing-double:2rem;--calcite-menu-min-width:10rem;--calcite-header-min-height:3rem;--calcite-footer-min-height:3rem}:root{--calcite-popper-transition:150ms ease-in-out}:host([hidden]){display:none}:host{animation:in 300ms ease-in-out;border-radius:0.125rem}:host([expanded]){max-width:20vw}::slotted(calcite-action-group){border-width:0;border-bottom-width:1px;border-color:var(--calcite-ui-border-3);border-style:solid;padding-bottom:0;padding-top:0}.container{flex-direction:column;display:inline-flex;overflow-y:auto;border-radius:0.25rem;background-color:var(--calcite-ui-background);box-shadow:0 6px 20px -4px rgba(0, 0, 0, 0.1), 0 4px 12px -2px rgba(0, 0, 0, 0.08);max-width:15vw}.action-group--bottom{flex-grow:1;justify-content:flex-end;padding-bottom:0}:host([layout=horizontal]) .container{flex-direction:row;max-width:unset}:host([layout=horizontal]) .container .action-group--bottom{padding:0}:host([layout=horizontal]) .container ::slotted(calcite-action-group){border-width:0;border-right-width:1px;flex-direction:row;padding:0}:host([layout=horizontal]) .container.calcite--rtl ::slotted(calcite-action-group){border-width:0;border-left-width:1px}::slotted(calcite-action-group:last-child){border-bottom-width:0}";
 
 const CalciteActionPad = class {
   constructor(hostRef) {
@@ -28,17 +28,17 @@ const CalciteActionPad = class {
     //
     // --------------------------------------------------------------------------
     /**
-     * Indicates the horizontal or vertical layout of the component.
+     * When set to true, the expand-toggling behavior will be disabled.
      */
-    this.layout = "vertical";
-    /**
-     * Indicates whether widget can be expanded.
-     */
-    this.expand = true;
+    this.expandDisabled = false;
     /**
      * Indicates whether widget is expanded.
      */
     this.expanded = false;
+    /**
+     * Indicates the horizontal or vertical layout of the component.
+     */
+    this.layout = "vertical";
     // --------------------------------------------------------------------------
     //
     //  Private Methods
@@ -47,14 +47,17 @@ const CalciteActionPad = class {
     this.toggleExpand = () => {
       this.expanded = !this.expanded;
     };
+    this.setExpandToggleRef = (el) => {
+      this.expandToggleEl = el;
+    };
   }
-  expandHandler(expand) {
-    if (expand) {
+  expandHandler(expandDisabled) {
+    if (!expandDisabled) {
       CalciteExpandToggle.toggleChildActionText({ parent: this.el, expanded: this.expanded });
     }
   }
   expandedHandler(expanded) {
-    if (this.expand) {
+    if (!this.expandDisabled) {
       CalciteExpandToggle.toggleChildActionText({ parent: this.el, expanded });
     }
     this.calciteActionPadToggle.emit();
@@ -65,10 +68,22 @@ const CalciteActionPad = class {
   //
   // --------------------------------------------------------------------------
   componentWillLoad() {
-    const { el, expand, expanded } = this;
-    if (expand) {
+    const { el, expandDisabled, expanded } = this;
+    if (!expandDisabled) {
       CalciteExpandToggle.toggleChildActionText({ parent: el, expanded });
     }
+  }
+  // --------------------------------------------------------------------------
+  //
+  //  Methods
+  //
+  // --------------------------------------------------------------------------
+  async setFocus(focusId) {
+    if (focusId === "expand-toggle") {
+      await dom.focusElement(this.expandToggleEl);
+      return;
+    }
+    this.el.focus();
   }
   // --------------------------------------------------------------------------
   //
@@ -76,10 +91,10 @@ const CalciteActionPad = class {
   //
   // --------------------------------------------------------------------------
   renderBottomActionGroup() {
-    const { expanded, expand, intlExpand, intlCollapse, el, position, toggleExpand, tooltipExpand } = this;
+    const { expanded, expandDisabled, intlExpand, intlCollapse, el, position, toggleExpand, tooltipExpand } = this;
     const expandLabel = intlExpand || TEXT.expand;
     const collapseLabel = intlCollapse || TEXT.collapse;
-    const expandToggleNode = expand ? (index.h(CalciteExpandToggle.CalciteExpandToggle, { el: el, expanded: expanded, intlCollapse: collapseLabel, intlExpand: expandLabel, position: position, toggleExpand: toggleExpand, tooltipExpand: tooltipExpand })) : null;
+    const expandToggleNode = !expandDisabled ? (index.h(CalciteExpandToggle.CalciteExpandToggle, { el: el, expanded: expanded, intlCollapse: collapseLabel, intlExpand: expandLabel, position: position, ref: this.setExpandToggleRef, toggle: toggleExpand, tooltip: tooltipExpand })) : null;
     return expandToggleNode ? (index.h("calcite-action-group", { class: CSS.actionGroupBottom }, expandToggleNode)) : null;
   }
   render() {
@@ -92,7 +107,7 @@ const CalciteActionPad = class {
   }
   get el() { return index.getElement(this); }
   static get watchers() { return {
-    "expand": ["expandHandler"],
+    "expandDisabled": ["expandHandler"],
     "expanded": ["expandedHandler"]
   }; }
 };

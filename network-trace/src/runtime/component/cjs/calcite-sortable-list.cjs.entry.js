@@ -3,7 +3,7 @@
 Object.defineProperty(exports, '__esModule', { value: true });
 
 const index = require('./index-adeb0063.js');
-const sortable_esm = require('./sortable.esm-00feadfc.js');
+const sortable_esm = require('./sortable.esm-5fb79563.js');
 
 const CalciteSortableList = class {
   constructor(hostRef) {

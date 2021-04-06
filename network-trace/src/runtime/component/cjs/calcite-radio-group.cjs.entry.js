@@ -3,10 +3,10 @@
 Object.defineProperty(exports, '__esModule', { value: true });
 
 const index = require('./index-adeb0063.js');
-const dom = require('./dom-38a6a540.js');
-const key = require('./key-214fea4a.js');
+const dom = require('./dom-c66de328.js');
+const key = require('./key-d6a0381e.js');
 
-const calciteRadioGroupCss = "@keyframes calcite-fade-in{0%{opacity:0}100%{opacity:1}}@keyframes calcite-fade-in-down{0%{opacity:0;transform:translate3D(0, -5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes calcite-fade-in-up{0%{opacity:0;transform:translate3D(0, 5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes calcite-fade-in-scale{0%{opacity:0;transform:scale3D(0.95, 0.95, 1)}100%{opacity:1;transform:scale3D(1, 1, 1)}}:root{--calcite-popper-transition:150ms ease-in-out}:host([hidden]){display:none}:host{display:flex;width:-webkit-fit-content;width:-moz-fit-content;width:fit-content;border:1px solid var(--calcite-ui-border-1);background-color:var(--calcite-ui-foreground-1)}:host([layout=vertical]){flex-direction:column;align-items:start;align-self:flex-start}:host([width=full]){width:100%}:host([width=full]) ::slotted(calcite-radio-group-item){flex:1 1 auto}:host([width=full][layout=vertical]) ::slotted(calcite-radio-group-item){justify-content:start}::slotted(calcite-radio-group-item[checked]),::slotted(calcite-radio-group-item:focus){z-index:0}:host([disabled]){opacity:0.4;pointer-events:none}";
+const calciteRadioGroupCss = "@keyframes in{0%{opacity:0}100%{opacity:1}}@keyframes in-down{0%{opacity:0;transform:translate3D(0, -5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes in-up{0%{opacity:0;transform:translate3D(0, 5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes in-scale{0%{opacity:0;transform:scale3D(0.95, 0.95, 1)}100%{opacity:1;transform:scale3D(1, 1, 1)}}:root{--calcite-popper-transition:150ms ease-in-out}:host([hidden]){display:none}:host{border:1px solid;display:flex;border-color:var(--calcite-ui-border-input);background-color:var(--calcite-ui-foreground-1);width:-webkit-fit-content;width:-moz-fit-content;width:fit-content}:host([layout=vertical]){flex-direction:column;align-items:flex-start;align-self:flex-start}:host([width=full]){width:100%}:host([width=full]) ::slotted(calcite-radio-group-item){flex:1 1 auto}:host([width=full][layout=vertical]) ::slotted(calcite-radio-group-item){justify-content:flex-start}::slotted(calcite-radio-group-item[checked]),::slotted(calcite-radio-group-item:focus){z-index:0}:host([disabled]){opacity:0.5;pointer-events:none}";
 
 const CalciteRadioGroup = class {
   constructor(hostRef) {
@@ -50,7 +50,7 @@ const CalciteRadioGroup = class {
       .pop();
     if (match) {
       this.selectItem(match);
-      this.calciteRadioGroupChange.emit();
+      this.calciteRadioGroupChange.emit(match.value);
     }
     else if (items[0]) {
       items[0].tabIndex = 0;

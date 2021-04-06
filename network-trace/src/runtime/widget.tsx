@@ -13,8 +13,6 @@ import { applyPolyfills } from './component/esm/polyfills/index';
 import defaultMessages from './translations/default'
 const refreshIcon = require('jimu-ui/lib/icons/reset.svg');
 
-import './component/custom-elements/index.js';
-
 applyPolyfills().then(() => {
   defineCustomElements(window);
 });

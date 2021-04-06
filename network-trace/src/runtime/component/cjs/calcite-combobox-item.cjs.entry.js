@@ -3,26 +3,29 @@
 Object.defineProperty(exports, '__esModule', { value: true });
 
 const index = require('./index-adeb0063.js');
-const dom = require('./dom-38a6a540.js');
-const key = require('./key-214fea4a.js');
+const dom = require('./dom-c66de328.js');
+const guid = require('./guid-f05bb751.js');
+const utils = require('./utils-62e32488.js');
 
 const CSS = {
-  icon: "combobox-item-icon",
-  label: "combobox-item-label",
-  nested: "combobox-item-nested",
-  parent: "combobox-item-parent",
-  selected: "selected",
+  icon: "icon",
+  iconActive: "icon--active",
+  custom: "icon--custom",
+  dot: "icon--dot",
+  single: "label--single",
+  label: "label",
+  active: "label--active",
+  selected: "label--selected",
   title: "title",
   textContainer: "text-container"
 };
 
-const calciteComboboxItemCss = "@keyframes calcite-fade-in{0%{opacity:0}100%{opacity:1}}@keyframes calcite-fade-in-down{0%{opacity:0;transform:translate3D(0, -5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes calcite-fade-in-up{0%{opacity:0;transform:translate3D(0, 5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes calcite-fade-in-scale{0%{opacity:0;transform:scale3D(0.95, 0.95, 1)}100%{opacity:1;transform:scale3D(1, 1, 1)}}:root{--calcite-popper-transition:150ms ease-in-out}:host([hidden]){display:none}:host-context([theme=dark]){--calcite-ui-blue-1:#00A0FF;--calcite-ui-blue-2:#0087D7;--calcite-ui-blue-3:#47BBFF;--calcite-ui-green-1:#36DA43;--calcite-ui-green-2:#11AD1D;--calcite-ui-green-3:#44ED51;--calcite-ui-yellow-1:#FFC900;--calcite-ui-yellow-2:#F4B000;--calcite-ui-yellow-3:#FFE24D;--calcite-ui-red-1:#FE583E;--calcite-ui-red-2:#F3381B;--calcite-ui-red-3:#FF7465;--calcite-ui-background:#202020;--calcite-ui-foreground-1:#2b2b2b;--calcite-ui-foreground-2:#353535;--calcite-ui-foreground-3:#404040;--calcite-ui-text-1:#ffffff;--calcite-ui-text-2:#bfbfbf;--calcite-ui-text-3:#9f9f9f;--calcite-ui-border-1:#4a4a4a;--calcite-ui-border-2:#404040;--calcite-ui-border-3:#353535;--calcite-ui-border-4:#757575;--calcite-ui-border-5:#9f9f9f}:host([scale=xs]){font-size:10px;--calcite-combobox-item-spacing-unit-l:8px;--calcite-combobox-item-spacing-unit-s:4px}:host([scale=s]){font-size:12px;--calcite-combobox-item-spacing-unit-l:12px;--calcite-combobox-item-spacing-unit-s:8px}:host([scale=m]){font-size:14px;--calcite-combobox-item-spacing-unit-l:16px;--calcite-combobox-item-spacing-unit-s:12px}:host([scale=l]){font-size:16px;--calcite-combobox-item-spacing-unit-l:20px;--calcite-combobox-item-spacing-unit-s:16px}:host([scale=xl]){font-size:18px;--calcite-combobox-item-spacing-unit-l:24px;--calcite-combobox-item-spacing-unit-s:20px}:host,:host ul{display:flex;flex-direction:column;margin:0;padding:0;outline:none}:host .combobox-item-label{outline-offset:0;outline-color:transparent;transition:outline-offset 100ms ease-in-out, outline-color 100ms ease-in-out}:host(:focus) .combobox-item-label{outline:2px solid var(--calcite-ui-blue-1);outline-offset:-2px}:host .combobox-item-label{display:flex;box-sizing:border-box;width:100%;min-width:100%;align-items:center;color:var(--calcite-ui-text-3);transition:150ms ease-in-out;padding:var(--calcite-combobox-item-spacing-unit-s);cursor:pointer;text-decoration:none;position:relative}:host .combobox-item-label .combobox-item-icon{display:inline-flex;opacity:0;margin-right:var(--calcite-combobox-item-spacing-unit-s);transition:150ms ease-in-out;color:var(--calcite-ui-border-1)}:host([dir=rtl]) .combobox-item-label .combobox-item-icon{margin-left:var(--calcite-combobox-item-spacing-unit-l);margin-right:unset}:host .combobox-item-label.combobox-item-nested{padding-left:var(--calcite-combobox-item-spacing-unit-s)}:host .combobox-item-label.combobox-item-nested .combobox-item-icon{padding-left:var(--calcite-combobox-item-spacing-unit-l)}:host([dir=rtl]) .combobox-item-label.combobox-item-nested{padding-right:var(--calcite-combobox-item-spacing-unit-s);padding-left:unset}:host([dir=rtl]) .combobox-item-label.combobox-item-nested .combobox-item-icon{padding-right:var(--calcite-combobox-item-spacing-unit-l);padding-left:unset}:host(:not([disabled])) .combobox-item-label:hover,:host(:not([disabled])) .combobox-item-label:active{box-shadow:none;background-color:var(--calcite-ui-foreground-2);color:var(--calcite-ui-text-1);text-decoration:none}:host(:not([disabled])) .combobox-item-label:hover .combobox-item-icon,:host(:not([disabled])) .combobox-item-label:active .combobox-item-icon{opacity:1}:host(:focus:not([disabled])) .combobox-item-label{box-shadow:none;color:var(--calcite-ui-text-1);text-decoration:none}:host(:focus:not([disabled])) .combobox-item-label .combobox-item-icon{opacity:1}:host([disabled]) .combobox-item-label:hover .combobox-item-icon{opacity:1}:host([disabled]) .combobox-item-label:hover{cursor:default}:host(:focus){box-shadow:none}:host .combobox-item-label.selected{color:var(--calcite-ui-text-1);font-weight:500}:host .combobox-item-label.selected .combobox-item-icon{color:var(--calcite-ui-blue-1);opacity:1}";
+const calciteComboboxItemCss = "@charset \"UTF-8\";@keyframes in{0%{opacity:0}100%{opacity:1}}@keyframes in-down{0%{opacity:0;transform:translate3D(0, -5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes in-up{0%{opacity:0;transform:translate3D(0, 5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes in-scale{0%{opacity:0;transform:scale3D(0.95, 0.95, 1)}100%{opacity:1;transform:scale3D(1, 1, 1)}}:root{--calcite-popper-transition:150ms ease-in-out}:host([hidden]){display:none}:host([scale=s]){font-size:var(--calcite-font-size--2);--calcite-combobox-item-spacing-unit-l:0.75rem;--calcite-combobox-item-spacing-unit-s:0.5rem;--calcite-combobox-item-spacing-indent-1:0.5rem;--calcite-combobox-item-spacing-indent-2:1rem}:host([scale=m]){font-size:var(--calcite-font-size--1);--calcite-combobox-item-spacing-unit-l:1rem;--calcite-combobox-item-spacing-unit-s:0.75rem;--calcite-combobox-item-spacing-indent-1:0.75rem;--calcite-combobox-item-spacing-indent-2:1.5rem}:host([scale=l]){font-size:var(--calcite-font-size-0);--calcite-combobox-item-spacing-unit-l:1.25rem;--calcite-combobox-item-spacing-unit-s:1rem;--calcite-combobox-item-spacing-indent-1:1rem;--calcite-combobox-item-spacing-indent-2:2rem}:host{--calcite-combobox-item-indent-start-1:var(--calcite-combobox-item-spacing-indent-1);--calcite-combobox-item-indent-end-1:unset;--calcite-combobox-item-indent-start-2:var(--calcite-combobox-item-spacing-indent-2);--calcite-combobox-item-indent-end-2:unset}:host([dir=rtl]){--calcite-combobox-item-indent-start-1:unset;--calcite-combobox-item-indent-end-1:var(--calcite-combobox-item-spacing-indent-1);--calcite-combobox-item-indent-start-2:unset;--calcite-combobox-item-indent-end-2:var(--calcite-combobox-item-spacing-indent-2)}:host(:focus){box-shadow:none}:host,ul{display:flex;flex-direction:column;margin:0;padding:0;outline:2px solid transparent;outline-offset:2px}.label{outline-offset:0;outline-color:transparent;transition:outline-offset 100ms ease-in-out, outline-color 100ms ease-in-out;display:flex;box-sizing:border-box;width:100%;min-width:100%;align-items:center;color:var(--calcite-ui-text-3);cursor:pointer;position:relative;transition:150ms ease-in-out;padding:var(--calcite-combobox-item-spacing-unit-s);text-decoration:none}:host([disabled]) .label{cursor:default}.label--selected{color:var(--calcite-ui-text-1);font-weight:var(--calcite-font-weight-medium)}.label--active{outline:2px solid var(--calcite-ui-brand);outline-offset:-2px}.label:hover,.label:active{color:var(--calcite-ui-text-1);background-color:var(--calcite-ui-foreground-2);box-shadow:none;text-decoration:none}.title{padding:0 var(--calcite-combobox-item-spacing-unit-s)}.icon{display:inline-flex;opacity:0;transition:150ms ease-in-out;}.icon--indent-1{padding-left:var(--calcite-combobox-item-indent-start-1);padding-right:var(--calcite-combobox-item-indent-end-1)}.icon--indent-2{padding-left:var(--calcite-combobox-item-indent-start-2);padding-right:var(--calcite-combobox-item-indent-end-2)}.icon--custom{margin-top:-1px;color:var(--calcite-ui-text-3)}.icon--active{color:var(--calcite-ui-text-1)}.icon--dot{display:flex;justify-content:flex-end;width:var(--calcite-combobox-item-spacing-unit-l)}.icon--dot:before{content:\"•\"}:host([dir=rtl]) .icon--dot:before{text-align:right}.label--active .icon{opacity:1}.label--selected .icon{opacity:1;color:var(--calcite-ui-brand)}:host(:hover[disabled]) .icon{opacity:1}";
 
 const CalciteComboboxItem = class {
   constructor(hostRef) {
     index.registerInstance(this, hostRef);
     this.calciteComboboxItemChange = index.createEvent(this, "calciteComboboxItemChange", 7);
-    this.calciteComboboxItemKeyEvent = index.createEvent(this, "calciteComboboxItemKeyEvent", 7);
     // --------------------------------------------------------------------------
     //
     //  Properties
@@ -32,6 +35,10 @@ const CalciteComboboxItem = class {
     this.disabled = false;
     /** Set this to true to pre-select an item. Toggles when an item is checked/unchecked. */
     this.selected = false;
+    /** True when item is highlighted either from keyboard or mouse hover */
+    this.active = false;
+    /** Unique identifier, used for accessibility */
+    this.guid = guid.guid();
     this.isSelected = this.selected;
     // --------------------------------------------------------------------------
     //
@@ -56,36 +63,8 @@ const CalciteComboboxItem = class {
   //
   // --------------------------------------------------------------------------
   componentWillLoad() {
-    this.isNested = this.getDepth();
+    this.ancestors = utils.getAncestors(this.el);
     this.hasDefaultSlot = this.el.querySelector(":not([slot])") !== null;
-  }
-  // --------------------------------------------------------------------------
-  //
-  //  Event Listeners
-  //
-  // --------------------------------------------------------------------------
-  keyDownHandler(event) {
-    event.stopPropagation();
-    switch (key.getKey(event.key)) {
-      case " ":
-      case "Enter":
-        this.isSelected = !this.isSelected;
-        this.calciteComboboxItemChange.emit(this.el);
-        event.preventDefault();
-        break;
-      case "ArrowUp":
-      case "ArrowDown":
-      case "Home":
-      case "End":
-      case "Tab":
-      case "Escape":
-        this.calciteComboboxItemKeyEvent.emit({
-          event: event,
-          item: this.el
-        });
-        event.preventDefault();
-        break;
-    }
   }
   // --------------------------------------------------------------------------
   //
@@ -102,19 +81,28 @@ const CalciteComboboxItem = class {
     }
     this.isSelected = typeof coerce === "boolean" ? coerce : !this.isSelected;
   }
-  getDepth() {
-    var _a;
-    return !!((_a = this.el.parentElement) === null || _a === void 0 ? void 0 : _a.closest("calcite-combobox-item"));
-  }
   // --------------------------------------------------------------------------
   //
   //  Render Methods
   //
   // --------------------------------------------------------------------------
-  renderIcon(scale) {
+  renderIcon(scale, isSingle) {
+    const { icon, el, disabled, isSelected } = this;
+    const level = `${CSS.icon}--indent-${utils.getDepth(el)}`;
     const iconScale = scale !== "l" ? "s" : "m";
-    const iconPath = this.disabled ? "circle-disallowed" : "check";
-    return index.h("calcite-icon", { class: CSS.icon, icon: iconPath, scale: iconScale });
+    const defaultIcon = isSingle ? "dot" : "check";
+    const iconPath = disabled ? "circle-disallowed" : defaultIcon;
+    const showDot = isSingle && !icon && !disabled;
+    return showDot ? (index.h("span", { class: {
+        [CSS.icon]: true,
+        [CSS.dot]: true,
+        [level]: true
+      } })) : (index.h("calcite-icon", { class: {
+        [CSS.icon]: !icon,
+        [CSS.custom]: !!icon,
+        [CSS.iconActive]: icon && isSelected,
+        [level]: true
+      }, icon: icon || iconPath, scale: iconScale }));
   }
   renderChildren() {
     if (!this.hasDefaultSlot) {
@@ -123,15 +111,16 @@ const CalciteComboboxItem = class {
     return (index.h("ul", null, index.h("slot", null)));
   }
   render() {
+    const isSingleSelect = dom.getElementProp(this.el, "selection-mode", "multi") === "single";
     const classes = {
       [CSS.label]: true,
       [CSS.selected]: this.isSelected,
-      [CSS.nested]: this.isNested,
-      [CSS.parent]: !this.isNested
+      [CSS.active]: this.active,
+      [CSS.single]: isSingleSelect
     };
     const scale = dom.getElementProp(this.el, "scale", "m");
     const dir = dom.getElementDir(this.el);
-    return (index.h(index.Host, { "aria-selected": this.isSelected.toString(), dir: dir, disabled: this.disabled, role: "option", scale: scale, tabIndex: this.disabled ? null : 0 }, index.h("div", { class: classes, onClick: this.itemClickHandler, ref: (el) => (this.comboboxItemEl = el) }, this.renderIcon(scale), index.h("span", { class: CSS.title }, this.textLabel)), this.renderChildren()));
+    return (index.h(index.Host, { "aria-hidden": true, dir: dir, disabled: this.disabled, scale: scale, tabIndex: -1 }, index.h("li", { class: classes, id: this.guid, onClick: this.itemClickHandler, ref: (el) => (this.comboboxItemEl = el), tabIndex: -1 }, this.renderIcon(scale, isSingleSelect), index.h("span", { class: CSS.title }, this.textLabel)), this.renderChildren()));
   }
   get el() { return index.getElement(this); }
   static get watchers() { return {

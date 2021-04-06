@@ -1,8 +1,11 @@
 import { r as registerInstance, c as createEvent, h, H as Host, g as getElement } from './index-cbdbef9d.js';
-import { g as getElementDir } from './dom-b2b7d90d.js';
-import { g as getKey } from './key-040272ec.js';
-import { forIn, debounce } from 'lodash-es';
-import { u as updatePopper, c as createPopper, C as CSS } from './popper-47c2d00a.js';
+import { g as getElementDir } from './dom-558ef00c.js';
+import { g as getKey } from './key-6f340c70.js';
+import { g as guid } from './guid-9ad8042d.js';
+import { d as debounce } from './debounce-b227f776.js';
+import { f as forIn } from './forIn-99a1a66b.js';
+import { u as updatePopper, c as createPopper, C as CSS } from './popper-8707be6e.js';
+import { C as ComboboxItemGroup, a as ComboboxTransitionDuration, b as ComboboxChildSelector, g as getItemAncestors, c as getItemChildren, h as hasActiveChildren, d as ComboboxItem, e as ComboboxDefaultPlacement } from './utils-22cf70a4.js';
 
 const filter = (data, value) => {
   const regex = new RegExp(value, "ig");
@@ -33,101 +36,255 @@ const filter = (data, value) => {
   return result;
 };
 
-const calciteComboboxCss = "@keyframes calcite-fade-in{0%{opacity:0}100%{opacity:1}}@keyframes calcite-fade-in-down{0%{opacity:0;transform:translate3D(0, -5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes calcite-fade-in-up{0%{opacity:0;transform:translate3D(0, 5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes calcite-fade-in-scale{0%{opacity:0;transform:scale3D(0.95, 0.95, 1)}100%{opacity:1;transform:scale3D(1, 1, 1)}}:root{--calcite-popper-transition:150ms ease-in-out}:host([hidden]){display:none}:host{display:block;position:relative}:host-context([theme=dark]){--calcite-ui-blue-1:#00A0FF;--calcite-ui-blue-2:#0087D7;--calcite-ui-blue-3:#47BBFF;--calcite-ui-green-1:#36DA43;--calcite-ui-green-2:#11AD1D;--calcite-ui-green-3:#44ED51;--calcite-ui-yellow-1:#FFC900;--calcite-ui-yellow-2:#F4B000;--calcite-ui-yellow-3:#FFE24D;--calcite-ui-red-1:#FE583E;--calcite-ui-red-2:#F3381B;--calcite-ui-red-3:#FF7465;--calcite-ui-background:#202020;--calcite-ui-foreground-1:#2b2b2b;--calcite-ui-foreground-2:#353535;--calcite-ui-foreground-3:#404040;--calcite-ui-text-1:#ffffff;--calcite-ui-text-2:#bfbfbf;--calcite-ui-text-3:#9f9f9f;--calcite-ui-border-1:#4a4a4a;--calcite-ui-border-2:#404040;--calcite-ui-border-3:#353535;--calcite-ui-border-4:#757575;--calcite-ui-border-5:#9f9f9f}:host([scale=s]){font-size:12px;--calcite-combobox-item-spacing-unit-l:12px;--calcite-combobox-item-spacing-unit-s:8px}:host([scale=m]){font-size:14px;--calcite-combobox-item-spacing-unit-l:16px;--calcite-combobox-item-spacing-unit-s:12px}:host([scale=l]){font-size:16px;--calcite-combobox-item-spacing-unit-l:20px;--calcite-combobox-item-spacing-unit-s:16px}[role=combobox]{display:flex}input{flex-grow:1;font-size:inherit;font-family:inherit;padding:var(--calcite-combobox-item-spacing-unit-s) var(--calcite-combobox-item-spacing-unit-l);background-color:var(--calcite-ui-foreground-1);border:1px solid var(--calcite-ui-border-1);color:1px solid var(--calcite-ui-text-1);outline-offset:0;outline-color:transparent;transition:outline-offset 100ms ease-in-out, outline-color 100ms ease-in-out}input:focus{outline:2px solid var(--calcite-ui-blue-1);outline-offset:-2px}.list-container{display:block;position:absolute;z-index:999;top:-999999px;left:-999999px;visibility:hidden;pointer-events:none}.list-container .calcite-popper-anim{position:relative;z-index:1;transition:var(--calcite-popper-transition);visibility:hidden;transition-property:transform, visibility, opacity;opacity:0;box-shadow:0 0 16px 0 rgba(0, 0, 0, 0.16);border-radius:var(--calcite-border-radius)}.list-container[data-popper-placement^=bottom] .calcite-popper-anim{transform:translateY(-5px)}.list-container[data-popper-placement^=top] .calcite-popper-anim{transform:translateY(5px)}.list-container[data-popper-placement^=left] .calcite-popper-anim{transform:translateX(5px)}.list-container[data-popper-placement^=right] .calcite-popper-anim{transform:translateX(-5px)}.list-container[data-popper-placement] .calcite-popper-anim--active{opacity:1;visibility:visible;transform:translate(0)}:host([active]) .list-container{width:100%;pointer-events:initial;visibility:visible}.list{display:block;margin:0;padding:0;max-height:100vh;width:var(--calcite-dropdown-width);background:var(--calcite-ui-foreground-1);overflow:hidden;overflow-y:scroll}.selections calcite-chip{margin-right:var(--calcite-combobox-item-spacing-unit-s);margin-bottom:var(--calcite-combobox-item-spacing-unit-s)}.selections calcite-chip:last-child{margin-right:0}:host([dir=rtl]) .selections calcite-chip{margin-right:unset;margin-left:var(--calcite-combobox-item-spacing-unit-s)}:host([dir=rtl]) .selections calcite-chip:last-child{margin-left:0}.item{display:block}";
+const calciteComboboxCss = "@keyframes in{0%{opacity:0}100%{opacity:1}}@keyframes in-down{0%{opacity:0;transform:translate3D(0, -5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes in-up{0%{opacity:0;transform:translate3D(0, 5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes in-scale{0%{opacity:0;transform:scale3D(0.95, 0.95, 1)}100%{opacity:1;transform:scale3D(1, 1, 1)}}:root{--calcite-popper-transition:150ms ease-in-out}:host([hidden]){display:none}:host{display:block;position:relative}:host([disabled]){pointer-events:none;-webkit-user-select:none;-ms-user-select:none;user-select:none;opacity:0.5}:host([scale=s]){font-size:var(--calcite-font-size--2);--calcite-combobox-item-spacing-unit-l:0.75rem;--calcite-combobox-item-spacing-unit-m:0.5rem;--calcite-combobox-item-spacing-unit-s:0.25rem;--calcite-combobox-input-height:1.25rem}:host([scale=m]){font-size:var(--calcite-font-size--1);--calcite-combobox-item-spacing-unit-l:1rem;--calcite-combobox-item-spacing-unit-m:0.75rem;--calcite-combobox-item-spacing-unit-s:0.5rem;--calcite-combobox-input-height:2rem}:host([scale=l]){font-size:var(--calcite-font-size-0);--calcite-combobox-item-spacing-unit-l:1.25rem;--calcite-combobox-item-spacing-unit-m:1rem;--calcite-combobox-item-spacing-unit-s:0.75rem;--calcite-combobox-input-height:2.5rem}.wrapper{display:flex;flex-wrap:wrap;padding:var(--calcite-combobox-item-spacing-unit-m) var(--calcite-combobox-item-spacing-unit-l) 0 var(--calcite-combobox-item-spacing-unit-l);background-color:var(--calcite-ui-foreground-1);border:1px solid var(--calcite-ui-border-1);color:var(--calcite-ui-text-1);outline-offset:0;outline-color:transparent;transition:outline-offset 100ms ease-in-out, outline-color 100ms ease-in-out}.wrapper--active{outline:2px solid var(--calcite-ui-brand);outline-offset:-2px}.wrapper--single{padding:var(--calcite-combobox-item-spacing-unit-s) var(--calcite-combobox-item-spacing-unit-m);cursor:pointer}.input{flex-grow:1;font-size:inherit;font-family:inherit;padding:0;background-color:transparent;border:none;color:var(--calcite-ui-text-1);-webkit-appearance:none;appearance:none;height:var(--calcite-combobox-input-height);line-height:var(--calcite-combobox-input-height);min-width:120px;margin-top:1px;margin-bottom:var(--calcite-combobox-item-spacing-unit-m)}.input:focus{outline:none}.input--transparent{opacity:0}.input--single{margin-bottom:0;margin-top:0;cursor:pointer;padding:0}.wrapper--active .input-single{cursor:text}.input--hidden{width:0;min-width:0;opacity:0;pointer-events:none}.input--icon{padding:0 var(--calcite-combobox-item-spacing-unit-m)}.input-wrap{display:flex}.input-wrap--single{flex:1 1 auto}.label{height:var(--calcite-combobox-input-height);line-height:var(--calcite-combobox-input-height);padding:0;display:block;flex:1 1 auto;pointer-events:none}.label--spaced{padding:0 var(--calcite-combobox-item-spacing-unit-m)}.icon-end,.icon-start{cursor:pointer;display:flex;align-items:center;width:var(--calcite-combobox-item-spacing-unit-l)}.popper-container{display:block;position:absolute;z-index:900;transform:scale(0);visibility:hidden;pointer-events:none;width:100%}.popper-container .calcite-popper-anim{position:relative;z-index:1;transition:var(--calcite-popper-transition);visibility:hidden;transition-property:transform, visibility, opacity;opacity:0;box-shadow:0 0 16px 0 rgba(0, 0, 0, 0.16);border-radius:var(--calcite-border-radius)}.popper-container[data-popper-placement^=bottom] .calcite-popper-anim{transform:translateY(-5px)}.popper-container[data-popper-placement^=top] .calcite-popper-anim{transform:translateY(5px)}.popper-container[data-popper-placement^=left] .calcite-popper-anim{transform:translateX(5px)}.popper-container[data-popper-placement^=right] .calcite-popper-anim{transform:translateX(-5px)}.popper-container[data-popper-placement] .calcite-popper-anim--active{opacity:1;visibility:visible;transform:translate(0)}:host([active]) .popper-container{pointer-events:initial;visibility:visible}.screen-readers-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0, 0, 0, 0);white-space:nowrap;border-width:0}.list-container{overflow-y:auto;max-height:100vh;width:var(--calcite-dropdown-width);background:var(--calcite-ui-foreground-1)}.list{display:block;margin:0;padding:0}.list--hide{height:0;overflow:hidden}.chip{margin-right:var(--calcite-combobox-item-spacing-unit-s);margin-bottom:var(--calcite-combobox-item-spacing-unit-s)}.chip--active{background-color:var(--calcite-ui-foreground-3)}.chip:last-child{margin-right:0}:host([dir=rtl]) .chip{margin-right:unset;margin-left:var(--calcite-combobox-item-spacing-unit-m)}:host([dir=rtl]) .chip:last-child{margin-left:0}.item{display:block}";
 
-const COMBO_BOX_ITEM = "calcite-combobox-item";
-const DEFAULT_PLACEMENT = "bottom-start";
 const CalciteCombobox = class {
   constructor(hostRef) {
     registerInstance(this, hostRef);
     this.calciteLookupChange = createEvent(this, "calciteLookupChange", 7);
+    this.calciteComboboxFilterChange = createEvent(this, "calciteComboboxFilterChange", 7);
     this.calciteComboboxChipDismiss = createEvent(this, "calciteComboboxChipDismiss", 7);
     //--------------------------------------------------------------------------
     //
     //  Public Properties
     //
     //--------------------------------------------------------------------------
+    /** Open and close combobox */
     this.active = false;
+    /** Disable combobox input */
     this.disabled = false;
-    /** specify the scale of the combobox, defaults to m */
+    /** Specify the maximum number of combobox items (including nested children) to display before showing the scroller */
+    this.maxItems = 0;
+    /** specify the selection mode
+     * - multi: allow any number of selected items (default)
+     * - single: only one selection)
+     * - ancestors: like multi, but show ancestors of selected items as selected, only deepest children shown in chips
+     */
+    this.selectionMode = "multi";
+    /** Specify the scale of the combobox, defaults to m */
     this.scale = "m";
+    //--------------------------------------------------------------------------
+    //
+    //  Private State/Props
+    //
+    //--------------------------------------------------------------------------
     this.items = [];
+    this.groupItems = [];
     this.selectedItems = [];
     this.visibleItems = [];
+    this.hideList = !this.active;
+    this.activeItemIndex = -1;
+    this.activeChipIndex = -1;
+    this.activeDescendant = "";
+    this.text = "";
     this.textInput = null;
     this.observer = null;
+    this.guid = guid();
+    /** specifies the item wrapper height; it is updated when maxItems is > 0  **/
+    this.maxScrollerHeight = 0;
+    this.inputHeight = 0;
     // --------------------------------------------------------------------------
     //
     //  Private Methods
     //
     // --------------------------------------------------------------------------
-    this.setInactiveIfNotContained = (target) => {
-      if (!this.active || this.el.contains(target)) {
+    this.setFocusClick = () => {
+      this.setFocus();
+    };
+    this.setInactiveIfNotContained = (event) => {
+      if (!this.active || event.composedPath().includes(this.el)) {
         return;
+      }
+      if (this.selectionMode === "single") {
+        this.textInput.value = "";
+        this.text = "";
+        this.filterItems("");
+        this.updateActiveItemIndex(-1);
       }
       this.active = false;
     };
     this.setMenuEl = (el) => {
       this.menuEl = el;
     };
+    this.setListContainerEl = (el) => {
+      this.listContainerEl = el;
+    };
     this.setReferenceEl = (el) => {
       this.referenceEl = el;
     };
     this.inputHandler = (event) => {
-      const target = event.target;
-      this.filterItems(target.value);
-    };
-    this.handleInputKeyDown = (event) => {
-      if (event.target === this.textInput) {
-        const key = getKey(event.key);
-        if (event.shiftKey && key === "Tab") {
-          return;
-        }
-        else if (key === "Escape") {
-          this.active = false;
-        }
-        else if (key === "ArrowDown") {
-          this.focusFirstItem();
-        }
-        else if (key === "ArrowUp") {
-          this.focusLastItem();
-        }
-        else {
-          this.active = true;
-          this.textInput.focus();
-        }
+      const value = event.target.value;
+      this.text = value;
+      this.filterItems(value);
+      if (value) {
+        this.activeChipIndex = -1;
       }
+    };
+    this.getTextValue = (el) => {
+      return el
+        ? el.tagName === ComboboxItemGroup
+          ? el.label
+          : el.value
+        : null;
     };
     this.filterItems = debounce((value) => {
       const filteredData = filter(this.data, value);
       const values = filteredData.map((item) => item.value);
-      this.items.forEach((item) => {
-        item.hidden = values.indexOf(item.value) === -1;
-        // If item is nested inside another item...
-        const { parentItem } = item;
-        if (parentItem) {
-          // If the parent item is a match, show me.
-          if (values.indexOf(parentItem.value) !== -1) {
-            item.hidden = false;
-          }
-          // If I am a match, show my parent.
-          if (values.indexOf(item.value) !== -1) {
-            parentItem.hidden = false;
-          }
+      const items = this.getCombinedItems();
+      items.forEach((item) => {
+        const hidden = !values.includes(this.getTextValue(item));
+        item.hidden = hidden;
+        const [parent, grandparent] = item.ancestors;
+        if ((parent || grandparent) &&
+          (values.includes(this.getTextValue(parent)) ||
+            values.includes(this.getTextValue(grandparent)))) {
+          item.hidden = false;
+        }
+        if (!hidden) {
+          item.ancestors.forEach((anscestor) => (anscestor.hidden = false));
         }
       });
       this.visibleItems = this.getVisibleItems();
+      this.calciteComboboxFilterChange.emit({ visibleItems: [...this.visibleItems], text: value });
     }, 100);
+    this.updateItems = () => {
+      this.items = this.getItems();
+      this.groupItems = this.getGroupItems();
+      this.data = this.getData();
+      this.selectedItems = this.getSelectedItems();
+      this.visibleItems = this.getVisibleItems();
+      this.needsIcon = this.getNeedsIcon();
+      if (this.selectionMode === "single" && this.selectedItems.length) {
+        this.selectedItem = this.selectedItems[0];
+      }
+    };
     this.comboboxFocusHandler = () => {
       this.active = true;
+      this.textInput.focus();
     };
     this.comboboxBlurHandler = (event) => {
-      const relatedTarget = event.relatedTarget;
-      this.setInactiveIfNotContained(relatedTarget);
+      this.setInactiveIfNotContained(event);
     };
   }
-  activeHandler() {
+  activeHandler(newValue, oldValue) {
+    clearTimeout(this.hideListTimeout);
+    // when closing, wait transition time then hide to prevent overscroll
+    if (oldValue && !newValue) {
+      this.hideListTimeout = window.setTimeout(() => {
+        this.hideList = true;
+      }, ComboboxTransitionDuration);
+    }
+    else if (!oldValue && newValue) {
+      this.hideList = false;
+    }
     this.reposition();
+  }
+  //--------------------------------------------------------------------------
+  //
+  //  Event Listeners
+  //
+  //--------------------------------------------------------------------------
+  documentClickHandler(event) {
+    this.setInactiveIfNotContained(event);
+  }
+  calciteComboboxItemChangeHandler(event) {
+    this.toggleSelection(event.detail);
+  }
+  calciteChipDismissHandler(event) {
+    var _a;
+    this.active = false;
+    const value = (_a = event.detail) === null || _a === void 0 ? void 0 : _a.value;
+    const comboboxItem = this.items.find((item) => item.value === value);
+    if (comboboxItem) {
+      this.toggleSelection(comboboxItem, false);
+    }
+    this.calciteComboboxChipDismiss.emit(event.detail);
+  }
+  keydownHandler(event) {
+    const key = getKey(event.key, getElementDir(this.el));
+    switch (key) {
+      case "Tab":
+        this.activeChipIndex = -1;
+        this.activeItemIndex = -1;
+        this.active = false;
+        break;
+      case "ArrowLeft":
+        this.previousChip();
+        break;
+      case "ArrowRight":
+        this.nextChip();
+        break;
+      case "ArrowUp":
+        event.preventDefault();
+        this.active = true;
+        this.shiftActiveItemIndex(-1);
+        break;
+      case "ArrowDown":
+        event.preventDefault();
+        this.active = true;
+        this.shiftActiveItemIndex(1);
+        break;
+      case "Home":
+        this.active = true;
+        this.updateActiveItemIndex(0);
+        break;
+      case "End":
+        this.active = true;
+        this.updateActiveItemIndex(this.visibleItems.length - 1);
+        break;
+      case "Escape":
+        this.active = false;
+        break;
+      case "Enter":
+        if (this.activeItemIndex > -1) {
+          this.toggleSelection(this.visibleItems[this.activeItemIndex]);
+        }
+        else if (this.activeChipIndex > -1) {
+          this.removeActiveChip();
+        }
+        else if (this.allowCustomValues && this.text) {
+          this.addCustomChip(this.text);
+        }
+        break;
+      case "Delete":
+      case "Backspace":
+        if (this.activeChipIndex > -1) {
+          this.removeActiveChip();
+        }
+        else if (!this.text && this.isMulti()) {
+          this.removeLastChip();
+        }
+        break;
+      default:
+        if (!this.active) {
+          this.setFocus();
+        }
+        break;
+    }
+  }
+  //--------------------------------------------------------------------------
+  //
+  //  Public Methods
+  //
+  //--------------------------------------------------------------------------
+  async reposition() {
+    const { popper, menuEl } = this;
+    const modifiers = this.getModifiers();
+    popper
+      ? updatePopper({
+        el: menuEl,
+        modifiers,
+        placement: ComboboxDefaultPlacement,
+        popper
+      })
+      : this.createPopper();
+  }
+  async setFocus() {
+    var _a;
+    this.active = true;
+    (_a = this.textInput) === null || _a === void 0 ? void 0 : _a.focus();
+    this.activeChipIndex = -1;
+    this.activeItemIndex = -1;
   }
   // --------------------------------------------------------------------------
   //
@@ -146,45 +303,22 @@ const CalciteCombobox = class {
   componentDidLoad() {
     var _a;
     (_a = this.observer) === null || _a === void 0 ? void 0 : _a.observe(this.el, { childList: true, subtree: true });
+    this.maxScrollerHeight = this.getMaxScrollerHeight(this.getCombinedItems());
+  }
+  componentDidRender() {
+    if (this.el.offsetHeight !== this.inputHeight) {
+      this.reposition();
+      this.inputHeight = this.el.offsetHeight;
+    }
   }
   disconnectedCallback() {
     var _a;
     (_a = this.observer) === null || _a === void 0 ? void 0 : _a.disconnect();
     this.destroyPopper();
   }
-  //--------------------------------------------------------------------------
-  //
-  //  Public Methods
-  //
-  //--------------------------------------------------------------------------
-  async reposition() {
-    const { popper, menuEl } = this;
-    const modifiers = this.getModifiers();
-    popper
-      ? updatePopper({
-        el: menuEl,
-        modifiers,
-        placement: DEFAULT_PLACEMENT,
-        popper
-      })
-      : this.createPopper();
-  }
-  documentClickHandler(event) {
-    const target = event.target;
-    this.setInactiveIfNotContained(target);
-  }
-  calciteComboboxItemChangeHandler(event) {
-    this.toggleSelection(event.detail);
-  }
-  calciteChipDismissHandler(event) {
-    var _a;
-    this.active = false;
-    const value = (_a = event.detail) === null || _a === void 0 ? void 0 : _a.value;
-    const comboboxItem = this.items.find((item) => item.value === value);
-    if (comboboxItem) {
-      this.toggleSelection(comboboxItem, false);
-    }
-    this.calciteComboboxChipDismiss.emit(event.detail);
+  /** when search text is cleared, reset active to  */
+  textHandler() {
+    this.updateActiveItemIndex(-1);
   }
   getModifiers() {
     const flipModifier = {
@@ -203,7 +337,7 @@ const CalciteCombobox = class {
     this.popper = createPopper({
       el: menuEl,
       modifiers,
-      placement: DEFAULT_PLACEMENT,
+      placement: ComboboxDefaultPlacement,
       referenceEl
     });
   }
@@ -214,122 +348,278 @@ const CalciteCombobox = class {
     }
     this.popper = null;
   }
+  getMaxScrollerHeight(items) {
+    const { maxItems } = this;
+    let itemsToProcess = 0;
+    let maxScrollerHeight = 0;
+    items.forEach((item) => {
+      if (itemsToProcess < maxItems && maxItems > 0) {
+        maxScrollerHeight += this.calculateSingleItemHeight(item);
+        itemsToProcess++;
+      }
+    });
+    return maxScrollerHeight;
+  }
+  calculateSingleItemHeight(item) {
+    let height = item.offsetHeight;
+    // if item has children items, don't count their height twice
+    const children = item.querySelectorAll(ComboboxChildSelector);
+    children.forEach((child) => {
+      height -= child.offsetHeight;
+    });
+    return height;
+  }
+  getCombinedItems() {
+    return [...this.groupItems, ...this.items];
+  }
   toggleSelection(item, value = !item.selected) {
-    item.selected = value;
-    this.selectedItems = this.getSelectedItems();
-    this.calciteLookupChange.emit(this.selectedItems);
+    if (!item) {
+      return;
+    }
+    if (this.isMulti()) {
+      item.selected = value;
+      this.updateAncestors(item);
+      this.selectedItems = this.getSelectedItems();
+      this.calciteLookupChange.emit(this.selectedItems);
+      this.resetText();
+      this.textInput.focus();
+      this.filterItems("");
+    }
+    else {
+      this.items.forEach((el) => el.toggleSelected(false));
+      item.toggleSelected(true);
+      this.selectedItem = item;
+      this.textInput.value = item.textLabel;
+      this.active = false;
+      this.updateActiveItemIndex(-1);
+      this.resetText();
+      this.filterItems("");
+    }
+  }
+  updateAncestors(item) {
+    if (this.selectionMode !== "ancestors") {
+      return;
+    }
+    const ancestors = getItemAncestors(item);
+    const children = getItemChildren(item);
+    if (item.selected) {
+      ancestors.forEach((el) => {
+        el.selected = true;
+      });
+    }
+    else {
+      children.forEach((el) => (el.selected = false));
+      [...ancestors].forEach((el) => {
+        if (!hasActiveChildren(el)) {
+          el.selected = false;
+        }
+      });
+    }
   }
   getVisibleItems() {
     return this.items.filter((item) => !item.hidden);
   }
   getSelectedItems() {
-    return this.items.filter((item) => item.selected);
-  }
-  updateItems() {
-    this.items = this.getItems();
-    this.data = this.getData();
-    this.selectedItems = this.getSelectedItems();
-    this.visibleItems = this.getVisibleItems();
+    return (this.items
+      .filter((item) => item.selected && (this.selectionMode !== "ancestors" || !hasActiveChildren(item)))
+      /** Preserve order of entered tags */
+      .sort((a, b) => {
+      const aIdx = this.selectedItems.indexOf(a);
+      const bIdx = this.selectedItems.indexOf(b);
+      if (aIdx > -1 && bIdx > -1) {
+        return aIdx - bIdx;
+      }
+      return bIdx - aIdx;
+    }));
   }
   getData() {
     return this.items.map((item) => ({
       value: item.value,
-      label: item.textLabel
+      label: item.textLabel,
+      guid: item.guid
     }));
   }
-  getItems() {
-    const items = Array.from(this.el.querySelectorAll(COMBO_BOX_ITEM));
-    return items
-      .filter((item) => !item.disabled)
-      .map((item) => {
-      const { parentElement } = item;
-      item.parentItem = parentElement.matches(COMBO_BOX_ITEM)
-        ? parentElement
-        : null;
-      return item;
-    });
+  getNeedsIcon() {
+    return this.selectionMode === "single" && this.items.some((item) => item.icon);
   }
-  calciteComboboxItemKeyEventHandler(event) {
-    const { item, event: keyboardEvent } = event.detail;
-    const isFirstItem = this.itemIndex(item) === 0;
-    const isLastItem = this.itemIndex(item) === this.items.length - 1;
-    const shiftKey = keyboardEvent.shiftKey;
-    const keyCode = getKey(keyboardEvent.key);
-    switch (keyCode) {
-      case "Tab":
-        if (isFirstItem && shiftKey)
-          this.closeCalciteCombobox();
-        if (isLastItem && !shiftKey)
-          this.closeCalciteCombobox();
-        else if (isFirstItem && shiftKey)
-          this.textInput.focus();
-        else if (shiftKey)
-          this.focusPrevItem(item);
-        else
-          this.focusNextItem(item);
-        break;
-      case "ArrowDown":
-        this.focusNextItem(item);
-        break;
-      case "ArrowUp":
-        this.focusPrevItem(item);
-        break;
-      case "Home":
-        this.focusFirstItem();
-        break;
-      case "End":
-        this.focusLastItem();
-        break;
-      case "Escape":
-        this.closeCalciteCombobox();
-        break;
+  resetText() {
+    this.textInput.value = "";
+    this.text = "";
+  }
+  getItems() {
+    const items = Array.from(this.el.querySelectorAll(ComboboxItem));
+    return items.filter((item) => !item.disabled);
+  }
+  getGroupItems() {
+    return Array.from(this.el.querySelectorAll(ComboboxItemGroup));
+  }
+  addCustomChip(value) {
+    const existingItem = this.items.find((el) => el.value === value || el.textLabel === value);
+    if (existingItem) {
+      this.toggleSelection(existingItem, true);
+    }
+    else {
+      const item = document.createElement(ComboboxItem);
+      item.value = value;
+      item.textLabel = value;
+      item.guid = guid();
+      item.selected = true;
+      this.el.appendChild(item);
+      this.resetText();
+      this.setFocus();
+      this.updateItems();
+      this.filterItems("");
     }
   }
-  closeCalciteCombobox() {
-    this.textInput.focus();
-    this.active = false;
+  removeActiveChip() {
+    this.toggleSelection(this.selectedItems[this.activeChipIndex], false);
+    this.setFocus();
   }
-  focusFirstItem() {
-    const firstItem = this.items[0];
-    firstItem.focus();
+  removeLastChip() {
+    this.toggleSelection(this.selectedItems[this.selectedItems.length - 1], false);
+    this.setFocus();
   }
-  focusLastItem() {
-    const lastItem = this.items[this.items.length - 1];
-    lastItem.focus();
+  previousChip() {
+    if (this.text) {
+      return;
+    }
+    const length = this.selectedItems.length - 1;
+    const active = this.activeChipIndex;
+    this.activeChipIndex = active === -1 ? length : Math.max(active - 1, 0);
+    this.updateActiveItemIndex(-1);
+    this.focusChip();
   }
-  focusNextItem(item) {
-    const index = this.itemIndex(item);
-    const nextItem = this.items[index + 1] || this.items[0];
-    nextItem.focus();
+  nextChip() {
+    if (this.text || this.activeChipIndex === -1) {
+      return;
+    }
+    const last = this.selectedItems.length - 1;
+    const newIndex = this.activeChipIndex + 1;
+    if (newIndex > last) {
+      this.activeChipIndex = -1;
+      this.setFocus();
+    }
+    else {
+      this.activeChipIndex = newIndex;
+      this.focusChip();
+    }
+    this.updateActiveItemIndex(-1);
   }
-  focusPrevItem(item) {
-    const index = this.itemIndex(item);
-    const prevItem = this.items[index - 1] || this.items[this.items.length - 1];
-    prevItem.focus();
+  focusChip() {
+    var _a;
+    const guid = (_a = this.selectedItems[this.activeChipIndex]) === null || _a === void 0 ? void 0 : _a.guid;
+    const chip = this.referenceEl.querySelector(`#chip-${guid}`);
+    chip === null || chip === void 0 ? void 0 : chip.setFocus();
   }
-  itemIndex(item) {
-    return this.items.indexOf(item);
+  shiftActiveItemIndex(delta) {
+    const length = this.visibleItems.length;
+    const newIndex = (this.activeItemIndex + length + delta) % length;
+    this.updateActiveItemIndex(newIndex);
+    // ensure active item is in view if we have scrolling
+    const activeItem = this.visibleItems[this.activeItemIndex];
+    const height = this.calculateSingleItemHeight(activeItem);
+    const { offsetHeight, scrollTop } = this.listContainerEl;
+    if (offsetHeight + scrollTop < activeItem.offsetTop + height) {
+      this.listContainerEl.scrollTop = activeItem.offsetTop - offsetHeight + height;
+    }
+    else if (activeItem.offsetTop < scrollTop) {
+      this.listContainerEl.scrollTop = activeItem.offsetTop;
+    }
+  }
+  updateActiveItemIndex(index) {
+    this.activeItemIndex = index;
+    let activeDescendant = null;
+    this.visibleItems.forEach((el, i) => {
+      if (i === index) {
+        el.active = true;
+        activeDescendant = el.guid;
+      }
+      else {
+        el.active = false;
+      }
+    });
+    this.activeDescendant = activeDescendant;
+    if (this.activeItemIndex > -1) {
+      this.activeChipIndex = -1;
+      this.textInput.focus();
+    }
+  }
+  isMulti() {
+    return this.selectionMode === "multi" || this.selectionMode === "ancestors";
   }
   //--------------------------------------------------------------------------
   //
   //  Render Methods
   //
   //--------------------------------------------------------------------------
+  renderChips() {
+    const { activeChipIndex, scale, selectionMode } = this;
+    return this.selectedItems.map((item, i) => {
+      const chipClasses = { chip: true, "chip--active": activeChipIndex === i };
+      const ancestors = [...getItemAncestors(item)].reverse();
+      const pathLabel = [...ancestors, item].map((el) => el.textLabel);
+      const label = selectionMode !== "ancestors" ? item.textLabel : pathLabel.join(" / ");
+      return (h("calcite-chip", { class: chipClasses, dismissLabel: "remove tag", dismissible: true, icon: item.icon, id: `chip-${item.guid}`, key: item.value, scale: scale, value: item.value }, label));
+    });
+  }
+  renderInput() {
+    const { active, disabled, placeholder, selectionMode, needsIcon, label } = this;
+    const single = selectionMode === "single";
+    const showLabel = !active && single && !!this.selectedItem;
+    return (h("span", { class: {
+        "input-wrap": true,
+        "input-wrap--single": single
+      } }, showLabel && (h("span", { class: {
+        label: true,
+        "label--spaced": needsIcon
+      }, key: "label", onFocus: this.comboboxFocusHandler, tabindex: "0" }, this.selectedItem.textLabel)), h("input", { "aria-activedescendant": this.activeDescendant, "aria-autocomplete": "list", "aria-controls": guid, "aria-label": label, class: {
+        input: true,
+        "input--transparent": this.activeChipIndex > -1,
+        "input--single": single,
+        "input--hidden": showLabel,
+        "input--icon": single && needsIcon
+      }, disabled: disabled, id: `${guid}-input`, key: "input", onBlur: this.comboboxBlurHandler, onFocus: this.comboboxFocusHandler, onInput: this.inputHandler, placeholder: placeholder, ref: (el) => (this.textInput = el), type: "text" })));
+  }
+  renderListBoxOptions() {
+    return this.visibleItems.map((item) => (h("li", { "aria-selected": (!!item.selected).toString(), id: item.guid, role: "option", tabindex: "-1" }, item.textLabel || item.value)));
+  }
+  renderPopperContainer() {
+    const { active, maxScrollerHeight, setMenuEl, setListContainerEl, hideList } = this;
+    const classes = {
+      "list-container": true,
+      [CSS.animation]: true,
+      [CSS.animationActive]: active
+    };
+    const style = {
+      maxHeight: maxScrollerHeight > 0 ? `${maxScrollerHeight}px` : ""
+    };
+    return (h("div", { "aria-hidden": "true", class: "popper-container", ref: setMenuEl }, h("div", { class: classes, ref: setListContainerEl, style: style }, h("ul", { class: { list: true, "list--hide": hideList } }, h("slot", null)))));
+  }
+  renderIconStart() {
+    const { selectionMode, needsIcon, selectedItem } = this;
+    const scale = this.scale === "l" ? "m" : "s";
+    return (selectionMode === "single" &&
+      needsIcon && (h("span", { class: "icon-start" }, (selectedItem === null || selectedItem === void 0 ? void 0 : selectedItem.icon) && (h("calcite-icon", { class: "selected-icon", icon: selectedItem === null || selectedItem === void 0 ? void 0 : selectedItem.icon, scale: scale })))));
+  }
+  renderIconEnd() {
+    const scale = this.scale === "l" ? "m" : "s";
+    return (this.selectionMode === "single" && (h("span", { class: "icon-end" }, h("calcite-icon", { icon: "chevron-down", scale: scale }))));
+  }
   render() {
-    const { active, disabled, el, label, placeholder, scale, selectedItems } = this;
+    const { guid, active, el, label } = this;
+    const single = this.selectionMode === "single";
     const dir = getElementDir(el);
-    const listBoxId = "listbox";
-    return (h(Host, { active: active, dir: dir }, h("div", { class: "selections" }, selectedItems.map((item) => {
-      return (h("calcite-chip", { dir: dir, dismissible: true, key: item.value, scale: scale, value: item.value }, item.textLabel));
-    })), h("div", { "aria-expanded": active.toString(), "aria-haspopup": "listbox", "aria-owns": listBoxId, ref: this.setReferenceEl, role: "combobox" }, h("input", { "aria-autocomplete": "list", "aria-controls": listBoxId, "aria-label": label, disabled: disabled, onBlur: this.comboboxBlurHandler, onFocus: this.comboboxFocusHandler, onInput: this.inputHandler, onKeyDown: this.handleInputKeyDown, placeholder: placeholder, ref: (el) => (this.textInput = el), type: "text" })), h("div", { "aria-hidden": (!active).toString(), class: "list-container", ref: this.setMenuEl }, h("ul", { "aria-label": label, "aria-multiselectable": "true", class: {
-        list: true,
-        [CSS.animation]: true,
-        [CSS.animationActive]: active
-      }, id: listBoxId, role: "listbox" }, h("slot", null)))));
+    const labelId = `${guid}-label`;
+    return (h(Host, { active: active, dir: dir }, h("div", { "aria-autocomplete": "list", "aria-expanded": active.toString(), "aria-haspopup": "listbox", "aria-labelledby": labelId, "aria-owns": guid, class: {
+        wrapper: true,
+        "wrapper--active": active,
+        "wrapper--single": single
+      }, onClick: this.setFocusClick, ref: this.setReferenceEl, role: "combobox" }, this.renderIconStart(), !single && this.renderChips(), h("label", { class: "screen-readers-only", htmlFor: `${guid}-input`, id: labelId }, label), this.renderInput(), this.renderIconEnd()), h("ul", { "aria-labelledby": labelId, "aria-multiselectable": "true", class: "screen-readers-only", id: guid, role: "listbox", tabIndex: -1 }, this.renderListBoxOptions()), this.renderPopperContainer()));
   }
   get el() { return getElement(this); }
   static get watchers() { return {
-    "active": ["activeHandler"]
+    "active": ["activeHandler"],
+    "text": ["textHandler"]
   }; }
 };
 CalciteCombobox.style = calciteComboboxCss;

@@ -3,9 +3,9 @@
 Object.defineProperty(exports, '__esModule', { value: true });
 
 const index = require('./index-adeb0063.js');
-const dom = require('./dom-38a6a540.js');
+const dom = require('./dom-c66de328.js');
 const resources = require('./resources-c7d5cc25.js');
-const array = require('./array-3f4409d6.js');
+const CalciteHeading = require('./CalciteHeading-1ee0d4c6.js');
 
 const CSS = {
   backButton: "back-button",
@@ -43,12 +43,13 @@ const SLOTS = {
 const TEXT = {
   back: "Back",
   close: "Close",
-  open: "Open"
+  open: "Open",
+  options: "Options"
 };
+const HEADING_LEVEL = 3;
 
-const calcitePanelCss = "@keyframes calcite-fade-in{0%{opacity:0}100%{opacity:1}}@keyframes calcite-fade-in-down{0%{opacity:0;transform:translate3D(0, -5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes calcite-fade-in-up{0%{opacity:0;transform:translate3D(0, 5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes calcite-fade-in-scale{0%{opacity:0;transform:scale3D(0.95, 0.95, 1)}100%{opacity:1;transform:scale3D(1, 1, 1)}}:host{box-sizing:border-box;background-color:var(--calcite-ui-foreground-1);color:var(--calcite-ui-text-2);font-size:0.875rem;line-height:1.5}:host *{box-sizing:border-box}:root{--calcite-popper-transition:150ms ease-in-out}:host([hidden]){display:none}:host{display:flex;position:relative;max-height:var(--calcite-panel-max-height);width:var(--calcite-panel-width);max-width:var(--calcite-panel-max-width);min-width:var(--calcite-panel-min-width);transition:max-height 150ms ease-in-out, width 150ms ease-in-out;--calcite-min-header-height:calc(var(--calcite-icon-size) * 3);--calcite-panel-max-height:unset;--calcite-panel-width:100%;--calcite-panel-min-width:unset;--calcite-panel-max-width:unset}.header{margin:0;display:flex;align-items:center;justify-content:space-between;color:var(--calcite-ui-text-2);fill:var(--calcite-ui-text-2)}.heading{padding:0;margin:0;font-weight:var(--calcite-ui-text-weight-demi);line-height:1.5}.header .heading{flex:1 0 auto;padding:var(--calcite-spacing-half) var(--calcite-spacing-half)}h1.heading{font-size:1.25rem}h2.heading{font-size:1.125rem}h3.heading{font-size:1rem}h4.heading,h5.heading{font-size:0.875rem}.container{align-items:stretch;background-color:var(--calcite-ui-background);height:100%;width:100%;padding:0;margin:0;display:flex;flex-flow:column}calcite-scrim{align-items:stretch;width:100%;height:100%;display:flex;flex-flow:column;pointer-events:none}:host([height-scale=s]){--calcite-panel-max-height:40vh}:host([height-scale=m]){--calcite-panel-max-height:60vh}:host([height-scale=l]){--calcite-panel-max-height:80vh}:host([width-scale=s]){--calcite-panel-width:12vw;--calcite-panel-max-width:300px;--calcite-panel-min-width:150px}:host([width-scale=m]){--calcite-panel-width:20vw;--calcite-panel-max-width:420px;--calcite-panel-min-width:240px}:host([width-scale=l]){--calcite-panel-width:45vw;--calcite-panel-max-width:680px;--calcite-panel-min-width:340px}.container[hidden]{display:none}:host([loading]) .container,:host([disabled]) .container{position:relative;z-index:1}.header{align-items:stretch;background-color:var(--calcite-ui-foreground-1);flex:0 0 auto;justify-content:flex-start;min-height:var(--calcite-header-min-height);position:sticky;top:0;z-index:2;border-bottom:1px solid var(--calcite-ui-border-3);width:100%}.header-content{display:block;overflow:hidden;margin-right:auto;padding:var(--calcite-spacing) var(--calcite-spacing-three-quarters)}.header-content .heading,.header-content .summary{padding:0;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%}.header-content .heading{color:var(--calcite-ui-text-3);font-weight:var(--calcite-ui-text-weight-demi);margin:0 0 var(--calcite-spacing-quarter);font-size:1rem}.header-content .heading:only-child{margin-bottom:0}.header-content .summary{color:var(--calcite-ui-text-3);font-size:0.75rem}.header-actions{align-items:stretch;display:flex;flex-flow:row nowrap}.menu-container:only-child{margin-left:auto}.menu-button{align-self:stretch;flex:0 1 auto;height:100%;position:relative}.menu{min-width:var(--calcite-menu-min-width);flex-flow:column nowrap}.content-container{align-items:stretch;background-color:var(--calcite-ui-background);display:flex;flex-flow:column nowrap;flex:1 1 auto;overflow:auto}.footer{background-color:var(--calcite-ui-foreground-1);border-top:1px solid var(--calcite-ui-border-3);display:flex;flex:0 0 auto;justify-content:space-evenly;min-height:var(--calcite-footer-min-height);padding:var(--calcite-spacing-half) var(--calcite-spacing-half);position:sticky;bottom:0;width:100%}.calcite--rtl .header-content{margin-left:auto;margin-right:unset}.calcite--rtl .menu-container:only-child{margin-left:unset;margin-right:auto}.fab-container{position:sticky;z-index:1;bottom:0;display:inline-block;margin:0 auto;padding:var(--calcite-spacing-half) var(--calcite-spacing-half);left:0;right:0}";
+const calcitePanelCss = "@keyframes in{0%{opacity:0}100%{opacity:1}}@keyframes in-down{0%{opacity:0;transform:translate3D(0, -5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes in-up{0%{opacity:0;transform:translate3D(0, 5px, 0)}100%{opacity:1;transform:translate3D(0, 0, 0)}}@keyframes in-scale{0%{opacity:0;transform:scale3D(0.95, 0.95, 1)}100%{opacity:1;transform:scale3D(1, 1, 1)}}:host{box-sizing:border-box;background-color:var(--calcite-ui-foreground-1);color:var(--calcite-ui-text-2);font-size:var(--calcite-font-size--1)}:host *{box-sizing:border-box}:root{--calcite-popper-transition:150ms ease-in-out}:host([hidden]){display:none}:host{display:flex;position:relative;max-height:var(--calcite-panel-max-height);width:var(--calcite-panel-width);max-width:var(--calcite-panel-max-width);min-width:var(--calcite-panel-min-width);transition:max-height 150ms ease-in-out, width 150ms ease-in-out;--calcite-min-header-height:calc(var(--calcite-icon-size) * 3);--calcite-panel-max-height:unset;--calcite-panel-width:100%;--calcite-panel-min-width:unset;--calcite-panel-max-width:unset}.header{margin:0;display:flex;align-items:center;justify-content:space-between;color:var(--calcite-ui-text-2);fill:var(--calcite-ui-text-2)}.heading{padding:0;margin:0;font-weight:var(--calcite-font-weight-medium);line-height:1.5}.header .heading{flex:1 0 auto;padding:var(--calcite-spacing-half) var(--calcite-spacing-half)}h1.heading{font-size:var(--calcite-font-size-2)}h2.heading{font-size:var(--calcite-font-size-1)}h3.heading{font-size:var(--calcite-font-size-0)}h4.heading,h5.heading{font-size:var(--calcite-font-size--1)}.container{display:flex;flex-direction:column;align-items:stretch;background-color:var(--calcite-ui-background);height:100%;width:100%;padding:0;margin:0}calcite-scrim{display:flex;flex-direction:column;align-items:stretch;width:100%;height:100%;pointer-events:none}:host([height-scale=s]){--calcite-panel-max-height:40vh}:host([height-scale=m]){--calcite-panel-max-height:60vh}:host([height-scale=l]){--calcite-panel-max-height:80vh}:host([width-scale=s]){--calcite-panel-width:12vw;--calcite-panel-max-width:300px;--calcite-panel-min-width:150px}:host([width-scale=m]){--calcite-panel-width:20vw;--calcite-panel-max-width:420px;--calcite-panel-min-width:240px}:host([width-scale=l]){--calcite-panel-width:45vw;--calcite-panel-max-width:680px;--calcite-panel-min-width:340px}.container[hidden]{display:none}:host([loading]) .container,:host([disabled]) .container{position:relative;z-index:1}.header{border-bottom:1px solid;align-items:stretch;background-color:var(--calcite-ui-foreground-1);justify-content:flex-start;position:sticky;top:0;border-bottom-color:var(--calcite-ui-border-3);width:100%;flex:0 0 auto;min-height:3rem;z-index:2;width:100%}.header-content{display:block;overflow:hidden;margin-right:auto;padding-top:1rem;padding-bottom:1rem;padding-left:0.75rem;padding-right:0.75rem}.header-content .heading,.header-content .summary{padding:0;display:block;overflow:hidden;white-space:nowrap;width:100%;text-overflow:ellipsis}.header-content .heading{font-weight:var(--calcite-font-weight-bold);margin-top:0;margin-left:0;margin-right:0;margin-bottom:0.25rem;font-size:var(--calcite-font-size-0);line-height:1.375}.header-content .heading:only-child{margin-bottom:0}.header-content .summary{color:var(--calcite-ui-text-2);font-size:var(--calcite-font-size--1);line-height:1.375}.header-actions{display:flex;align-items:stretch;flex-flow:row nowrap}.menu-container:only-child{margin-left:auto}.menu-button{align-self:stretch;flex:0 1 auto;height:100%;position:relative}.menu{min-width:10rem;flex-flow:column nowrap}.content-container{align-items:stretch;background-color:var(--calcite-ui-background);display:flex;flex:1 1 auto;overflow:auto;display:flex;flex-flow:column nowrap}.footer{border-top:1px solid;background-color:var(--calcite-ui-foreground-1);border-top-color:var(--calcite-ui-border-3);display:flex;justify-content:space-evenly;position:sticky;bottom:0;width:100%;flex:0 0 auto;min-height:3rem;padding:0.5rem}.calcite--rtl .header-content{margin-left:auto;margin-right:unset}.calcite--rtl .menu-container:only-child{margin-right:auto;margin-left:unset}.fab-container{display:inline-block;position:sticky;margin-top:0;margin-bottom:0;margin-left:auto;margin-right:auto;bottom:0;left:0;right:0;z-index:1;padding:0.5rem}";
 
-const SUPPORTED_ARROW_KEYS = ["ArrowUp", "ArrowDown"];
 const CalcitePanel = class {
   constructor(hostRef) {
     index.registerInstance(this, hostRef);
@@ -73,6 +74,10 @@ const CalcitePanel = class {
      */
     this.dismissible = false;
     /**
+     * Number at which section headings should start for this component.
+     */
+    this.headingLevel = HEADING_LEVEL;
+    /**
      * Shows a back button in the header.
      */
     this.showBackButton = false;
@@ -92,11 +97,11 @@ const CalcitePanel = class {
     this.setContainerRef = (node) => {
       this.containerEl = node;
     };
-    this.setMenuButonRef = (node) => {
-      this.menuButtonEl = node;
-    };
     this.setDismissRef = (node) => {
       this.dismissButtonEl = node;
+    };
+    this.setBackRef = (node) => {
+      this.backButtonEl = node;
     };
     this.panelKeyUpHandler = (event) => {
       if (event.key === "Escape") {
@@ -112,73 +117,9 @@ const CalcitePanel = class {
     this.backButtonClick = () => {
       this.calcitePanelBackClick.emit();
     };
-    this.toggleMenuOpen = () => {
-      this.menuOpen = !this.menuOpen;
-    };
-    this.menuButtonKeyDown = (event) => {
-      const { key } = event;
-      const { menuOpen } = this;
-      if (!this.isValidKey(key, SUPPORTED_ARROW_KEYS)) {
-        return;
-      }
-      const actions = this.queryActions();
-      const { length } = actions;
-      if (!length) {
-        return;
-      }
-      event.preventDefault();
-      if (!menuOpen) {
-        this.menuOpen = true;
-      }
-      if (key === "ArrowUp") {
-        const lastAction = actions[length - 1];
-        dom.focusElement(lastAction);
-      }
-      if (key === "ArrowDown") {
-        const firstAction = actions[0];
-        dom.focusElement(firstAction);
-      }
-    };
-    this.menuActionsKeydown = (event) => {
-      const { key, target } = event;
-      if (!this.isValidKey(key, SUPPORTED_ARROW_KEYS)) {
-        return;
-      }
-      const actions = this.queryActions();
-      const { length } = actions;
-      const currentIndex = actions.indexOf(target);
-      if (!length || currentIndex === -1) {
-        return;
-      }
-      event.preventDefault();
-      if (key === "ArrowUp") {
-        const value = array.getRoundRobinIndex(currentIndex - 1, length);
-        const previousAction = actions[value];
-        dom.focusElement(previousAction);
-      }
-      if (key === "ArrowDown") {
-        const value = array.getRoundRobinIndex(currentIndex + 1, length);
-        const nextAction = actions[value];
-        dom.focusElement(nextAction);
-      }
-    };
-    this.menuActionsContainerKeyDown = (event) => {
-      const { key } = event;
-      if (key === "Escape") {
-        this.menuOpen = false;
-      }
-    };
   }
   dismissedHandler() {
     this.calcitePanelDismissedChange.emit();
-  }
-  queryActions() {
-    return dom.getSlotted(this.el, SLOTS.headerActionsEnd, {
-      all: true
-    });
-  }
-  isValidKey(key, supportedKeys) {
-    return !!supportedKeys.find((k) => k === key);
   }
   // --------------------------------------------------------------------------
   //
@@ -186,12 +127,16 @@ const CalcitePanel = class {
   //
   // --------------------------------------------------------------------------
   async setFocus(focusId) {
-    var _a, _b;
+    var _a, _b, _c;
     if (focusId === "dismiss-button") {
       (_a = this.dismissButtonEl) === null || _a === void 0 ? void 0 : _a.setFocus();
       return;
     }
-    (_b = this.containerEl) === null || _b === void 0 ? void 0 : _b.focus();
+    if (focusId === "back-button") {
+      (_b = this.backButtonEl) === null || _b === void 0 ? void 0 : _b.setFocus();
+      return;
+    }
+    (_c = this.containerEl) === null || _c === void 0 ? void 0 : _c.focus();
   }
   // --------------------------------------------------------------------------
   //
@@ -204,11 +149,11 @@ const CalcitePanel = class {
     const { showBackButton, intlBack, backButtonClick } = this;
     const label = intlBack || TEXT.back;
     const icon = rtl ? ICONS.backRight : ICONS.backLeft;
-    return showBackButton ? (index.h("calcite-action", { "aria-label": label, class: CSS.backButton, icon: icon, key: "back-button", onClick: backButtonClick, scale: "s", slot: SLOTS.headerActionsStart, text: label })) : null;
+    return showBackButton ? (index.h("calcite-action", { "aria-label": label, class: CSS.backButton, icon: icon, key: "back-button", onClick: backButtonClick, ref: this.setBackRef, scale: "s", slot: SLOTS.headerActionsStart, text: label })) : null;
   }
   renderHeaderContent() {
-    const { heading, summary } = this;
-    const headingNode = heading ? index.h("h3", { class: CSS.heading }, heading) : null;
+    const { heading, headingLevel, summary } = this;
+    const headingNode = heading ? (index.h(CalciteHeading.CalciteHeading, { class: CSS.heading, level: headingLevel }, heading)) : null;
     const summaryNode = summary ? index.h("span", { class: CSS.summary }, summary) : null;
     return headingNode || summaryNode ? (index.h("div", { class: CSS.headerContent, key: "header-content" }, headingNode, summaryNode)) : null;
   }
@@ -231,21 +176,10 @@ const CalcitePanel = class {
     const hasEndActions = dom.getSlotted(el, SLOTS.headerActionsEnd);
     return hasEndActions || dismissibleNode ? (index.h("div", { class: { [CSS.headerActionsEnd]: true, [CSS.headerActions]: true }, key: "header-actions-end" }, slotNode, dismissibleNode)) : null;
   }
-  renderMenuItems() {
-    const { menuOpen, menuButtonEl } = this;
-    return (index.h("calcite-popover", { disablePointer: true, flipPlacements: ["bottom-end", "top-end"], offsetDistance: 0, onKeyDown: this.menuActionsKeydown, open: menuOpen, placement: "bottom-end", referenceElement: menuButtonEl }, index.h("div", { class: CSS.menu }, index.h("slot", { name: SLOTS.headerMenuActions }))));
-  }
-  renderMenuButton() {
-    const { menuOpen, intlOpen, intlClose } = this;
-    const closeLabel = intlClose || TEXT.close;
-    const openLabel = intlOpen || TEXT.open;
-    const menuLabel = menuOpen ? closeLabel : openLabel;
-    return (index.h("calcite-action", { "aria-label": menuLabel, class: CSS.menuButton, icon: ICONS.menu, onClick: this.toggleMenuOpen, onKeyDown: this.menuButtonKeyDown, ref: this.setMenuButonRef, text: menuLabel }));
-  }
   renderMenu() {
-    const { el } = this;
+    const { el, intlOptions, menuOpen } = this;
     const hasMenuItems = dom.getSlotted(el, SLOTS.headerMenuActions);
-    return hasMenuItems ? (index.h("div", { class: CSS.menuContainer, onKeyDown: this.menuActionsContainerKeyDown }, this.renderMenuButton(), this.renderMenuItems())) : null;
+    return hasMenuItems ? (index.h("calcite-action-menu", { flipPlacements: ["top", "bottom"], intlOptions: intlOptions, open: menuOpen, placement: "bottom-end" }, index.h("slot", { name: SLOTS.headerMenuActions }))) : null;
   }
   renderHeaderNode() {
     const { el, showBackButton } = this;
