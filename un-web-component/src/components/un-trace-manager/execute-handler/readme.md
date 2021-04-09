@@ -7,10 +7,6 @@
 
 ## Dependencies
 
-### Used by
-
- - [un-trace-manager](..)
-
 ### Depends on
 
 - calcite-card
@@ -29,7 +25,6 @@ graph TD;
   calcite-notice --> calcite-icon
   calcite-button --> calcite-loader
   calcite-button --> calcite-icon
-  un-trace-manager --> execute-handler
   style execute-handler fill:#f9f,stroke:#333,stroke-width:4px
 ```
 

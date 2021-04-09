@@ -1,4 +1,5 @@
 import { Component, Host, h } from '@stencil/core';
+import { defineCustomElements } from "@esri/calcite-components/dist/loader";
 
 @Component({
   tag: 'trace-selector',
@@ -6,6 +7,10 @@ import { Component, Host, h } from '@stencil/core';
   shadow: true,
 })
 export class TraceSelector {
+
+  connectedCallback() {
+    defineCustomElements(window);
+  }
 
   render() {
     return (

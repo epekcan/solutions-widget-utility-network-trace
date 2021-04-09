@@ -15,12 +15,15 @@ export class UnTraceManager {
   @Prop() host: string = "";
   @Prop() name: string = "";
   @Prop() showTerminals: boolean;
-  @Prop() appToken: string = "Cl8tJFi4nxyV8LIgXKBzpgoWO0XDlHhE-xlJ03-DxqZybCe0ug_qf11W6PDrCve7rUU8kzWNNPpPbubeNn39gLr69SdTKgqnlFPVOSz2KWslkKXqfuHsyyZRvScmhG8pkVTbn-onG9g4xvCCB9G412LLq0hJPe8Azx26FWU3jlVn3X1UNH70-5o-H9NCV5tc";
-  @Prop() gdbVersion: string = "";
+  @Prop() appToken: string = "";
+  //@Prop() appToken: string = "Cl8tJFi4nxyV8LIgXKBzpgoWO0XDlHhE-xlJ03-DxqZybCe0ug_qf11W6PDrCve7rUU8kzWNNPpPbubeNn39gLr69SdTKgqnlFPVOSz2KWslkKXqfuHsyyZRvScmhG8pkVTbn-onG9g4xvCCB9G412LLq0hJPe8Azx26FWU3jlVn3X1UNH70-5o-H9NCV5tc";
+  @Prop() gdbVersion: string = "sde.DEFAULT";
   @Prop() inAssets: any;
   @Prop() inTC: any = {tc:{}, action:"update"};
   @Prop() runIsoTraceTwice: boolean = true;
   @Prop() isBasic: boolean = true;
+  @Prop() localeDisplay: string = 'ltr';
+  @Prop() localeStrings: any;
 
   @Watch('inAssets')
   watchHandler(newValue: any, oldValue: any, prop:any) {
@@ -35,9 +38,9 @@ export class UnTraceManager {
   @Event({eventName: 'emitTraceResults', composed: true, bubbles: true}) emitTraceResults: EventEmitter<any>;
   @Event({eventName: 'emitDrawComplete', composed: true, bubbles: true}) emitDrawComplete: EventEmitter<any>;
 
-  @State() currentTab: string = "input";
+
   @State() unHandler: any;
-  @State() geometryHandler: any;
+  @State() activeTab: string = 'input';
   @State() searchByUser: string = "";
   @State() traceList: Array<any> = [];
   @State() activeStep: number = 1;
@@ -45,16 +48,22 @@ export class UnTraceManager {
   @State() traceResults: any = null;
   @State() loader: boolean = false;
   @State() flags: Array<any> = [];
+  //@State() flags: string = '[{"traceLocationType":"startingPoint","globalId":"{DB331F49-422D-4067-992E-8091D11E479C}","percentAlong":0.5}]';
+  //@State() flags: string = '[{"traceLocationType":"startingPoint","globalId":"{DB331F49-422D-4067-992E-8091D11E479C}","percentAlong":0.5},{"traceLocationType":"barrier","globalId":"{24787450-40BE-44A3-BF1A-2F90630C5DD1}","percentAlong":0.5},{"traceLocationType":"barrier","globalId":"{309C3A4B-CC00-4393-8724-6DA5075BCB16}","percentAlong":0.5},{"traceLocationType":"barrier","globalId":"{074001AE-6A01-4440-A234-9A85C1F93740}","percentAlong":0.5},{"traceLocationType":"barrier","globalId":"{29A7D702-FBB2-46DF-A0FA-99F4D9615BEE}","percentAlong":0.5}]';
   @State() terminals: Array<any> = [];
   @State() layersForFlagLookup: Array<any> = [];
   @State() controllerLayer: any;
+  @State() flagsHandler: any;
+  @State() geometryHandler: any;
   @State() traces:any;
+
 
   connectedCallback() {
     defineCustomElements(window);
   }
 
   componentWillLoad() {
+    console.log(this.appToken);
     this.unHandler = new UnTraceHandler(this.host, this.name, this.gdbVersion, this.appToken);
     this.geometryHandler = new GeometryHandler();
     //this.unHandler.getToken().then((response:any) => {
@@ -74,30 +83,33 @@ export class UnTraceManager {
     //});
   }
 
-  render() {
-
-      return(
-        <div style={{display:'flex', flexDirection:'row', flex:"1"}}>
-          <calcite-tabs position="above" layout="center">
-            <calcite-tab-nav slot="tab-nav">
-              <calcite-tab-title active={(this.currentTab === 'input')?true:false} onClick={()=>{this.widgetTabChange('input')}}>Inputs</calcite-tab-title>
-              <calcite-tab-title active={(this.currentTab === 'output')?true:false} onClick={()=>{this.widgetTabChange('output')}}>Outputs</calcite-tab-title>
-            </calcite-tab-nav>
-
-            <calcite-tab active={(this.currentTab === 'input')?true:false} style={{backgroundColor:"#f8f8f8"}}>
-              {this.renderUIFlags()}
-              {this.renderUITraceSelector()}
-              {this.renderUIExecute()}
-            </calcite-tab>
-            <calcite-tab active={(this.currentTab === 'output')?true:false} style={{backgroundColor:"#f8f8f8"}}>
-              {this.renderUITraceSelector()}
-              {this.renderUIExecute()}
-            </calcite-tab>
-          </calcite-tabs>
-        </div>);
+  processFlag1() {
+    //this.clickPointPropsChange(geom);
   }
 
-  renderUIFlags() {
+  render() {
+    return(
+      <div style={{display:'flex', flexDirection:'row', flex:"1"}}>
+        <calcite-tabs position="above" layout="center">
+          <calcite-tab-nav slot="tab-nav">
+            <calcite-tab-title active={(this.activeTab === 'input')?true:false} onClick={()=>{this.tabChangeHandler('input')}}>Inputs</calcite-tab-title>
+            <calcite-tab-title active={(this.activeTab === 'output')?true:false} onClick={()=>{this.tabChangeHandler('output')}}>Outputs</calcite-tab-title>
+          </calcite-tab-nav>
+          <calcite-tab active={(this.activeTab === 'input')?true:false} style={{backgroundColor:"#f8f8f8"}}>
+            {this.renderUIFlags()}
+            {this.renderUITraceSelector()}
+            {this.renderUIExecute()}
+          </calcite-tab>
+          <calcite-tab active={(this.activeTab === 'output')?true:false} style={{backgroundColor:"#f8f8f8"}}>
+            {this.renderUITraceResult()}
+            {this.renderUITraceSelector()}
+            {this.renderUIExecute()}
+          </calcite-tab>
+        </calcite-tabs>
+      </div>);
+  }
+
+  renderUIFlags(): any {
     return(
       <div>
         <div style={{height:"10px", width:"100%"}}></div>
@@ -117,45 +129,44 @@ export class UnTraceManager {
     );
   }
 
-  renderUITraceSelector() {
-    return (
+  renderUITraceSelector(): any {
+    return(
       <div>
-      <div style={{height:"10px", width:"100%"}}></div>
-      <calcite-card>
         <div style={{height:"10px", width:"100%"}}></div>
-        <calcite-label
-          class="sc-calcite-label-h sc-calcite-label-s"
-          dir="ltr"
-          status="idle"
-          scale="m"
-          layout="default"
-          calcite-hydrated=""
-        >
-          <label class="sc-calcite-label-h sc-calcite-label-s sc-calcite-label">
-            Select a trace operation
-            <calcite-select
-              label="Select a trace group"
-              dir="ltr"
-              scale="m"
-              theme="light"
-              width="auto"
-              calcite-hydrated=""
-            >
-              <calcite-option selected={true} calcite-hydrated="">Isolation Trace Group</calcite-option>
-            </calcite-select>
-          </label>
-          <label class="sc-calcite-label-h sc-calcite-label-s sc-calcite-label">
-            This trace will select isolating and isolated features.
-          </label>
-        </calcite-label>
-      </calcite-card>
+        <calcite-card>
+          <div style={{height:"10px", width:"100%"}}></div>
+          <calcite-label
+            class="sc-calcite-label-h sc-calcite-label-s"
+            dir={this.localeDisplay}
+            status="idle"
+            scale="m"
+            layout="default"
+            calcite-hydrated=""
+          >
+            <label class="sc-calcite-label-h sc-calcite-label-s sc-calcite-label">
+              Select a trace operation
+              <calcite-select
+                label="Select a trace group"
+                dir={this.localeDisplay}
+                scale="m"
+                theme="light"
+                width="auto"
+                calcite-hydrated=""
+              >
+                <calcite-option selected={true} calcite-hydrated="">Isolation Trace Group</calcite-option>
+              </calcite-select>
+            </label>
+            <label class="sc-calcite-label-h sc-calcite-label-s sc-calcite-label">
+              This trace will select isolating and isolated features.
+            </label>
+          </calcite-label>
+        </calcite-card>
       </div>
     );
   }
 
-  renderUIExecute() {
-    return (
-      <div>
+  renderUIExecute(): any {
+    return(<div>
         <div style={{height:"10px", width:"100%"}}></div>
         <calcite-card>
           <div style={{height:"10px", width:"100%"}}></div>
@@ -175,12 +186,143 @@ export class UnTraceManager {
           <calcite-button scale="s" color="blue"  width="full">Run</calcite-button>
           <div style={{height:"10px", width:"100%"}}></div>
         </calcite-card>
-      </div>
-    );
+    </div>);
   }
 
-  widgetTabChange = (tab:string) => {
-    this.currentTab = tab;
+
+  renderUITraceResult(): any {
+    return(
+      <div>
+        <div style={{height:"25px", width:"100%", textAlign:'center', paddingTop:'10px'}}>
+          <calcite-label
+            class="sc-calcite-label-h sc-calcite-label-s"
+            dir={this.localeDisplay}
+            alignment="middle"
+            status="idle"
+            scale="s"
+            layout="default"
+          >
+          <label class="sc-calcite-label-h sc-calcite-label-s sc-calcite-label">Trace completed 4/8/2021 at 3:30pm</label>
+          </calcite-label>
+        </div>
+        <calcite-panel dir={this.localeDisplay} height-scale="s" intl-close="Close" theme="light">
+          <div class="heading" slot="header-content">
+            <div style={{display:"flex", flexDirection:"row", alignItems:"center"}}>
+              <div style={{paddingLeft:"5px", paddingRight:"5px"}}><div style={{borderRadius: "40px", width:"20px", height:"20px", backgroundColor:"#f00"}}></div></div>
+              <div style={{paddingLeft:"10px", paddingRight:"10px"}}>
+                <div class="sc-calcite-label-h sc-calcite-label-s sc-calcite-label">Isolating (3)</div>
+                <div>
+                  <calcite-label
+                    class="sc-calcite-label-h sc-calcite-label-s"
+                    dir={this.localeDisplay}
+                    alignment="middle"
+                    status="idle"
+                    scale="s"
+                    layout="default"
+                  >
+                  <label class="sc-calcite-label-h sc-calcite-label-s sc-calcite-label">Valves to close to isolated the leak</label>
+                  </calcite-label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <calcite-action
+            text="Action"
+            label="Action"
+            slot="header-actions-end"
+            icon="chevron-right"
+            appearance="solid"
+            scale="s"
+          ></calcite-action>
+        </calcite-panel>
+
+        <calcite-panel dir={this.localeDisplay} height-scale="s" intl-close="Close" theme="light">
+          <div class="heading" slot="header-content">
+            <div style={{display:"flex", flexDirection:"row", alignItems:"center"}}>
+              <div style={{paddingLeft:"5px", paddingRight:"5px"}}><div style={{borderRadius: "40px", width:"20px", height:"20px", backgroundColor:"#00f"}}></div></div>
+              <div style={{paddingLeft:"10px", paddingRight:"10px"}}>
+                <div class="sc-calcite-label-h sc-calcite-label-s sc-calcite-label">Isolated (20)</div>
+                <div>
+                  <calcite-label
+                    class="sc-calcite-label-h sc-calcite-label-s"
+                    dir={this.localeDisplay}
+                    alignment="middle"
+                    status="idle"
+                    scale="s"
+                    layout="default"
+                  >
+                  <label class="sc-calcite-label-h sc-calcite-label-s sc-calcite-label">Assets affected by the leak</label>
+                  </calcite-label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <calcite-action
+            text="Action"
+            label="Action"
+            slot="header-actions-end"
+            icon="chevron-right"
+            appearance="solid"
+            scale="s"
+          ></calcite-action>
+        </calcite-panel>
+      </div>
+    )
+  }
+
+
+
+  tabChangeHandler =(tab:string) => {
+    console.log(tab);
+    this.activeTab = tab;
+  }
+
+
+  renderTraceList(result:any): any {
+    let list = [];
+      result.map((r:any) => {
+        list.push(<calcite-card key={r.name}>
+          <h3 slot="title">{r.name}</h3>
+          <span slot="subtitle">{r.description}</span>
+          <calcite-link slot="footer-leading" onClick={
+            () => {
+              this.activeStep = 3;
+              this.activeTrace = r;
+              this.emitSelectedTrace.emit(r);
+            }
+          }>Select</calcite-link>
+          <calcite-link slot="footer-trailing">Edit Config</calcite-link>
+        </calcite-card>
+        );
+      })
+    return(
+      <div style={{height:"175px", overflow:"auto"}}><div>{list}</div></div>
+    )
+  }
+
+  renderTraceResults(): any {
+    if(this.traceResults !== null) {
+      let list = [];
+      if(this.traceResults.hasOwnProperty("message")) {
+        list.push(<calcite-card>
+          <h3 slot="title">{this.traceResults.message}</h3>
+        </calcite-card>
+        );
+      } else {
+        this.traceResults.traceResults.elements.map((r:any) => {
+          list.push(<calcite-card key={r.globalId}>
+            <h3 slot="title">{r.globalId}</h3>
+            <calcite-link slot="footer-leading">Hightlight</calcite-link>
+          </calcite-card>
+          );
+        })
+      }
+      return(
+        <div style={{height:"175px", overflow:"auto"}}><div>{list}</div></div>
+      )
+    } else {
+      return <div>Error</div>
+    }
   }
 
   //Prop change updates

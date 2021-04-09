@@ -1,3 +1,9 @@
 :host {
   display: block;
 }
+
+.flex-row-center {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+}

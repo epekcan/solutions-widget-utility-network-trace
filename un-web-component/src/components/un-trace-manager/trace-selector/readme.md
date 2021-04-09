@@ -7,10 +7,6 @@
 
 ## Dependencies
 
-### Used by
-
- - [un-trace-manager](..)
-
 ### Depends on
 
 - calcite-card
@@ -29,7 +25,6 @@ graph TD;
   calcite-card --> calcite-checkbox
   calcite-checkbox --> calcite-label
   calcite-select --> calcite-icon
-  un-trace-manager --> trace-selector
   style trace-selector fill:#f9f,stroke:#333,stroke-width:4px
 ```
 
