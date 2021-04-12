@@ -55,6 +55,7 @@ export class UnTraceManager {
   }
 
   componentWillLoad() {
+    console.log(this.appToken);
     this.unHandler = new UnTraceHandler(this.host, this.name, this.gdbVersion, this.appToken);
     this.geometryHandler = new GeometryHandler();
     //this.unHandler.getToken().then((response:any) => {
@@ -90,6 +91,7 @@ export class UnTraceManager {
               {this.renderUIExecute()}
             </calcite-tab>
             <calcite-tab active={(this.currentTab === 'output')?true:false} style={{backgroundColor:"#f8f8f8"}}>
+              {this.renderUITraceResults()}
               {this.renderUITraceSelector()}
               {this.renderUIExecute()}
             </calcite-tab>
@@ -101,18 +103,87 @@ export class UnTraceManager {
     return(
       <div>
         <div style={{height:"10px", width:"100%"}}></div>
-        <calcite-card>
-          <h3 slot="title">Starting points (0)</h3>
-          <span slot="subtitle">Add points to the map where the trace should start.</span>
-          <div class="flex-row-center">
-            <calcite-button scale="s" color="light" icon-start="plus">Add</calcite-button>
-          </div>
-          <div style={{height:"10px", width:"100%"}}></div>
-        </calcite-card>
+          <calcite-accordion
+            dir="ltr"
+            scale="m"
+            theme="light"
+            appearance="default"
+            icon-position="end"
+            icon-type="chevron"
+            selection-mode="multi"
+          >
+            <calcite-accordion-item
+              icon="pin"
+              item-title="Starting Points (0)"
+              item-subtitle="Add points to where the trace should start."
+              aria-expanded="false"
+              dir="ltr"
+              icon-position="end"
+              tabindex="0"
+            >
+
+              <calcite-panel dir="ltr" height-scale="s" intl-close="Close" theme="light">
+                <div class="heading" slot="header-content">
+                  <div class="sc-calcite-label-h sc-calcite-label-s sc-calcite-label">Asset id: 123456</div>
+                </div>
+                <calcite-action
+                  text="Action"
+                  label="Action"
+                  slot="header-actions-start"
+                  icon="chevron-up"
+                  appearance="solid"
+                  scale="s"
+                ></calcite-action>
+                <calcite-action
+                  text="Action"
+                  label="Action"
+                  slot="header-actions-end"
+                  icon="ellipsis"
+                  appearance="solid"
+                  scale="s"
+                ></calcite-action>
+              </calcite-panel>
+
+              <div style={{height:"10px", width:"100%"}}></div>
+              <div style={{display:"flex", justifyContent:"center"}}>
+              <calcite-split-button
+                appearance="solid"
+                color="light"
+                scale="s"
+                primary-icon-start="plus"
+                primary-text="Add Point"
+                primary-label="Primary Option"
+                dropdown-label="Additional Options"
+                dropdown-icon-type="chevron"
+              >
+                <calcite-dropdown-group selection-mode="none">
+                  <calcite-dropdown-item>Draw an area</calcite-dropdown-item>
+                </calcite-dropdown-group>
+              </calcite-split-button>
+              </div>
+            </calcite-accordion-item>
+          </calcite-accordion>
         <div style={{height:"10px", width:"100%"}}></div>
-        <calcite-card>
-          <h3 slot="title">Barriers (0)</h3>
-        </calcite-card>
+        <calcite-accordion
+            dir="ltr"
+            scale="m"
+            theme="light"
+            appearance="default"
+            icon-position="end"
+            icon-type="chevron"
+            selection-mode="multi"
+          >
+            <calcite-accordion-item
+              icon="x-octagon-f"
+              item-title="Barriers (0)"
+              item-subtitle="Add points to where trace should not go."
+              aria-expanded="false"
+              dir="ltr"
+              icon-position="end"
+              tabindex="0"
+            >
+            </calcite-accordion-item>
+          </calcite-accordion>
       </div>
     );
   }
@@ -175,6 +246,35 @@ export class UnTraceManager {
           <calcite-button scale="s" color="blue"  width="full">Run</calcite-button>
           <div style={{height:"10px", width:"100%"}}></div>
         </calcite-card>
+      </div>
+    );
+  }
+
+  renderUITraceResults() {
+    return (
+      <div>
+        <div style={{height:"10px", width:"100%"}}></div>
+        <calcite-panel dir="ltr" height-scale="s" intl-close="Close" theme="light">
+          <div class="heading" slot="header-content">
+            <div style={{display: "flex", flexDirection: "row", alignItems: "center"}}>
+              <div style={{paddingLeft: "5px", paddingRight: "5px"}}>
+                <div style={{ borderRadius: "40px", width: "20px", height: "20px", backgroundColor: "#f00" }}></div>
+              </div>
+              <div style={{paddingLeft: "10px", paddingRight: "10px"}}>
+                <div class="sc-calcite-label-h sc-calcite-label-s sc-calcite-label">Isolating (3)</div>
+                <div class="sc-calcite-label-h sc-calcite-label-s sc-calcite-label">Valves to close to isolated the leak</div>
+              </div>
+            </div>
+          </div>
+          <calcite-action
+            text="Action"
+            label="Action"
+            slot="header-actions-end"
+            icon="chevron-right"
+            appearance="solid"
+            scale="s"
+          ></calcite-action>
+        </calcite-panel>
       </div>
     );
   }
