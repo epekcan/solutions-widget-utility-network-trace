@@ -145,21 +145,23 @@ export class UnTraceManager {
               </calcite-panel>
 
               <div style={{height:"10px", width:"100%"}}></div>
-              <div style={{display:"flex", justifyContent:"center"}}>
-              <calcite-split-button
-                appearance="solid"
-                color="light"
-                scale="s"
-                primary-icon-start="plus"
-                primary-text="Add Point"
-                primary-label="Primary Option"
-                dropdown-label="Additional Options"
-                dropdown-icon-type="chevron"
-              >
-                <calcite-dropdown-group selection-mode="none">
-                  <calcite-dropdown-item>Draw an area</calcite-dropdown-item>
-                </calcite-dropdown-group>
-              </calcite-split-button>
+              <div style={{display:"flex", flexDirection:"column", justifyContent:"center", alignItems:"center"}}>
+                <calcite-link href="">See All</calcite-link>
+                <div style={{height:"10px", width:"100%"}}></div>
+                <calcite-split-button
+                  appearance="solid"
+                  color="light"
+                  scale="s"
+                  primary-icon-start="plus"
+                  primary-text="Add Point"
+                  primary-label="Primary Option"
+                  dropdown-label="Additional Options"
+                  dropdown-icon-type="chevron"
+                >
+                  <calcite-dropdown-group selection-mode="none">
+                    <calcite-dropdown-item>Draw an area</calcite-dropdown-item>
+                  </calcite-dropdown-group>
+                </calcite-split-button>
               </div>
             </calcite-accordion-item>
           </calcite-accordion>
