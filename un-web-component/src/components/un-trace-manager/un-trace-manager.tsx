@@ -57,6 +57,7 @@ export class UnTraceManager {
   @State() showFlagsType: string = 'start';
   @State() showFlagAssetPopper: boolean = false;
   @State() showExecuteNotice: boolean = false;
+  @State() showResultsDetails:boolean = false;
 
   @State() popoverIdLink: string = '';
 
@@ -101,7 +102,7 @@ export class UnTraceManager {
               {this.renderUIExecute()}
             </calcite-tab>
             <calcite-tab active={(this.currentTab === 'output')?true:false} style={{backgroundColor:"#f8f8f8"}}>
-              {this.renderUITraceResults()}
+              {(this.showResultsDetails)?this.renderUITraceResultsDetails(null):this.renderUITraceResults()}
               {this.renderUITraceSelector()}
               {this.renderUIExecute()}
             </calcite-tab>
@@ -380,7 +381,11 @@ export class UnTraceManager {
   renderUITraceResults() {
     return (
       <div>
-        <div style={{height:"10px", width:"100%"}}></div>
+        <div style={{height:"25px", width:"100%", textAlign:"center", paddingTop: '10px'}}>
+          <calcite-label class="sc-calcite-label-h sc-calcite-label-s" dir={this.orientation} alignment="center" status="idle" scale="s" layout="default">
+            Trace completed 4/14/2021 at 11:20am
+          </calcite-label>
+        </div>
         <calcite-panel dir={this.orientation} height-scale="s" intl-close="Close" theme="light">
           <div class="heading" slot="header-content">
             <div style={{display: "flex", flexDirection: "row", alignItems: "center"}}>
@@ -400,10 +405,92 @@ export class UnTraceManager {
             icon="chevron-right"
             appearance="solid"
             scale="s"
+            onClick={()=>{this.clickShowResultsDetails(true)}}
           ></calcite-action>
         </calcite-panel>
       </div>
     );
+  }
+
+  renderUITraceResultsDetails(trace:any) {
+    return(
+      <div>
+        <div style={{height:"10px", width:"100%"}}></div>
+        <calcite-panel dir={this.orientation} height-scale="s" intl-close="Close" theme="light">
+          <div class="heading" slot="header-content">
+            <div class="sc-calcite-label-h sc-calcite-label-s sc-calcite-label">Isolated (3)</div>
+          </div>
+          <calcite-action
+            text="Action"
+            label="Action"
+            slot="header-actions-start"
+            icon="chevron-left"
+            appearance="solid"
+            scale="s"
+            onClick={()=>{this.clickShowResultsDetails(false)}}
+          ></calcite-action>
+        </calcite-panel>
+        <div style={{height:"10px", width:"100%"}}></div>
+        <calcite-input
+          scale="m"
+          status="idle"
+          type="text"
+          alignment="start"
+          number-button-type="horizontal"
+          min="0"
+          max="100"
+          step="1"
+          prefix-text=""
+          suffix-text=""
+          value=""
+          placeholder="Search"
+          class="sc-calcite-input-h sc-calcite-input-s"
+          dir={this.orientation}
+        >
+        </calcite-input>
+        <div style={{height:"5px", width:"100%"}}></div>
+        <calcite-panel dir={this.orientation} height-scale="s" intl-close="Close" theme="light">
+          <div class="heading" slot="header-content">
+            <div class="sc-calcite-label-h sc-calcite-label-s sc-calcite-label" style={{display:'flex', flexDirection:"row"}}>
+              <div><calcite-icon icon="nodes-unmerge" scale="m" aria-hidden="true"></calcite-icon></div>
+              <div>Asset id: 123456</div>
+            </div>
+          </div>
+          <calcite-action
+            text="Action"
+            label="Action"
+            slot="header-actions-start"
+            icon="chevron-up"
+            appearance="solid"
+            scale="s"
+          ></calcite-action>
+          <calcite-action
+            text="Action"
+            label="Action"
+            slot="header-actions-end"
+            icon="zoom-to-object"
+            appearance="solid"
+            scale="s"
+          ></calcite-action>
+        </calcite-panel>
+        <calcite-panel dir={this.orientation} height-scale="s" intl-close="Close" theme="light">
+          <div class="heading" slot="header-content">
+            <div class="sc-calcite-label-h sc-calcite-label-s sc-calcite-label" style={{display:'flex', flexDirection:"row"}}>
+              <div style={{display:"flex"}}><calcite-icon icon="nodes-unmerge" scale="m" aria-hidden="true"></calcite-icon></div>
+              <div style={{display:"flex"}}>Bypass asset for the next trace</div>
+              <div style={{display:"flex"}}>
+                <calcite-switch
+                  name="setting"
+                  value="enabled"
+                  switched=""
+                  scale="m">
+                </calcite-switch>
+              </div>
+            </div>
+          </div>
+        </calcite-panel>
+      </div>
+    )
   }
 
   clickTabChange = (tab:string) => {
@@ -419,6 +506,10 @@ export class UnTraceManager {
     console.log('here');
     this.popoverIdLink = id;
     this.showFlagAssetPopper = show;
+  }
+
+  clickShowResultsDetails(show:boolean) {
+    this.showResultsDetails = show;
   }
 
   clickCanExecute =() => {
