@@ -134,6 +134,38 @@ export class UnTraceManager {
   }
 
   renderUIFlags() {
+    let startFlagList = [];
+    this.flags.map((f:any, i:number) => {
+      if(i <= 1) {
+        startFlagList.push(
+          <calcite-panel dir={this.orientation} height-scale="s" intl-close="Close" theme="light">
+            <div class="heading" slot="header-content">
+              <div class="sc-calcite-label-h sc-calcite-label-s sc-calcite-label">Asset id: {f.globalId}</div>
+            </div>
+            <calcite-action
+              text="Action"
+              label="Action"
+              slot="header-actions-start"
+              icon="chevron-up"
+              appearance="solid"
+              scale="s"
+            ></calcite-action>
+            <calcite-action
+              text="Action"
+              label="Action"
+              slot="header-actions-end"
+              icon="ellipsis"
+              appearance="solid"
+              scale="s"
+              id="flag-1"
+              onClick={()=>{this.clickShowFlagAssetOptions('flag-1',true)}}
+            >
+            </calcite-action>
+          </calcite-panel>
+        );
+      }
+    })
+
     return(
       <div>
         <div style={{height:"10px", width:"100%"}}></div>
@@ -148,7 +180,7 @@ export class UnTraceManager {
           >
             <calcite-accordion-item
               icon="pin"
-              item-title="Starting Points (0)"
+              item-title={"Starting Points (" + this.flags.length  +")"}
               item-subtitle="Add points to where the trace should start."
               aria-expanded="false"
               dir={this.orientation}
@@ -156,35 +188,12 @@ export class UnTraceManager {
               tabindex="0"
               active={this.showStartFlags}
             >
-              <calcite-panel dir={this.orientation} height-scale="s" intl-close="Close" theme="light">
-                <div class="heading" slot="header-content">
-                  <div class="sc-calcite-label-h sc-calcite-label-s sc-calcite-label">Asset id: 123456</div>
-                </div>
-                <calcite-action
-                  text="Action"
-                  label="Action"
-                  slot="header-actions-start"
-                  icon="chevron-up"
-                  appearance="solid"
-                  scale="s"
-                ></calcite-action>
-                <calcite-action
-                  text="Action"
-                  label="Action"
-                  slot="header-actions-end"
-                  icon="ellipsis"
-                  appearance="solid"
-                  scale="s"
-                  id="flag-1"
-                  onClick={()=>{this.clickShowFlagAssetOptions('flag-1',true)}}
-                >
-                </calcite-action>
-              </calcite-panel>
+              {startFlagList}
 
               <div style={{height:"10px", width:"100%"}}></div>
               <div style={{display:"flex", flexDirection:"column", justifyContent:"center", alignItems:"center"}}>
-                <calcite-link onClick={()=>{this.clickShowAllFlags('start', true)}}>See All</calcite-link>
-                <div style={{height:"10px", width:"100%"}}></div>
+                {(this.flags.length > 2) && <calcite-link onClick={()=>{this.clickShowAllFlags('start', true)}}>See All</calcite-link>}
+                {(this.flags.length > 2) && <div style={{height:"10px", width:"100%"}}></div>}
                 <calcite-split-button
                   appearance="solid"
                   color="light"
@@ -194,6 +203,7 @@ export class UnTraceManager {
                   primary-label="Primary Option"
                   dropdown-label="Additional Options"
                   dropdown-icon-type="chevron"
+                  onClick={() => {this.clickAddFlag('startingPoint')}}
                 >
                   <calcite-dropdown-group selection-mode="none">
                     <calcite-dropdown-item>Draw an area</calcite-dropdown-item>
@@ -421,8 +431,8 @@ export class UnTraceManager {
             <div class="sc-calcite-label-h sc-calcite-label-s sc-calcite-label">Isolated (3)</div>
           </div>
           <calcite-action
-            text="Action"
-            label="Action"
+            text="ActionBackResults"
+            label="ActionBackResults"
             slot="header-actions-start"
             icon="chevron-left"
             appearance="solid"
@@ -473,12 +483,11 @@ export class UnTraceManager {
             scale="s"
           ></calcite-action>
         </calcite-panel>
-        <calcite-panel dir={this.orientation} height-scale="s" intl-close="Close" theme="light">
-          <div class="heading" slot="header-content">
+        <calcite-card dir={this.orientation}>
             <div class="sc-calcite-label-h sc-calcite-label-s sc-calcite-label" style={{display:'flex', flexDirection:"row"}}>
-              <div style={{display:"flex"}}><calcite-icon icon="nodes-unmerge" scale="m" aria-hidden="true"></calcite-icon></div>
-              <div style={{display:"flex"}}>Bypass asset for the next trace</div>
-              <div style={{display:"flex"}}>
+              <div style={{display:"flex", flex:"1"}}><calcite-icon icon="nodes-unmerge" scale="m" aria-hidden="true"></calcite-icon></div>
+              <div style={{display:"flex", flex:"3"}}>Bypass asset for the next trace</div>
+              <div style={{display:"flex", flex:"1", justifyContent:"flex-end"}}>
                 <calcite-switch
                   name="setting"
                   value="enabled"
@@ -487,8 +496,23 @@ export class UnTraceManager {
                 </calcite-switch>
               </div>
             </div>
-          </div>
-        </calcite-panel>
+            <div style={{height:"5px", width:"100%"}}></div>
+            <div class="sc-calcite-label-h sc-calcite-label-s sc-calcite-label" style={{display:'flex', flexDirection:"column"}}>
+              <div>Terminal</div>
+              <div>
+                <calcite-select
+                  label="Select a Terminal"
+                  dir={this.orientation}
+                  scale="m"
+                  theme="light"
+                  width="auto"
+                  calcite-hydrated=""
+                  >
+                  <calcite-option selected={true} calcite-hydrated="">Terminal 1</calcite-option>
+                </calcite-select>
+              </div>
+            </div>
+        </calcite-card>
       </div>
     )
   }
@@ -515,6 +539,15 @@ export class UnTraceManager {
   clickCanExecute =() => {
     this.showExecuteNotice = true;
   }
+
+  clickAddFlag =(type:string) => {
+    let newFlags = [...this.flags];
+    newFlags.push(
+      {traceLocationType:type, globalId: 123456, terminal:0, allTerminals:[{terminalid:0, terminalName:'High Side'},{terminalid:1, terminalName:'Low Side'}]}
+    );
+    this.flags = newFlags;
+  }
+
 
   //Prop change updates
   assetPropsChange() {
