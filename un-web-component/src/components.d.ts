@@ -6,12 +6,6 @@
  */
 import { HTMLStencilElement, JSXBase } from "@stencil/core/internal";
 export namespace Components {
-    interface ExecuteHandler {
-    }
-    interface FlagHandler {
-    }
-    interface TraceSelector {
-    }
     interface UnTraceManager {
         "appToken": string;
         "gdbVersion": string;
@@ -20,29 +14,12 @@ export namespace Components {
         "inTC": any;
         "isBasic": boolean;
         "name": string;
+        "orientation": string;
         "runIsoTraceTwice": boolean;
         "showTerminals": boolean;
     }
 }
 declare global {
-    interface HTMLExecuteHandlerElement extends Components.ExecuteHandler, HTMLStencilElement {
-    }
-    var HTMLExecuteHandlerElement: {
-        prototype: HTMLExecuteHandlerElement;
-        new (): HTMLExecuteHandlerElement;
-    };
-    interface HTMLFlagHandlerElement extends Components.FlagHandler, HTMLStencilElement {
-    }
-    var HTMLFlagHandlerElement: {
-        prototype: HTMLFlagHandlerElement;
-        new (): HTMLFlagHandlerElement;
-    };
-    interface HTMLTraceSelectorElement extends Components.TraceSelector, HTMLStencilElement {
-    }
-    var HTMLTraceSelectorElement: {
-        prototype: HTMLTraceSelectorElement;
-        new (): HTMLTraceSelectorElement;
-    };
     interface HTMLUnTraceManagerElement extends Components.UnTraceManager, HTMLStencilElement {
     }
     var HTMLUnTraceManagerElement: {
@@ -50,19 +27,10 @@ declare global {
         new (): HTMLUnTraceManagerElement;
     };
     interface HTMLElementTagNameMap {
-        "execute-handler": HTMLExecuteHandlerElement;
-        "flag-handler": HTMLFlagHandlerElement;
-        "trace-selector": HTMLTraceSelectorElement;
         "un-trace-manager": HTMLUnTraceManagerElement;
     }
 }
 declare namespace LocalJSX {
-    interface ExecuteHandler {
-    }
-    interface FlagHandler {
-    }
-    interface TraceSelector {
-    }
     interface UnTraceManager {
         "appToken"?: string;
         "gdbVersion"?: string;
@@ -76,13 +44,11 @@ declare namespace LocalJSX {
         "onEmitQueryTrace"?: (event: CustomEvent<any>) => void;
         "onEmitSelectedTrace"?: (event: CustomEvent<any>) => void;
         "onEmitTraceResults"?: (event: CustomEvent<any>) => void;
+        "orientation"?: string;
         "runIsoTraceTwice"?: boolean;
         "showTerminals"?: boolean;
     }
     interface IntrinsicElements {
-        "execute-handler": ExecuteHandler;
-        "flag-handler": FlagHandler;
-        "trace-selector": TraceSelector;
         "un-trace-manager": UnTraceManager;
     }
 }
@@ -90,9 +56,6 @@ export { LocalJSX as JSX };
 declare module "@stencil/core" {
     export namespace JSX {
         interface IntrinsicElements {
-            "execute-handler": LocalJSX.ExecuteHandler & JSXBase.HTMLAttributes<HTMLExecuteHandlerElement>;
-            "flag-handler": LocalJSX.FlagHandler & JSXBase.HTMLAttributes<HTMLFlagHandlerElement>;
-            "trace-selector": LocalJSX.TraceSelector & JSXBase.HTMLAttributes<HTMLTraceSelectorElement>;
             "un-trace-manager": LocalJSX.UnTraceManager & JSXBase.HTMLAttributes<HTMLUnTraceManagerElement>;
         }
     }

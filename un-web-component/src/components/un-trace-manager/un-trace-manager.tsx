@@ -1,6 +1,4 @@
 import { Component, Prop, h, State, Event, EventEmitter, Watch} from '@stencil/core';
-import config from '@arcgis/core/config';
-config.assetsPath = 'https://cdn.jsdelivr.net/npm/@arcgis/core@4.18.1/assets';
 import {UnTraceHandler} from "./un-trace-handler";
 import {GeometryHandler} from "./geometry_handler";
 import "@esri/calcite-components";
@@ -26,6 +24,7 @@ export class UnTraceManager {
   @Watch('inAssets')
   watchHandler(newValue: any, oldValue: any, prop:any) {
     console.log(oldValue);
+    console.log(newValue);
     this[prop] = newValue;
     if(prop === 'inAssets') {this.assetPropsChange();}
   }
@@ -54,7 +53,7 @@ export class UnTraceManager {
   @State() showStartFlags: boolean = true;
   @State() showBarrierFlags: boolean = false;
   @State() showAllFlags: boolean = false;
-  @State() showFlagsType: string = 'start';
+  @State() showFlagsType: string = 'startPoint';
   @State() showFlagAssetPopper: boolean = false;
   @State() showExecuteNotice: boolean = false;
   @State() showResultsDetails:boolean = false;
@@ -67,6 +66,7 @@ export class UnTraceManager {
 
   componentWillLoad() {
     console.log(this.appToken);
+    console.log(this.gdbVersion);
     this.unHandler = new UnTraceHandler(this.host, this.name, this.gdbVersion, this.appToken);
     this.geometryHandler = new GeometryHandler();
     //this.unHandler.getToken().then((response:any) => {
@@ -86,85 +86,52 @@ export class UnTraceManager {
     //});
   }
 
+  processFlag1() {
+    //this.clickPointPropsChange(geom);
+  }
+
   render() {
 
-      return(
-        <div style={{display:'flex', flexDirection:'row', flex:"1"}}>
-          <calcite-tabs position="above" layout="center">
-            <calcite-tab-nav slot="tab-nav">
-              <calcite-tab-title active={(this.currentTab === 'input')?true:false} onClick={()=>{this.clickTabChange('input')}}>Inputs</calcite-tab-title>
-              <calcite-tab-title active={(this.currentTab === 'output')?true:false} onClick={()=>{this.clickTabChange('output')}}>Outputs</calcite-tab-title>
-            </calcite-tab-nav>
+    return(
+      <div style={{display:'flex', flexDirection:'row', flex:"1"}}>
+        <calcite-tabs position="above" layout="center">
+          <calcite-tab-nav slot="tab-nav">
+            <calcite-tab-title active={(this.currentTab === 'input')?true:false} onClick={()=>{this.clickTabChange('input')}}>Inputs</calcite-tab-title>
+            <calcite-tab-title active={(this.currentTab === 'output')?true:false} onClick={()=>{this.clickTabChange('output')}}>Outputs</calcite-tab-title>
+          </calcite-tab-nav>
 
-            <calcite-tab active={(this.currentTab === 'input')?true:false} style={{backgroundColor:"#f8f8f8"}}>
-              {(this.showAllFlags)?this.renderUIAllFlags(this.showFlagsType):this.renderUIFlags()}
-              {this.renderUITraceSelector()}
-              {this.renderUIExecute()}
-            </calcite-tab>
-            <calcite-tab active={(this.currentTab === 'output')?true:false} style={{backgroundColor:"#f8f8f8"}}>
-              {(this.showResultsDetails)?this.renderUITraceResultsDetails(null):this.renderUITraceResults()}
-              {this.renderUITraceSelector()}
-              {this.renderUIExecute()}
-            </calcite-tab>
-          </calcite-tabs>
+          <calcite-tab active={(this.currentTab === 'input')?true:false} style={{backgroundColor:"#f8f8f8"}}>
+            {this.renderUIFlags()}
+          </calcite-tab>
+          <calcite-tab active={(this.currentTab === 'output')?true:false} style={{backgroundColor:"#f8f8f8"}}>
+          </calcite-tab>
+        </calcite-tabs>
 
-          <calcite-popover-manager>
-            <calcite-popover
-              theme="light"
-              reference-element={this.popoverIdLink}
-              placement="auto"
-              offset-distance="6"
-              offset-skidding="0"
-              open={true}
-              text-close="Close"
-            >
-              <div style={{padding:"12px 16px"}}>
-                <b>I am a title!</b>
-                <br />
-                <p>
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
-                  tempor incididunt ut labore et dolore magna aliqua.
-                </p>
-                <calcite-link>I am an inline link</calcite-link>
-              </div>
-            </calcite-popover>
-          </calcite-popover-manager>
-
-        </div>);
+      </div>);
   }
 
   renderUIFlags() {
     let startFlagList = [];
-    this.flags.map((f:any, i:number) => {
-      if(i <= 1) {
-        startFlagList.push(
-          <calcite-panel dir={this.orientation} height-scale="s" intl-close="Close" theme="light">
-            <div class="heading" slot="header-content">
-              <div class="sc-calcite-label-h sc-calcite-label-s sc-calcite-label">Asset id: {f.globalId}</div>
-            </div>
-            <calcite-action
-              text="Action"
-              label="Action"
-              slot="header-actions-start"
-              icon="chevron-up"
-              appearance="solid"
-              scale="s"
-            ></calcite-action>
-            <calcite-action
-              text="Action"
-              label="Action"
-              slot="header-actions-end"
-              icon="ellipsis"
-              appearance="solid"
-              scale="s"
-              id="flag-1"
-              onClick={()=>{this.clickShowFlagAssetOptions('flag-1',true)}}
-            >
-            </calcite-action>
-          </calcite-panel>
-        );
+    let barrierFlagList = [];
+    let onlyStart = [];
+    let onlyBarriers = [];
+    onlyStart = this.flags.filter((f:any) => {
+      return f.traceLocationType === 'startingPoint';
+    });
+    onlyStart.map((f:any, i:number) => {
+      console.log(f);
+      if(i <= 1) {//startFlagList.push(this.generateAssetRow(f));
       }
-    })
+    });
+
+    onlyBarriers = this.flags.filter((f:any) => {
+      return f.traceLocationType === 'barrier';
+    });
+    onlyBarriers.map((f:any, i:number) => {
+      console.log(f);
+      if(i <= 1) {//barrierFlagList.push(this.generateAssetRow(f));
+      }
+    });
 
     return(
       <div>
@@ -180,7 +147,7 @@ export class UnTraceManager {
           >
             <calcite-accordion-item
               icon="pin"
-              item-title={"Starting Points (" + this.flags.length  +")"}
+              item-title={"Starting Points (" + onlyStart.length  +")"}
               item-subtitle="Add points to where the trace should start."
               aria-expanded="false"
               dir={this.orientation}
@@ -192,8 +159,8 @@ export class UnTraceManager {
 
               <div style={{height:"10px", width:"100%"}}></div>
               <div style={{display:"flex", flexDirection:"column", justifyContent:"center", alignItems:"center"}}>
-                {(this.flags.length > 2) && <calcite-link onClick={()=>{this.clickShowAllFlags('start', true)}}>See All</calcite-link>}
-                {(this.flags.length > 2) && <div style={{height:"10px", width:"100%"}}></div>}
+                {(onlyStart.length > 2) && <calcite-link onClick={()=>{}}>See All</calcite-link>}
+                {(onlyStart.length > 2) && <div style={{height:"10px", width:"100%"}}></div>}
                 <calcite-split-button
                   appearance="solid"
                   color="light"
@@ -203,7 +170,7 @@ export class UnTraceManager {
                   primary-label="Primary Option"
                   dropdown-label="Additional Options"
                   dropdown-icon-type="chevron"
-                  onClick={() => {this.clickAddFlag('startingPoint')}}
+                  onClick={() => {}}
                 >
                   <calcite-dropdown-group selection-mode="none">
                     <calcite-dropdown-item>Draw an area</calcite-dropdown-item>
@@ -224,7 +191,7 @@ export class UnTraceManager {
           >
             <calcite-accordion-item
               icon="x-octagon-f"
-              item-title="Barriers (0)"
+              item-title={"Barriers (" + onlyBarriers.length + ")"}
               item-subtitle="Add points to where trace should not go."
               aria-expanded="false"
               dir={this.orientation}
@@ -232,422 +199,195 @@ export class UnTraceManager {
               tabindex="0"
               active={this.showBarrierFlags}
             >
+
+              {barrierFlagList}
+
+              <div style={{height:"10px", width:"100%"}}></div>
+              <div style={{display:"flex", flexDirection:"column", justifyContent:"center", alignItems:"center"}}>
+                {(onlyBarriers.length > 2) && <calcite-link onClick={()=>{}}>See All</calcite-link>}
+                {(onlyBarriers.length > 2) && <div style={{height:"10px", width:"100%"}}></div>}
+                <calcite-split-button
+                  appearance="solid"
+                  color="light"
+                  scale="s"
+                  primary-icon-start="plus"
+                  primary-text="Add Point"
+                  primary-label="Primary Option"
+                  dropdown-label="Additional Options"
+                  dropdown-icon-type="chevron"
+                  onClick={() => {}}
+                >
+                  <calcite-dropdown-group selection-mode="none">
+                    <calcite-dropdown-item>Draw an area</calcite-dropdown-item>
+                  </calcite-dropdown-group>
+                </calcite-split-button>
+              </div>
+
             </calcite-accordion-item>
           </calcite-accordion>
       </div>
     );
   }
 
-  renderUIAllFlags(type:string) {
-    return(
-      <div>
-        <div style={{height:"10px", width:"100%"}}></div>
-        <calcite-panel dir={this.orientation} height-scale="s" intl-close="Close" theme="light">
-          <div class="heading" slot="header-content">
-            <div class="sc-calcite-label-h sc-calcite-label-s sc-calcite-label">All starting points</div>
-          </div>
-          <calcite-action
-            text="Action"
-            label="Action"
-            slot="header-actions-start"
-            icon="chevron-left"
-            appearance="solid"
-            scale="s"
-            onClick={()=>{this.clickShowAllFlags(type,false)}}
-          ></calcite-action>
-        </calcite-panel>
-        <div style={{height:"10px", width:"100%"}}></div>
-
-        <calcite-input
-          scale="m"
-          status="idle"
-          type="text"
-          alignment="start"
-          number-button-type="horizontal"
-          min="0"
-          max="100"
-          step="1"
-          prefix-text=""
-          suffix-text=""
-          value=""
-          placeholder="Search"
-          class="sc-calcite-input-h sc-calcite-input-s"
-          dir={this.orientation}
-        >
-        </calcite-input>
-        <div style={{height:"5px", width:"100%"}}></div>
-        <calcite-panel dir={this.orientation} height-scale="s" intl-close="Close" theme="light">
-          <div class="heading" slot="header-content">
-            <div class="sc-calcite-label-h sc-calcite-label-s sc-calcite-label">Asset id: 123456</div>
-          </div>
-          <calcite-action
-            text="Action"
-            label="Action"
-            slot="header-actions-start"
-            icon="chevron-up"
-            appearance="solid"
-            scale="s"
-          ></calcite-action>
-          <calcite-action
-            text="Action"
-            label="Action"
-            slot="header-actions-end"
-            icon="ellipsis"
-            appearance="solid"
-            scale="s"
-          ></calcite-action>
-        </calcite-panel>
-        <calcite-panel dir={this.orientation} height-scale="s" intl-close="Close" theme="light">
-          <div class="heading" slot="header-content">
-            <div class="sc-calcite-label-h sc-calcite-label-s sc-calcite-label">Asset id: 999999</div>
-          </div>
-          <calcite-action
-            text="Action"
-            label="Action"
-            slot="header-actions-start"
-            icon="chevron-up"
-            appearance="solid"
-            scale="s"
-          ></calcite-action>
-          <calcite-action
-            text="Action"
-            label="Action"
-            slot="header-actions-end"
-            icon="ellipsis"
-            appearance="solid"
-            scale="s"
-          ></calcite-action>
-        </calcite-panel>
-        <div style={{height:"10px", width:"100%"}}></div>
-        <div style={{display:"flex", flexDirection:"column", justifyContent:"center", alignItems:"center"}}>
-          <calcite-link onClick={()=>{this.clickShowAllFlags(type, true)}}>Clear All</calcite-link>
-        </div>
-      </div>
-    );
-  }
-
-  renderUITraceSelector() {
-    return (
-      <div>
-      <div style={{height:"10px", width:"100%"}}></div>
-      <calcite-card>
-        <div style={{height:"10px", width:"100%"}}></div>
-        <calcite-label
-          class="sc-calcite-label-h sc-calcite-label-s"
-          dir={this.orientation}
-          status="idle"
-          scale="m"
-          layout="default"
-          calcite-hydrated=""
-        >
-          <label class="sc-calcite-label-h sc-calcite-label-s sc-calcite-label">
-            Select a trace operation
-            <calcite-select
-              label="Select a trace group"
-              dir={this.orientation}
-              scale="m"
-              theme="light"
-              width="auto"
-              calcite-hydrated=""
-            >
-              <calcite-option selected={true} calcite-hydrated="">Isolation Trace Group</calcite-option>
-            </calcite-select>
-          </label>
-          <label class="sc-calcite-label-h sc-calcite-label-s sc-calcite-label">
-            This trace will select isolating and isolated features.
-          </label>
-        </calcite-label>
-      </calcite-card>
-      </div>
-    );
-  }
-
-  renderUIExecute() {
-    return (
-      <div>
-        <div style={{height:"10px", width:"100%"}}></div>
-        <calcite-card>
-          <div style={{height:"10px", width:"100%"}}></div>
-          <calcite-notice
-            theme="light"
-            icon=""
-            active={this.showExecuteNotice}
-            dismissible={true}
-            scale="s"
-            width="auto"
-            color="red"
-          >
-            <div slot="notice-title">Add starting point</div>
-            <div slot="notice-message">You first need to add a starting point to run the trace.</div>
-          </calcite-notice>
-          <div style={{height:"10px", width:"100%"}}></div>
-          <calcite-button scale="s" color="blue"  width="full" onClick={()=>{this.clickCanExecute()}}>Run</calcite-button>
-          <div style={{height:"10px", width:"100%"}}></div>
+  renderTraceList(result:any): any {
+    let list = [];
+      result.map((r:any) => {
+        list.push(<calcite-card key={r.name}>
+          <h3 slot="title">{r.name}</h3>
+          <span slot="subtitle">{r.description}</span>
+          <calcite-link slot="footer-leading" onClick={
+            () => {
+              this.activeStep = 3;
+              this.activeTrace = r;
+              this.emitSelectedTrace.emit(r);
+            }
+          }>Select</calcite-link>
+          <calcite-link slot="footer-trailing">Edit Config</calcite-link>
         </calcite-card>
-      </div>
-    );
-  }
-
-  renderUITraceResults() {
-    return (
-      <div>
-        <div style={{height:"25px", width:"100%", textAlign:"center", paddingTop: '10px'}}>
-          <calcite-label class="sc-calcite-label-h sc-calcite-label-s" dir={this.orientation} alignment="center" status="idle" scale="s" layout="default">
-            Trace completed 4/14/2021 at 11:20am
-          </calcite-label>
-        </div>
-        <calcite-panel dir={this.orientation} height-scale="s" intl-close="Close" theme="light">
-          <div class="heading" slot="header-content">
-            <div style={{display: "flex", flexDirection: "row", alignItems: "center"}}>
-              <div style={{paddingLeft: "5px", paddingRight: "5px"}}>
-                <div style={{ borderRadius: "40px", width: "20px", height: "20px", backgroundColor: "#f00" }}></div>
-              </div>
-              <div style={{paddingLeft: "10px", paddingRight: "10px"}}>
-                <div class="sc-calcite-label-h sc-calcite-label-s sc-calcite-label">Isolating (3)</div>
-                <div class="sc-calcite-label-h sc-calcite-label-s sc-calcite-label">Valves to close to isolated the leak</div>
-              </div>
-            </div>
-          </div>
-          <calcite-action
-            text="Action"
-            label="Action"
-            slot="header-actions-end"
-            icon="chevron-right"
-            appearance="solid"
-            scale="s"
-            onClick={()=>{this.clickShowResultsDetails(true)}}
-          ></calcite-action>
-        </calcite-panel>
-      </div>
-    );
-  }
-
-  renderUITraceResultsDetails(trace:any) {
+        );
+      })
     return(
-      <div>
-        <div style={{height:"10px", width:"100%"}}></div>
-        <calcite-panel dir={this.orientation} height-scale="s" intl-close="Close" theme="light">
-          <div class="heading" slot="header-content">
-            <div class="sc-calcite-label-h sc-calcite-label-s sc-calcite-label">Isolated (3)</div>
-          </div>
-          <calcite-action
-            text="ActionBackResults"
-            label="ActionBackResults"
-            slot="header-actions-start"
-            icon="chevron-left"
-            appearance="solid"
-            scale="s"
-            onClick={()=>{this.clickShowResultsDetails(false)}}
-          ></calcite-action>
-        </calcite-panel>
-        <div style={{height:"10px", width:"100%"}}></div>
-        <calcite-input
-          scale="m"
-          status="idle"
-          type="text"
-          alignment="start"
-          number-button-type="horizontal"
-          min="0"
-          max="100"
-          step="1"
-          prefix-text=""
-          suffix-text=""
-          value=""
-          placeholder="Search"
-          class="sc-calcite-input-h sc-calcite-input-s"
-          dir={this.orientation}
-        >
-        </calcite-input>
-        <div style={{height:"5px", width:"100%"}}></div>
-        <calcite-panel dir={this.orientation} height-scale="s" intl-close="Close" theme="light">
-          <div class="heading" slot="header-content">
-            <div class="sc-calcite-label-h sc-calcite-label-s sc-calcite-label" style={{display:'flex', flexDirection:"row"}}>
-              <div><calcite-icon icon="nodes-unmerge" scale="m" aria-hidden="true"></calcite-icon></div>
-              <div>Asset id: 123456</div>
-            </div>
-          </div>
-          <calcite-action
-            text="Action"
-            label="Action"
-            slot="header-actions-start"
-            icon="chevron-up"
-            appearance="solid"
-            scale="s"
-          ></calcite-action>
-          <calcite-action
-            text="Action"
-            label="Action"
-            slot="header-actions-end"
-            icon="zoom-to-object"
-            appearance="solid"
-            scale="s"
-          ></calcite-action>
-        </calcite-panel>
-        <calcite-card dir={this.orientation}>
-            <div class="sc-calcite-label-h sc-calcite-label-s sc-calcite-label" style={{display:'flex', flexDirection:"row"}}>
-              <div style={{display:"flex", flex:"1"}}><calcite-icon icon="nodes-unmerge" scale="m" aria-hidden="true"></calcite-icon></div>
-              <div style={{display:"flex", flex:"3"}}>Bypass asset for the next trace</div>
-              <div style={{display:"flex", flex:"1", justifyContent:"flex-end"}}>
-                <calcite-switch
-                  name="setting"
-                  value="enabled"
-                  switched=""
-                  scale="m">
-                </calcite-switch>
-              </div>
-            </div>
-            <div style={{height:"5px", width:"100%"}}></div>
-            <div class="sc-calcite-label-h sc-calcite-label-s sc-calcite-label" style={{display:'flex', flexDirection:"column"}}>
-              <div>Terminal</div>
-              <div>
-                <calcite-select
-                  label="Select a Terminal"
-                  dir={this.orientation}
-                  scale="m"
-                  theme="light"
-                  width="auto"
-                  calcite-hydrated=""
-                  >
-                  <calcite-option selected={true} calcite-hydrated="">Terminal 1</calcite-option>
-                </calcite-select>
-              </div>
-            </div>
-        </calcite-card>
-      </div>
+      <div style={{height:"175px", overflow:"auto"}}><div>{list}</div></div>
     )
+  }
+
+  renderTraceResults(): any {
+    if(this.traceResults !== null) {
+      let list = [];
+      if(this.traceResults.hasOwnProperty("message")) {
+        list.push(<calcite-card>
+          <h3 slot="title">{this.traceResults.message}</h3>
+        </calcite-card>
+        );
+      } else {
+        this.traceResults.traceResults.elements.map((r:any) => {
+          list.push(<calcite-card key={r.globalId}>
+            <h3 slot="title">{r.globalId}</h3>
+            <calcite-link slot="footer-leading">Hightlight</calcite-link>
+          </calcite-card>
+          );
+        })
+      }
+      return(
+        <div style={{height:"175px", overflow:"auto"}}><div>{list}</div></div>
+      )
+    } else {
+      return <div>Error</div>
+    }
   }
 
   clickTabChange = (tab:string) => {
     this.currentTab = tab;
   }
 
-  clickShowAllFlags = (type:string, show:boolean) => {
-    this.showFlagsType = type;
-    this.showAllFlags = show;
-  }
-
-  clickShowFlagAssetOptions =(id:string, show:boolean) => {
-    console.log('here');
-    this.popoverIdLink = id;
-    this.showFlagAssetPopper = show;
-  }
-
-  clickShowResultsDetails(show:boolean) {
-    this.showResultsDetails = show;
-  }
-
-  clickCanExecute =() => {
-    this.showExecuteNotice = true;
-  }
-
-  clickAddFlag =(type:string) => {
-    let newFlags = [...this.flags];
-    newFlags.push(
-      {traceLocationType:type, globalId: 123456, terminal:0, allTerminals:[{terminalid:0, terminalName:'High Side'},{terminalid:1, terminalName:'Low Side'}]}
-    );
-    this.flags = newFlags;
-  }
-
-
   //Prop change updates
   assetPropsChange() {
-    this.flags = [];
-    if(this.inAssets.length > 0) {
-      console.log(this.inAssets);
-      let assetList = [];
-      this.inAssets.map(async (a:any) => {
-        if(a.layers.length > 0) {
-          a.layers.map((lyr:any) => {
-            assetList.push(this.lookupAsset(lyr, a.geometry));
-          });
-        } else {
-          // only geom is provided.  do lookup
-          this.layersForFlagLookup.map((lyr:any) => {
-            const usage = lyr.utilityNetworkFeatureClassUsageType;
-            if(usage === 'esriUNFCUTJunction' || usage === 'esriUNFCUTDevice' || usage === 'esriUNFCUTLine') {
-              const lyrObj = {layerId: lyr.layerId, ids:[], subtypes:[]};
-              assetList.push(this.lookupAsset(lyrObj, a.geometry));
-            }
-          });
-        }
-      });
-      Promise.all(assetList).then((response:any) => {
-        if(response.length > 0) {
-          response.map((res:any) => {
-            if(res.result.features.length > 0) {
-              res.result.features.map(async(feat:any) => {
-                if(res.result.geometryType === 'esriGeometryPolyline') {
-                  //get percent along
-                  const perct = await this.geometryHandler.getPercentageAlong(feat.geometry,  res.flagGeom, res.result.spatialReference);
-                  console.log(perct);
-                  const flagExists = this.flags.indexOf((f:any) => {
-                    return f.globalId === feat.attributes.globalid;
-                  });
-                  if(flagExists === -1) {
-                    this.flags.push(
-                      {traceLocationType:'startingPoint',globalId: feat.attributes.globalid, percentAlong:perct[0]}
-                    );
-                  }
-                  //if line on line, send back the intersected point for flag graphic
-                  if(res.flagGeom.type === "polyline") {
-                    const points = await this.geometryHandler.intersectToPoint(feat.geometry, res.flagGeom, res.result.spatialReference);
-                    this.emitDrawComplete.emit({type:'start', geometry: points});
-                  } else {
-                    this.emitDrawComplete.emit({type:'start', geometry: res.flagGeom});
-                  }
-                } else if(res.result.geometryType === 'esriGeometryPoint') {
-                  //get terminals
-                  const terminalList = this.terminals.filter((t:any) => {
-                    return (
-                      t.assetGroupCode === feat.attributes.assetgroup &&
-                      t.assetTypeCode === feat.attributes.assettype &&
-                      t.layerId === res.layerId
-                    )
-                  });
-                  if(terminalList.length > 0) {
-                    const flagExists = this.flags.indexOf((f:any) => {
-                      return f.globalId === feat.attributes.globalid;
-                    });
-                    if(flagExists === -1) {
-                      this.flags.push(
-                        {traceLocationType:'startingPoint', globalId: feat.attributes.globalid, terminal:terminalList[0].terminalConfiguration.terminals[0], allTerminals:terminalList[0].terminalConfiguration}
-                      );
-                      this.emitDrawComplete.emit({type:'start', geometry: res.flagGeom});
-                    }
-                  }
-                } else {
-                  //do nothing, it might be a polygon or invalid type
-                }
+    this.inAssets = JSON.parse(this.inAssets);
+    let assetList = [];
+    this.inAssets.map((a:any) => {
+      assetList.push(this.lookupAsset(a, null));
+    });
+    Promise.all(assetList).then((response:any) => {
+      if(response.length > 0) {
+        response.map((res:any) => {
+          console.log(res);
+          if(res.result.features.length > 0) {
+            if(res.result.geometryType === 'esriGeometryPolyline') {
+              let clickPoint = [1029437.0469165109,1859984.5320274457];
+              //get percent along
+              if(clickPoint) {
+                this.getPercentAlong(res.result.features[0].geometry.paths[0],  clickPoint, res.result.spatialReference.wkid).then((result:any) => {
+                  this.flags.push(
+                    {"traceLocationType":res.asset.type,"globalId": res.result.features[0].attributes.GLOBALID, "percentAlong":result}
+                  );
+                  console.log(this.flags);
+                });
+              } else {
+                this.flags.push(
+                  {"traceLocationType":res.asset.type,"globalId": res.result.features[0].attributes.GLOBALID, "percentAlong":0.5}
+                );
+                console.log(this.flags);
+              }
+            } else if(res.result.geometryType === 'esriGeometryPoint') {
+              //get terminals
+              const terminalList = this.terminals.filter((t:any) => {
+                return (
+                  t.assetGroupCode === res.result.features[0].attributes.ASSETGROUP &&
+                  t.assetTypeCode === res.result.features[0].attributes.ASSETTYPE
+                )
               });
+              if(terminalList.length > 0) {
+                this.flags.push(
+                  {"traceLocationType":res.asset.type,"globalId": res.result.features[0].attributes.GLOBALID, "terminal":terminalList[0].terminalConfiguration.terminals[0], "allTerminals":terminalList[0].terminalConfiguration}
+                );
+              }
+              console.log(this.flags);
+            } else {
+              //do nothing, it might be a polygon or invalid type
             }
-          });
-          setTimeout(()=> {
-            this.executeTrace();
-          },1000);
-        }
-      });
-    }
+          }
+        });
+      }
+    });
   }
 
-  //SUPPORT FUNCTIONS
-  lookupAsset(lyr?:any, geom?: any): Promise<any> {
-    return new Promise(async(resolve) => {
-      let geomObj = (geom)?geom:null;
-      if(geomObj !== null) {
-        if(geomObj.type === "polygon") {
-          //convert it to polyline and reproject it.
-          const rings = geomObj.rings;
-          geomObj = await this.geometryHandler.createPolyline(rings, geomObj.spatialReference.wkid);
-        } else {
-          //polyline and point, just reproject
-        }
+  processFlag = ((geom:any) => {
+    console.log('Inside Component: received click from parent, query.')
+    //this.inPoints = JSON.parse(this.inPoints);
+    let assetList = [];
+    //this.inPoints.map((a:any) => {
+    this.layersForFlagLookup.map((lyr:any) => {
+      assetList.push(this.lookupAsset(lyr, geom));
+    });
+    //});
+    Promise.all(assetList).then((response:any) => {
+      if(response.length > 0) {
+        response.map((res:any) => {
+          console.log(res);
+          if(res.result.geometryType === 'esriGeometryPolyline') {
+            let clickPoint = [1029437.0469165109,1859984.5320274457];
+            //get percent along
+            if(clickPoint) {
+              this.getPercentAlong(res.result.features[0].geometry.paths[0],  clickPoint, res.result.spatialReference.wkid).then((result:any) => {
+                this.flags.push(
+                  {"traceLocationType":res.asset.type,"globalId": res.result.features[0].attributes.GLOBALID, "percentAlong":result}
+                );
+              });
+            } else {
+              this.flags.push(
+                {"traceLocationType":res.asset.type,"globalId": res.result.features[0].attributes.GLOBALID, "percentAlong":0.5}
+              );
+            }
+            console.log(this.flags);
+          } else if(res.result.geometryType === 'esriGeometryPoint') {
+            //get terminals
+            const terminalList = this.terminals.filter((t:any) => {
+              return (
+                t.assetGroupCode === res.result.features[0].attributes.ASSETGROUP &&
+                t.assetTypeCode === res.result.features[0].attributes.ASSETTYPE
+              )
+            });
+            if(terminalList.length > 0) {
+              this.flags.push(
+                {"traceLocationType":res.asset.type,"globalId": res.result.features[0].attributes.GLOBALID, "terminal":terminalList[0].terminalConfiguration.terminals[0], "allTerminals":terminalList[0].terminalConfiguration}
+              );
+            }
+            console.log(this.flags);
+          } else {
+            //do nothing, it might be a polygon or invalid type
+          }
+        });
       }
-      this.unHandler.queryForFeature(lyr, geomObj).then((response:any)=> {
-        //console.log(response);
+    });
+  });
+
+  //SUPPORT FUNCTIONS
+  lookupAsset(lyr:any, geom?: any, globalId?: string ): Promise<any> {
+    return new Promise((resolve) => {
+      this.unHandler.queryForFeature(this.appToken, lyr.layerId, geom, globalId).then((response:any)=> {
+        console.log(response);
         const resObj = {
-          "result": response,
-          "flagGeom": geomObj,
-          "layerId": lyr.layerId
+          "result": response
         }
         resolve(resObj);
       })
@@ -657,50 +397,15 @@ export class UnTraceManager {
     });
   }
 
-  executeTrace() {
-    if(this.traces.hasOwnProperty('traceConfigurations')) {
-      if(this.traces.traceConfigurations.length > 0) {
-        this.traces.traceConfigurations.map((tc:any) => {
-          if(tc.traceType === 'isolation') {
-            this.unHandler.executeTrace(tc.traceType, this.flags, '', tc.globalId).then((results:any) => {
-              this.processResults(tc.traceConfiguration.includeIsolated, results.traceResults);
-              //this.emitTraceResults.emit({isIsolated:tc.traceConfiguration.includeIsolated, results:results.traceResults});
-            });
-          }
-        });
-      }
-    }
+  getPercentAlong(geometry:any, clickPoint: any, sr:any) {
+    return new Promise((resolve) => {
+      this.unHandler.getPercentageAlong(geometry,  clickPoint, sr).then((response:any) => {
+        resolve(response);
+      })
+      .catch((e: any) => {
+        resolve(e);
+      });
+    });
   }
-
-  processResults(isIsolated:boolean, results:any) {
-    if(results.hasOwnProperty("elements")) {
-      if(results.elements.length > 0) {
-        const grouped = [];
-        results.elements.map((el:any) => {
-          if(grouped[el.networkSourceId]) {
-            grouped[el.networkSourceId].push(el.objectId);
-          } else {
-            grouped[el.networkSourceId] = [];
-            grouped[el.networkSourceId].push(el.objectId);
-          }
-        });
-        for(const key in grouped) {
-          const findLayer = this.layersForFlagLookup.filter((lyr:any) => {
-            return(lyr.sourceId === parseInt(key));
-          });
-          if(findLayer.length > 0) {
-            const layerObj = {"layerId":findLayer[0].layerId, "subtypes":[], "ids":grouped[key]};
-            this.lookupAsset(layerObj).then((results:any) => {
-              console.log("results records");
-              console.log(results);
-              this.emitTraceResults.emit({isIsolated:isIsolated, results:results});
-            });
-          }
-        }
-
-      }
-    }
-  }
-
 
 }

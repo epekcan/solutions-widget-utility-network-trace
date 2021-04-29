@@ -21,8 +21,8 @@
       padding: 0;
       }
       #viewDiv {
-      height: 99%;
-      width: 100%;
+      height: 50%;
+      width: 50%;
       margin: 0;
       padding: 0;
       }
@@ -36,85 +36,51 @@
     <script>
       require([
         "esri/Map",
-        "esri/config",
         "esri/Graphic",
-        "esri/WebMap",
         "esri/views/MapView",
         "esri/layers/FeatureLayer",
-        "esri/layers/GraphicsLayer",
-        "esri/geometry/Point",
         "esri/widgets/Legend",
-        "esri/identity/IdentityManager",
-        "esri/widgets/Sketch",
-        "esri/geometry/projection",
-        "esri/geometry/geometryEngine"
-      ], function(Map, esriConfig, Graphic, WebMap, MapView, FeatureLayer, GraphicsLayer, Point, Legend, IdentityManager, Sketch, projection, geometryEngine) {
+        "esri/identity/IdentityManager"
+      ], function(Map, Graphic, MapView, FeatureLayer, Legend, IdentityManager) {
         // Crime in SF
-
-        //IdentityManager.registerToken({
-        //  server: "https://dev0016770.esri.com/portal",
-        //  token: "enBdmobtbOLrsgVeFMlX1W8CifYVPt0gQC8HiyCM5Rue22__6-dARzO8RnIp0PQan8fZDtWMWqc2_5bqhvAyk1XZxM-q6tJP-Jpebb_4x_oSLUhMhnm9j5MkAbW9Vj8v-CdAIdtnigbKIxUmcJI7-zRFOrnSWElrPjXxNaUkHd9T5d5R2OCtebKBxhp3FW9d"
-        //s});
-
-        const gl = new GraphicsLayer();
-
-        esriConfig.portalUrl = "https://dev0016770.esri.com/portal";
-        const webmap = new WebMap({
-          portalItem: { // autocasts as new PortalItem()
-            id: "a80e69210ed34485995f0aa8362f539b"
-          }
+        IdentityManager.registerToken({
+          server: "https://dev0010161.esri.com/server/rest/services/Water_Distribution_Utility_Network_34/FeatureServer",
+          token: "dUcjzR3DQco4DS8LOVZ5on8pypAaHlC5RokgQVa-QqFxo4xvtwklLvMB0OCY6pBoL25GLeZn_FRzwXkvYYDrXJCQyGyzDnL1jsSCAhJnA6qiRK7zfzIJmOz2KlHdxSozSorf6_KYG3W2KoKVoEDV2ZnnvQwFKQmbO2bLDespL-JzVgTGDnb5qg30jSKiGAPA-nBY60M0pd96Mex22aUt-dYzdGv-L17i_W-XvN4970k."
+        });
+        // Carbon storage of trees in Warren Wilson College.
+        var layer = new FeatureLayer({
+          url: "https://dev0010161.esri.com/server/rest/services/Water_Distribution_Utility_Network_34/FeatureServer/515",
+          gdbVersion: "sde.DEFAULT"
         });
 
-        webmap.add(gl,0);
+        var map = new Map({
+          basemap: "gray-vector",
+          layers: [layer]
+        });
 
         var view = new MapView({
           container: "viewDiv",
-          map: webmap,
+          map: map,
           zoom: 15,
           center: [-88.1663, 41.772275]
         });
 
-
-        const sketch = new Sketch({
-          layer: gl,
+        var legend = new Legend({
           view: view,
-          // graphic will be selected as soon as it is created
-          //creationMode: "update"
+          layerInfos: [{
+            layer: layer
+          }]
         });
-
-        view.ui.add(sketch, "top-right");
 
         // additional query fields initially set to null for basic query
         var distance = null;
         var units = null;
 
-        // Listen to sketch widget's create event.
-        sketch.on("create", function(event) {
-          // check if the create event's state has changed to complete indicating
-          // the graphic create operation is completed.
-          if (event.state === "complete") {
-            //console.log(event.graphic);
-            gl.removeAll();
-
-            // use the graphic.geometry to query features that intersect it
-            //selectFeatures(event.graphic.geometry);
-            let layerGroup = [];
-
-            const traceComponent = document.querySelector('un-trace-manager');
-            traceComponent.inAssets = [{"type":'start', "geometry":event.graphic.geometry, "layers":layerGroup}];
-
-          }
-          if (event.state === "start") {
-            gl.removeAll();
-          }
-        });
-
-
         //create graphic for mouse point click
         var pointGraphic = new Graphic({
           symbol: {
             type: "simple-marker", // autocasts as new SimpleMarkerSymbol()
-            color: [255, 0, 0],
+            color: [0, 0, 139],
             outline: {
               color: [255,255,255],
               width: 1.5
@@ -135,6 +101,13 @@
           }
         });
 
+
+        layer.load()
+        .then(function() {
+          // Set the view extent to the data extent
+          layer.popupTemplate = layer.createPopupTemplate();
+        });
+
         function queryFeatures(screenPoint, componentProps) {
           const point = view.toMap(screenPoint);
           layer.queryFeatures({
@@ -149,10 +122,9 @@
           })
           .then(function(featureSet) {
             // set graphic location to mouse pointer and add to mapview
-            console.log(featureSet);
+            //console.log(featureSet.features);
             console.log("Outside component: click on map, query, send back to component");
-
-            //componentProps.detail.callback(point);
+            componentProps.detail.callback(point);
             pointGraphic.geometry = point;
             view.graphics.add(pointGraphic);
             // open popup of query result
@@ -164,122 +136,22 @@
           });
         }
 
-        function getDataForComponent(screenPoint, componentProps) {
-
-          const point = view.toMap(screenPoint);
-
-          view.hitTest(screenPoint).then(function (response) {
-            if (response.results.length > 0) {
-              console.log(response.results);
-              let layerGroup = [];
-              response.results.map((r) => {
-                if(r.graphic.layer.hasOwnProperty('layerId')) {
-                  let assetGroups = [];
-                  let objectIds = [];
-                  objectIds.push(r.graphic.attributes.objectid);
-                  layerGroup.push({
-                  'layerId': r.graphic.layer.layerId,
-                  'subtypes': assetGroups,
-                  'ids': objectIds
-                  });
-                }
-              });
-
-              const traceComponent = document.querySelector('un-trace-manager');
-              traceComponent.inAssets = [{"type":'start', "geometry":point, "layers":layerGroup}];
-
-            }
-          });
-          //console.log(webmap.layers);
-          webmap.layers.map((lyr) => {
-            //console.log(lyr.title + "    vis:" + lyr.visible);
-            if(lyr.hasOwnProperty("layers")) {
-              lyr.layers.map((ll) => {
-              //console.log("     " + ll.title + "    vis:" + ll.visible);
-            });
-            }
-          });
-          pointGraphic.geometry = point;
-          view.graphics.add(pointGraphic);
-
-        }
-
-
-        pointGraphic = (color, geom) => {
-          let graphic = new Graphic({
-            symbol: {
-              type: "simple-marker", // autocasts as new SimpleMarkerSymbol()
-              color: color,
-              outline: {
-                color: [255,255,255],
-                width: 1.5
-              }
-            }
-          });
-          graphic.geometry = geom;
-          return graphic;
-        }
-
-        polyonGraphic = (color, geom) => {
-          const bufferGraphic = new Graphic({
-            symbol: {
-              type: "simple-fill", // autocasts as new SimpleFillSymbol()
-              color: color,
-              outline: {
-                // autocasts as new SimpleLineSymbol()
-                color: [255, 255, 255],
-                width: 1
-              }
-            }
-          });
-          bufferGraphic.geometry = geom;
-          return bufferGraphic;
-        }
-
 
         setTimeout(() => {
           const domElement = document.querySelector('un-trace-manager');
           domElement.addEventListener('emitQueryTrace', event => {
             console.log('query traces emit');
+            console.log(event);
           });
 
           domElement.addEventListener('emitSelectedTrace', event => {
             console.log('Selected trace emit');
+            console.log(event);
           });
 
           domElement.addEventListener('emitTraceResults', event => {
-            console.log(event.detail);
-            const details = event.detail;
-            const data = event.detail.results;
-            const dataFeat = data.result;
-            if(dataFeat.hasOwnProperty("features")) {
-              const resultsGraphics = [];
-              dataFeat.features.map((feat) => {
-                if(dataFeat.geometryType === "esriGeometryPolyline") {
-
-                } else if (dataFeat.geometryType === "esriGeometryPoint") {
-                  projection.load().then(() => {
-                    const pnt = new Point({x: feat.geometry.x, y:feat.geometry.y, spatialReference: dataFeat.spatialReference});
-                    const projGeom = projection.project(pnt, MapView.spatialReference);
-                    if(details.isIsolated) {
-                      const buffPoint = geometryEngine.buffer(projGeom, 20, 'feet');
-                      const graphic = polyonGraphic([0, 255, 0, 0.6], buffPoint);
-                      resultsGraphics.push(graphic);
-                      gl.add(graphic);
-                    } else {
-                      const buffPoint = geometryEngine.buffer(projGeom, 25, 'feet');
-                      const graphic = polyonGraphic([255, 0, 0, 0.6], buffPoint);
-                      resultsGraphics.push(graphic);
-                      gl.add(graphic);
-                    }
-                  });
-                } else {
-
-                }
-              });
-              //gl.addMany(resultsGraphics);
-            }
-
+            console.log('query traces results');
+            console.log(event);
           });
 
           domElement.addEventListener('emitFlagChange', event => {
@@ -287,35 +159,24 @@
             //console.log(event);
             view.on("click", function(e) {
               view.graphics.remove(pointGraphic);
-              getDataForComponent(e,event);
+              queryFeatures(e,event);
             });
           });
 
-          domElement.addEventListener('emitDrawComplete', event => {
-            console.log('query complete from drawn input inside component.  flags are returned');
-            console.log(event.detail);
-            projection.load().then(() => {
-              if(event.detail.geometry.length > 0) {
-                event.detail.geometry.map((e) => {
-                  const projGeom = projection.project(e, MapView.spatialReference);
-                  let graphic = pointGraphic([255, 0, 0], projGeom);
-                  gl.add(graphic);
-                  //view.graphics.add(flagGraphic);
-                });
-              } else {
-                if(event.detail.hasOwnProperty("geometry")) {
-                  const projGeom = projection.project(event.detail.geometry, MapView.spatialReference);
-                  let graphic = pointGraphic([255, 0, 0], projGeom);
-                  gl.add(graphic);
-                }
-              }
-            });
-          });
+          /*
+          setTimeout(function() {
+            const domElement2 = document.querySelector('un-trace-manager');
+            domElement2.setAttribute("in-points", '[{"coord":[999,111], "layerId":950, "type":"startingPoint"}]');
+          },5000);
 
+          setTimeout(function() {
+            const domElement3 = document.querySelector('un-trace-manager');
+            domElement3.setAttribute("in-assets", '[{"globalId":"C1E54746-6772-4E77-8753-3B95D8DF34F1", "layerId":501, "type":"startingPoint"}]');
+          },6000);
+          */
         },1000);
 
 
-        //[{"type":start, "geom":null, "layers":[{"layerId":0, "assetGroups":[0,1,2], "objectId":[e123]}]}]
 
       });
     </script>
@@ -323,9 +184,10 @@
   <body>
       <un-trace-manager
       show-terminals=true
-      host="https://dev0016770.esri.com"
-      webmap="a80e69210ed34485995f0aa8362f539b"
-      name="Water_Distribution_Utility_Network" >
+      in-points='[{"coord":[123,456], "layerId":515, "type":"startingPoint"}]'
+      in-assets='[{"globalId":"DB331F49-422D-4067-992E-8091D11E479C", "layerId":515, "type":"startingPoint"}]'
+      host="https://dev0010161.esri.com"
+      name="Water_Distribution_Utility_Network_34" >
     </un-trace-manager>
     <div id="viewDiv"></div>
   </body>
