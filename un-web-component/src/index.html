@@ -7,8 +7,11 @@
     <script type="module" src="/build/stencil-starter-project-name.esm.js"></script>
     <script nomodule src="/build/stencil-starter-project-name.js"></script>
 
-    <link rel="stylesheet" href="https://js.arcgis.com/4.18/esri/themes/light/main.css" />
-    <script src="https://js.arcgis.com/4.18/"></script>
+    <link rel="stylesheet" href="http://pwonglap.esri.com/arcgis-js-api/esri/css/main.css" />
+    <!-- <script src="https://jsdev.arcgis.com/4.20/"></script> -->
+
+    <script src="http://pwonglap.esri.com/arcgis-js-api/test-apps/dojo-config.js"></script>
+    <script src="http://pwonglap.esri.com/arcgis-js-api/dojo/dojo.js"></script>
 
     <link rel="stylesheet" type="text/css" href="build/stencil-starter-project-name.css" />
 
@@ -21,8 +24,8 @@
       padding: 0;
       }
       #viewDiv {
-      height: 50%;
-      width: 50%;
+      height: 100%;
+      width: 100%;
       margin: 0;
       padding: 0;
       }
@@ -40,36 +43,53 @@
         "esri/views/MapView",
         "esri/layers/FeatureLayer",
         "esri/widgets/Legend",
-        "esri/identity/IdentityManager"
-      ], function(Map, Graphic, MapView, FeatureLayer, Legend, IdentityManager) {
+        "esri/identity/IdentityManager",
+        "esri/WebMap",
+        "esri/config"
+      ], function(Map, Graphic, MapView, FeatureLayer, Legend, IdentityManager, WebMap, esriConfig) {
+        useDefaults(arguments);
+
         // Crime in SF
         IdentityManager.registerToken({
-          server: "https://dev0010161.esri.com/server/rest/services/Water_Distribution_Utility_Network_34/FeatureServer",
-          token: "dUcjzR3DQco4DS8LOVZ5on8pypAaHlC5RokgQVa-QqFxo4xvtwklLvMB0OCY6pBoL25GLeZn_FRzwXkvYYDrXJCQyGyzDnL1jsSCAhJnA6qiRK7zfzIJmOz2KlHdxSozSorf6_KYG3W2KoKVoEDV2ZnnvQwFKQmbO2bLDespL-JzVgTGDnb5qg30jSKiGAPA-nBY60M0pd96Mex22aUt-dYzdGv-L17i_W-XvN4970k."
-        });
-        // Carbon storage of trees in Warren Wilson College.
-        var layer = new FeatureLayer({
-          url: "https://dev0010161.esri.com/server/rest/services/Water_Distribution_Utility_Network_34/FeatureServer/515",
-          gdbVersion: "sde.DEFAULT"
+          server: "https://dev0016770.esri.com/server/rest/services/Water_Distribution_Utility_Network/FeatureServer",
+          token: "0ml_-96q99V2xaJRslKrEg_amgXsgGt3mpP15ZunXltBkyygyihSaOrEw4vmZlpbjkK__OdXqlYRNxqCvcCS1y4YKitBJejmaQNZXDrB08ObICSZ7UmE_saYsipZISuU5cbJ3BWB_NPrxmUjzrLgxlBMm6YuPq8XapZ9OtAYtc9I_8NBnaJZe6QThs3iOIxr"
         });
 
-        var map = new Map({
-          basemap: "gray-vector",
-          layers: [layer]
+        esriConfig.portalUrl = "https://dev0016770.esri.com/portal";
+
+        var webmap = new WebMap({
+          portalItem: {
+            id: "73e1ead580f14f1b889aa14c8018656a",
+            portal: {url: "https://dev0016770.esri.com/portal"}
+          }
         });
+        //trace network     bd367ad881df4610b92ecfb53560fefb
 
         var view = new MapView({
-          container: "viewDiv",
-          map: map,
-          zoom: 15,
-          center: [-88.1663, 41.772275]
+          map: webmap,
+          container: "viewDiv"
         });
 
-        var legend = new Legend({
-          view: view,
-          layerInfos: [{
-            layer: layer
-          }]
+        view.when(function(){
+          // This function will execute once the promise is resolved
+        }, function(error){
+          // This function will execute if the promise is rejected due to an error
+        });
+
+        webmap.load().then(function () {
+          un1 = webmap.utilityNetworks.getItemAt(0);
+
+              // At this point you only have access to the id and title properties of the named trace configurations
+              // You need to load the UtilityNetwork in order to get all the properties
+
+              un1.load().then(function () {
+                    for(var i=0;i<un1.sharedNamedTraceConfigurations.length;i++)
+                    {
+                          var traceConfig = un1.sharedNamedTraceConfigurations[0];
+                          // do whatever
+                          console.log(traceConfig);
+                    }
+              });
         });
 
         // additional query fields initially set to null for basic query
@@ -99,13 +119,6 @@
               width: 1
             }
           }
-        });
-
-
-        layer.load()
-        .then(function() {
-          // Set the view extent to the data extent
-          layer.popupTemplate = layer.createPopupTemplate();
         });
 
         function queryFeatures(screenPoint, componentProps) {
@@ -163,17 +176,13 @@
             });
           });
 
-          /*
-          setTimeout(function() {
-            const domElement2 = document.querySelector('un-trace-manager');
-            domElement2.setAttribute("in-points", '[{"coord":[999,111], "layerId":950, "type":"startingPoint"}]');
-          },5000);
-
+/*
           setTimeout(function() {
             const domElement3 = document.querySelector('un-trace-manager');
             domElement3.setAttribute("in-assets", '[{"globalId":"C1E54746-6772-4E77-8753-3B95D8DF34F1", "layerId":501, "type":"startingPoint"}]');
           },6000);
-          */
+*/
+
         },1000);
 
 
@@ -182,13 +191,19 @@
     </script>
   </head>
   <body>
-      <un-trace-manager
-      show-terminals=true
-      in-points='[{"coord":[123,456], "layerId":515, "type":"startingPoint"}]'
-      in-assets='[{"globalId":"DB331F49-422D-4067-992E-8091D11E479C", "layerId":515, "type":"startingPoint"}]'
-      host="https://dev0010161.esri.com"
-      name="Water_Distribution_Utility_Network_34" >
-    </un-trace-manager>
-    <div id="viewDiv"></div>
+    <div style="display: flex; flex-direction: row">
+      <div>
+        <un-trace-manager
+          show-terminals=true
+          in-points='[{"coord":[123,456], "layerId":515, "type":"startingPoint"}]'
+          in-assets='[{"globalId":"DB331F49-422D-4067-992E-8091D11E479C", "layerId":515, "type":"startingPoint"}]'
+          host="https://dev0016770.esri.com"
+          name="Water_Distribution_Trace_Network_from_GN"
+          app-token="0ml_-96q99V2xaJRslKrEg_amgXsgGt3mpP15ZunXltBkyygyihSaOrEw4vmZlpbjkK__OdXqlYRNxqCvcCS1y4YKitBJejmaQNZXDrB08ObICSZ7UmE_saYsipZISuU5cbJ3BWB_NPrxmUjzrLgxlBMm6YuPq8XapZ9OtAYtc9I_8NBnaJZe6QThs3iOIxr"
+          >
+        </un-trace-manager>
+      </div>
+      <div id="viewDiv"></div>
+    </div>
   </body>
 </html>

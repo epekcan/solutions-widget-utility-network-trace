@@ -11,10 +11,10 @@ export namespace Components {
         "gdbVersion": string;
         "host": string;
         "inAssets": any;
-        "inPoints": any;
         "inTC": any;
         "isBasic": boolean;
         "name": string;
+        "orientation": string;
         "runIsoTraceTwice": boolean;
         "showTerminals": boolean;
     }
@@ -36,14 +36,15 @@ declare namespace LocalJSX {
         "gdbVersion"?: string;
         "host"?: string;
         "inAssets"?: any;
-        "inPoints"?: any;
         "inTC"?: any;
         "isBasic"?: boolean;
         "name"?: string;
+        "onEmitDrawComplete"?: (event: CustomEvent<any>) => void;
         "onEmitFlagChange"?: (event: CustomEvent<any>) => void;
         "onEmitQueryTrace"?: (event: CustomEvent<any>) => void;
         "onEmitSelectedTrace"?: (event: CustomEvent<any>) => void;
         "onEmitTraceResults"?: (event: CustomEvent<any>) => void;
+        "orientation"?: string;
         "runIsoTraceTwice"?: boolean;
         "showTerminals"?: boolean;
     }
