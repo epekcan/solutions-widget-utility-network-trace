@@ -5,6 +5,11 @@ import {UnTraceHandler} from "./un-trace-handler";
 import {GeometryHandler} from "./geometry_handler";
 import "@esri/calcite-components";
 import { defineCustomElements } from "@esri/calcite-components/dist/loader";
+//@ts-ignore
+import { loadModules } from "https://unpkg.com/esri-loader@3.1.0/dist/esm/esri-loader.js";
+import "http://pwonglap.esri.com/arcgis-js-api/test-apps/dojo-config.js";
+
+const options = {url:"http://pwonglap.esri.com/arcgis-js-api/dojo/dojo.js" };
 
 @Component({
   tag: 'un-trace-manager',
@@ -14,21 +19,24 @@ import { defineCustomElements } from "@esri/calcite-components/dist/loader";
 export class UnTraceManager {
   @Prop() host: string = "";
   @Prop() name: string = "";
+  @Prop() webmap: string = "";
   @Prop() showTerminals: boolean;
   @Prop() appToken: string;
   @Prop() gdbVersion: string = "";
   @Prop() inAssets: any;
+  @Prop() flagGeometry: any;
   @Prop() inTC: any = {tc:{}, action:"update"};
   @Prop() runIsoTraceTwice: boolean = true;
   @Prop() isBasic: boolean = true;
   @Prop() orientation: string = 'ltr';
 
-  @Watch('inAssets')
-  watchHandler2(newValue: any, oldValue: any, prop:any) {
+  @Watch('flagGeometry')
+  watchHandler(newValue: any, oldValue: any, prop:any) {
     console.log(oldValue);
     console.log(newValue);
     this[prop] = newValue;
-    if(prop === 'inAssets') {this.assetPropsChange();}
+    if(prop === 'flagGeometry') {this.queryFeaturesForFlag(newValue);}
+    //if(prop === 'inAssets') {this.assetPropsChange();}
   }
 
   @Event({eventName: 'emitQueryTrace', composed: true, bubbles: true}) emitQueryTrace: EventEmitter<any>;
@@ -49,8 +57,10 @@ export class UnTraceManager {
   @State() flags: Array<any> = [];
   @State() terminals: Array<any> = [];
   @State() layersForFlagLookup: Array<any> = [];
+
+  @State() unObj: any;
   @State() controllerLayer: any;
-  @State() traces:any;
+  @State() traces: Array<any> = [];
 
   @State() showStartFlags: boolean = true;
   @State() showBarrierFlags: boolean = false;
@@ -69,11 +79,28 @@ export class UnTraceManager {
   componentWillLoad() {
     console.log(this.appToken);
     console.log(this.gdbVersion);
-    this.unHandler = new UnTraceHandler(this.host, this.name, this.gdbVersion, this.appToken);
-    this.geometryHandler = new GeometryHandler();
-    //this.unHandler.getToken().then((response:any) => {
-    //  this.token = response.token;
+    this._getUNFromMap();
+  }
 
+  async _getUNFromMap() {
+    this.unHandler = new UnTraceHandler(this.host, this.name, this.gdbVersion, this.webmap, this.appToken);
+    this.geometryHandler = new GeometryHandler();
+
+    this.unObj = await this.unHandler.load();
+    if(this.unObj) {
+      if(this.unObj.hasOwnProperty('sharedNamedTraceConfigurations')) {
+        this.traces = [...this.unObj.sharedNamedTraceConfigurations];
+        this.traces.map((t:any, i:number) => {
+          if(i === 0) {
+            t["selected"] = true;
+          } else {
+            t["selected"] = false;
+          }
+        });
+      }
+    }
+
+    /*
       this.unHandler.queryDataElement().then(async(dataElement:any) => {
         this.controllerLayer = this.unHandler.findControllerLayer(dataElement);
         this.layersForFlagLookup = this.unHandler.queryLayersForFlag(this.controllerLayer);
@@ -84,8 +111,8 @@ export class UnTraceManager {
         console.log(this.terminals);
         console.log(this.traces);
       });
+    */
 
-    //});
   }
 
   componentDidRender() {
@@ -181,7 +208,7 @@ export class UnTraceManager {
                   primary-label="Primary Option"
                   dropdown-label="Additional Options"
                   dropdown-icon-type="chevron"
-                  onClick={() => {this.clickAddFlag('startingPoint')}}
+                  onClick={() => {this.clickAddFlag('startingPoint', 'point')}}
                 >
                   <calcite-dropdown-group selection-mode="none">
                     <calcite-dropdown-item>Draw an area</calcite-dropdown-item>
@@ -226,7 +253,7 @@ export class UnTraceManager {
                   primary-label="Primary Option"
                   dropdown-label="Additional Options"
                   dropdown-icon-type="chevron"
-                  onClick={() => {this.clickAddFlag('barrier')}}
+                  onClick={() => {this.clickAddFlag('barrier', 'point')}}
                 >
                   <calcite-dropdown-group selection-mode="none">
                     <calcite-dropdown-item>Draw an area</calcite-dropdown-item>
@@ -315,9 +342,11 @@ export class UnTraceManager {
       <calcite-popover-manager>
       <calcite-panel dir={this.orientation} height-scale="s" intl-close="Close" theme="light">
         <div class="heading" slot="header-content">
-          <div class="sc-calcite-label-h sc-calcite-label-s sc-calcite-label">Asset id: {feat.globalId}</div>
+          <div class="sc-calcite-label-h sc-calcite-label-s sc-calcite-label">Global id: {feat.globalId}</div>
         </div>
-        <calcite-action
+        {
+          (feat.hasOwnProperty('terminalId')) &&
+          <calcite-action
           text="Action"
           label="Action"
           slot="header-actions-start"
@@ -325,7 +354,8 @@ export class UnTraceManager {
           appearance="solid"
           scale="s"
           onClick={()=>{this.clickShowFlagTerminal(feat.globalId)}}
-        ></calcite-action>
+          ></calcite-action>
+        }
         <calcite-action
           text="Action"
           label="Action"
@@ -399,8 +429,17 @@ export class UnTraceManager {
   }
 
   renderUITraceSelector() {
+    let traces = [];
+    if(this.traces.length > 0) {
+      this.traces.map((ntc:any) => {
+        traces.push(
+          <calcite-option selected={ntc.selected} calcite-hydrated="" value={ntc}>{ntc.title}</calcite-option>
+        );
+      });
+    }
+
     return (
-      <div>
+      (traces.length > 0) && <div>
       <div style={{height:"10px", width:"100%"}}></div>
       <calcite-card>
         <div style={{height:"10px", width:"100%"}}></div>
@@ -422,7 +461,7 @@ export class UnTraceManager {
               width="auto"
               calcite-hydrated=""
             >
-              <calcite-option selected={true} calcite-hydrated="">Isolation Trace Group</calcite-option>
+              {traces}
             </calcite-select>
           </label>
           <label class="sc-calcite-label-h sc-calcite-label-s sc-calcite-label">
@@ -626,17 +665,29 @@ export class UnTraceManager {
     if(atleastOneStart) {
       this.clickTabChange('output');
       this.showExecuteNotice = false;
+
+      let haveTraces = this.traces.some((t:any) => {
+        return t.selected === true;
+      })
+
+      if(haveTraces) {
+
+      }
+
+
     } else {
       this.showExecuteNotice = true;
     }
   }
 
-  clickAddFlag =(type:string) => {
-    let newFlags = [...this.flags];
-    newFlags.push(
-      {traceLocationType:type, globalId: type + (this.flags.length +1), terminal:0, allTerminals:[{terminalid:0, terminalName:'High Side'},{terminalid:1, terminalName:'Low Side'}], showTerminal:false}
-    );
-    this.flags = newFlags;
+  clickAddFlag =(type:string, geomType:string) => {
+    //let newFlags = [...this.flags];
+    //newFlags.push(
+    //  {traceLocationType:type, globalId: type + (this.flags.length +1), terminal:0, allTerminals:[{terminalid:0, terminalName:'High Side'},{terminalid:1, terminalName:'Low Side'}], showTerminal:false}
+    //);
+    //this.flags = newFlags;
+    let param = {type:type, geometryType:geomType};
+    this.emitFlagChange.emit(param);
   }
 
   clickRemoveAllFlag =(type:string) => {
@@ -652,6 +703,39 @@ export class UnTraceManager {
       return al[parameter].indexOf(search) > -1;
     });
     return arrayList;
+  }
+
+
+
+  queryFeaturesForFlag =(screenPoint:any) => {
+    loadModules(["esri/geometry/Point"], options)
+    .then(([Point]) => {
+      let srcPoint = JSON.parse(screenPoint);
+      const point = new Point.default({
+        x: srcPoint.mapPoint.x,
+        y: srcPoint.mapPoint.y,
+        spatialReference: srcPoint.mapPoint.spatialReference
+      });
+      this.unHandler.queryAssetByGeom(point).then((results:any) => {
+        if(results.length > 0) {
+          let newFlags = [...this.flags];
+          results.map(async(res:any) => {
+            console.log(res);
+            //if it's line, get percentage along
+            if(res.layer.geometryType === 'polyline') {
+              const perct = await this.geometryHandler.getPercentageAlong(res.geometry,  point, res.geometry.spatialReference);
+              newFlags.push(
+                {traceLocationType:'startingPoint', globalId: res.attributes.globalid, percentAlong: perct}
+              );
+            } else {
+              //it's a point, query terminals
+            }
+
+          });
+          this.flags = newFlags;
+        }
+      });
+    })
   }
 
 
@@ -764,9 +848,8 @@ export class UnTraceManager {
   }
 
   executeTrace() {
-    if(this.traces.hasOwnProperty('traceConfigurations')) {
-      if(this.traces.traceConfigurations.length > 0) {
-        this.traces.traceConfigurations.map((tc:any) => {
+      if(this.traces.length > 0) {
+        this.traces.map((tc:any) => {
           if(tc.traceType === 'isolation') {
             this.unHandler.executeTrace(tc.traceType, this.flags, '', tc.globalId).then((results:any) => {
               this.processResults(tc.traceConfiguration.includeIsolated, results.traceResults);
@@ -775,7 +858,6 @@ export class UnTraceManager {
           }
         });
       }
-    }
   }
 
   processResults(isIsolated:boolean, results:any) {

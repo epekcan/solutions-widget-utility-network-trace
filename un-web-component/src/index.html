@@ -39,17 +39,22 @@
     <script>
       require([
         "esri/Map",
+        "esri/views/draw/Draw",
         "esri/Graphic",
+        "esri/layers/GraphicsLayer",
         "esri/views/MapView",
         "esri/layers/FeatureLayer",
         "esri/widgets/Legend",
         "esri/identity/IdentityManager",
         "esri/WebMap",
         "esri/config"
-      ], function(Map, Graphic, MapView, FeatureLayer, Legend, IdentityManager, WebMap, esriConfig) {
+      ], function(Map, Draw, Graphic, GraphicsLayer, MapView, FeatureLayer, Legend, IdentityManager, WebMap, esriConfig) {
         useDefaults(arguments);
 
-        // Crime in SF
+        let action = null;
+
+        const graphicsLayer = new GraphicsLayer();
+
         IdentityManager.registerToken({
           server: "https://dev0016770.esri.com/server/rest/services/Water_Distribution_Utility_Network/FeatureServer",
           token: "0ml_-96q99V2xaJRslKrEg_amgXsgGt3mpP15ZunXltBkyygyihSaOrEw4vmZlpbjkK__OdXqlYRNxqCvcCS1y4YKitBJejmaQNZXDrB08ObICSZ7UmE_saYsipZISuU5cbJ3BWB_NPrxmUjzrLgxlBMm6YuPq8XapZ9OtAYtc9I_8NBnaJZe6QThs3iOIxr"
@@ -59,15 +64,20 @@
 
         var webmap = new WebMap({
           portalItem: {
-            id: "73e1ead580f14f1b889aa14c8018656a",
+            id: "dd72587bf24649afb1cce1dfc1bc4aab",
             portal: {url: "https://dev0016770.esri.com/portal"}
           }
         });
+        //subtype layers   73e1ead580f14f1b889aa14c8018656a
         //trace network     bd367ad881df4610b92ecfb53560fefb
 
         var view = new MapView({
           map: webmap,
           container: "viewDiv"
+        });
+
+        let draw = new Draw({
+          view: view
         });
 
         view.when(function(){
@@ -77,19 +87,7 @@
         });
 
         webmap.load().then(function () {
-          un1 = webmap.utilityNetworks.getItemAt(0);
-
-              // At this point you only have access to the id and title properties of the named trace configurations
-              // You need to load the UtilityNetwork in order to get all the properties
-
-              un1.load().then(function () {
-                    for(var i=0;i<un1.sharedNamedTraceConfigurations.length;i++)
-                    {
-                          var traceConfig = un1.sharedNamedTraceConfigurations[0];
-                          // do whatever
-                          console.log(traceConfig);
-                    }
-              });
+          webmap.add(graphicsLayer);
         });
 
         // additional query fields initially set to null for basic query
@@ -149,9 +147,17 @@
           });
         }
 
+        function _clickPointToMap(screenPoint) {
+          const point = view.toMap(screenPoint);
+          pointGraphic.geometry = point;
+          view.graphics.add(pointGraphic);
+          return point;
+        }
+
 
         setTimeout(() => {
           const domElement = document.querySelector('un-trace-manager');
+
           domElement.addEventListener('emitQueryTrace', event => {
             console.log('query traces emit');
             console.log(event);
@@ -170,18 +176,22 @@
           domElement.addEventListener('emitFlagChange', event => {
             console.log('Outside Component: receive flag button click, activate map click');
             //console.log(event);
+            view.graphics.remove(pointGraphic);
+            view.popup.autoOpenEnabled = false;
             view.on("click", function(e) {
               view.graphics.remove(pointGraphic);
-              queryFeatures(e,event);
+              const point = _clickPointToMap(e);
+              //queryFeatures(e,event);
+              domElement.setAttribute("flag-geometry", JSON.stringify(e));
             });
           });
 
-/*
-          setTimeout(function() {
-            const domElement3 = document.querySelector('un-trace-manager');
-            domElement3.setAttribute("in-assets", '[{"globalId":"C1E54746-6772-4E77-8753-3B95D8DF34F1", "layerId":501, "type":"startingPoint"}]');
-          },6000);
-*/
+
+          //setTimeout(function() {
+          //  const domElement3 = document.querySelector('un-trace-manager');
+          //  domElement3.setAttribute("webmap", JSON.stringify(webmap));
+          //},1000);
+
 
         },1000);
 
@@ -199,6 +209,8 @@
           in-assets='[{"globalId":"DB331F49-422D-4067-992E-8091D11E479C", "layerId":515, "type":"startingPoint"}]'
           host="https://dev0016770.esri.com"
           name="Water_Distribution_Trace_Network_from_GN"
+          flag-geometry=""
+          webmap="dd72587bf24649afb1cce1dfc1bc4aab"
           app-token="0ml_-96q99V2xaJRslKrEg_amgXsgGt3mpP15ZunXltBkyygyihSaOrEw4vmZlpbjkK__OdXqlYRNxqCvcCS1y4YKitBJejmaQNZXDrB08ObICSZ7UmE_saYsipZISuU5cbJ3BWB_NPrxmUjzrLgxlBMm6YuPq8XapZ9OtAYtc9I_8NBnaJZe6QThs3iOIxr"
           >
         </un-trace-manager>

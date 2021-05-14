@@ -1,77 +1,95 @@
+import {State} from '@stencil/core';
 import config from '@arcgis/core/config';
 config.assetsPath = 'https://cdn.jsdelivr.net/npm/@arcgis/core@4.18.1/assets';
 import {request} from '@esri/arcgis-rest-request';
 import {GeometryHandler} from "./geometry_handler";
+//@ts-ignore
+import { loadModules } from "https://unpkg.com/esri-loader@3.1.0/dist/esm/esri-loader.js";
+import "http://pwonglap.esri.com/arcgis-js-api/test-apps/dojo-config.js";
+//import "http://pwonglap.esri.com/arcgis-js-api/dojo/dojo.js";
+
+const options = {url:"http://pwonglap.esri.com/arcgis-js-api/dojo/dojo.js" };
+const options2 = {url: "https://js.arcgis.com/4.19/"}
 
 export class UnTraceHandler {
   host:string = '';
   unName:string = '';
   gdbVersion:string = '';
+  webmap: string = '';
   token:string = '';
-  constructor(host, name, gdbVersion, token?) {
+  un: any;
+  mapObj: any;
+  mapViewObj: any;
+  constructor(host, name, gdbVersion, webmap, token?) {
     this.host = host;
     this.unName = name;
     this.gdbVersion = gdbVersion;
-    this.token = token
+    this.webmap = webmap;
+    this.token = token;
   }
-
   geometryHandler = new GeometryHandler();
 
-  getToken() {
+  /*******  JS API UN */
+  load() {
     return new Promise((resolve: any) => {
-      const requestURL = this.host + '/portal/sharing/rest/generateToken';
-      const params = {
-        client_id: 'b97taLpupCPAd4AH',
-        client_secret: '164fbefcfe204fd99fcc2bd8798921d5',
-        grant_type: 'client_credentials',
-        username: 'admin',
-        password: 'esri.agp',
-        referer: 'http://pwonglap.esri.com:3333'
-      };
+      loadModules(["esri/WebMap", "esri/views/MapView"], options)
+      .then(([WebMap, MapView]) => {
+        // create map with the given options at a DOM node w/ id 'mapNode'
+        let webmap = new WebMap.default({
+          portalItem: {
+            id: this.webmap,
+            portal: {url: this.host + "/portal"}
+          }
+        });
 
-      //username: 'pwong1',
-      //password: 'pwong1.109',
+        this.mapViewObj = new MapView.default({
+          map: webmap
+        });
 
-      this._request({method: 'POST', url:requestURL, params: params})
-      .then((result:any) => {
-        if(result.hasOwnProperty('error')) {
-          resolve(false);
-        } else {
-          resolve(result);
-        }
+        webmap.load().then(() => {
+          this.mapObj = webmap;
+          this.un = webmap.utilityNetworks.getItemAt(0);
+            this.un.load().then(() => {
+              resolve(this.un);
+            });
+        });
+
       })
-      .catch((e:any) => {
-        resolve(e);
-      });
-    });
+   })
   }
 
-  getTraces(searchByUser?:string): Promise<any> {
+  queryAssetByGeom(geom:any) {
+    //this.mapViewObj.hitTest(screenPoint).then((results:any) => {
+    //  console.log(results);
+    //});
     return new Promise((resolve: any) => {
-      const requestURL = this.host + '/server/rest/services/'+this.unName+'/UtilityNetworkServer/traceConfigurations/query';
-      let params = {};
-      if(this.token !== '') {
-        if(searchByUser) {
-          params = {f : 'json', globalIds:'', creators:(searchByUser !== '')?'['+ searchByUser + ']':'', tags:'', names:'', token:this.token};
-        } else {
-          params = {f : 'json', globalIds:'', creators:'', tags:'', names:'', token:this.token};
+      //const point = this.mapViewObj.toMap(validScrPoint);
+      this.mapObj.layers.map((lyr:any) => {
+        if(lyr.type === 'feature') {
+          if(lyr.title === 'Water Line') {
+            lyr.queryFeatures({
+              geometry: geom,
+              // distance and units will be null if basic query selected
+              distance: 10,
+              units: 'feet',
+              spatialRelationship: "intersects",
+              returnGeometry: true,
+              returnQueryGeometry: true,
+              outFields: ["*"],
+            })
+            .then(function(featureSet) {
+              // set graphic location to mouse pointer and add to mapview
+              resolve(featureSet.features);
+            });
+          }
         }
-      } else {
-        resolve(false);
-      }
-      this._request({method: 'POST', url:requestURL, params: params})
-      .then((result:any) => {
-        if(result.hasOwnProperty('error')) {
-          resolve([]);
-        } else {
-          resolve(result);
-        }
-      })
-      .catch((e:any) => {
-        resolve(e);
       });
-    });
+    })
+
   }
+
+
+  /************ END JS API UN */
 
   executeTrace(traceType:string, flags:Array<any>, traceConfig?:any, traceId?:string): Promise<any> {
     //traceConfigurationGlobalId:'{80DDAE15-2720-49CA-971F-FBA76AEBC075}'
@@ -113,7 +131,7 @@ export class UnTraceHandler {
   }
 
   //query for feature to use for various functions such as percentage along and terminal config
-  queryForFeature(layer?:any, geom?:any, moment?:string): Promise<any> {
+  queryForFeature2(layer?:any, geom?:any, moment?:string): Promise<any> {
     return new Promise((resolve) => {
       const requestURL = this.host + '/server/rest/services/'+this.unName+'/FeatureServer/'+ layer.layerId + '/query';
       let params = {};

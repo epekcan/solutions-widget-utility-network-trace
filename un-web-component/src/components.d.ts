@@ -8,6 +8,7 @@ import { HTMLStencilElement, JSXBase } from "@stencil/core/internal";
 export namespace Components {
     interface UnTraceManager {
         "appToken": string;
+        "flagGeometry": any;
         "gdbVersion": string;
         "host": string;
         "inAssets": any;
@@ -17,6 +18,7 @@ export namespace Components {
         "orientation": string;
         "runIsoTraceTwice": boolean;
         "showTerminals": boolean;
+        "webmap": string;
     }
 }
 declare global {
@@ -33,6 +35,7 @@ declare global {
 declare namespace LocalJSX {
     interface UnTraceManager {
         "appToken"?: string;
+        "flagGeometry"?: any;
         "gdbVersion"?: string;
         "host"?: string;
         "inAssets"?: any;
@@ -47,6 +50,7 @@ declare namespace LocalJSX {
         "orientation"?: string;
         "runIsoTraceTwice"?: boolean;
         "showTerminals"?: boolean;
+        "webmap"?: string;
     }
     interface IntrinsicElements {
         "un-trace-manager": UnTraceManager;
