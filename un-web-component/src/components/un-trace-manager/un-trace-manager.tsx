@@ -52,7 +52,6 @@ export class UnTraceManager {
   @State() traceList: Array<any> = [];
   @State() activeStep: number = 1;
   @State() activeTrace: any = null;
-  @State() traceResults: any = null;
   @State() loader: boolean = false;
   @State() flags: Array<any> = [];
   @State() terminals: Array<any> = [];
@@ -61,6 +60,7 @@ export class UnTraceManager {
   @State() unObj: any;
   @State() controllerLayer: any;
   @State() traces: Array<any> = [];
+  @State() traceResults: Array<any> = [];
 
   @State() showStartFlags: boolean = true;
   @State() showBarrierFlags: boolean = false;
@@ -500,22 +500,19 @@ export class UnTraceManager {
   }
 
   renderUITraceResults() {
-    return (
-      <div>
-        <div style={{height:"25px", width:"100%", textAlign:"center", paddingTop: '10px'}}>
-          <calcite-label class="sc-calcite-label-h sc-calcite-label-s" dir={this.orientation} alignment="center" status="idle" scale="s" layout="default">
-            Trace completed 4/14/2021 at 11:20am
-          </calcite-label>
-        </div>
-        <calcite-panel dir={this.orientation} height-scale="s" intl-close="Close" theme="light">
+    let resultPanels = [];
+    if(this.traceResults.length > 0) {
+      this.traceResults.map((tr:any) => {
+        resultPanels.push(
+          <calcite-panel dir={this.orientation} height-scale="s" intl-close="Close" theme="light">
           <div class="heading" slot="header-content">
             <div style={{display: "flex", flexDirection: "row", alignItems: "center"}}>
               <div style={{paddingLeft: "5px", paddingRight: "5px"}}>
                 <div style={{ borderRadius: "40px", width: "20px", height: "20px", backgroundColor: "#f00" }}></div>
               </div>
               <div style={{paddingLeft: "10px", paddingRight: "10px"}}>
-                <div class="sc-calcite-label-h sc-calcite-label-s sc-calcite-label">Isolating (3)</div>
-                <div class="sc-calcite-label-h sc-calcite-label-s sc-calcite-label">Valves to close to isolated the leak</div>
+                <div class="sc-calcite-label-h sc-calcite-label-s sc-calcite-label">{tr.trace.title} ({tr.results.elements.length})</div>
+                <div class="sc-calcite-label-h sc-calcite-label-s sc-calcite-label">{tr.trace.description}</div>
               </div>
             </div>
           </div>
@@ -528,7 +525,29 @@ export class UnTraceManager {
             scale="s"
             onClick={()=>{this.clickShowResultsDetails(true)}}
           ></calcite-action>
-        </calcite-panel>
+          </calcite-panel>
+        );
+      })
+    } else {
+      resultPanels.push(
+        <calcite-loader
+          active=""
+          type="indeterminate"
+          scale="s"
+          value="0"
+          id="03f8e6e4-3169-efe2-2c77-d99f9f5796a3"
+          role="progressbar"
+        ></calcite-loader>
+      )
+    }
+    return (
+      <div>
+        <div style={{height:"25px", width:"100%", textAlign:"center", paddingTop: '10px'}}>
+          <calcite-label class="sc-calcite-label-h sc-calcite-label-s" dir={this.orientation} alignment="center" status="idle" scale="s" layout="default">
+            Trace completed 4/14/2021 at 11:20am
+          </calcite-label>
+        </div>
+        {resultPanels}
       </div>
     );
   }
@@ -666,12 +685,30 @@ export class UnTraceManager {
       this.clickTabChange('output');
       this.showExecuteNotice = false;
 
-      let haveTraces = this.traces.some((t:any) => {
+      let haveTraces = this.traces.filter((t:any) => {
         return t.selected === true;
       })
 
-      if(haveTraces) {
-
+      if(haveTraces.length > 0) {
+        console.log(haveTraces);
+        console.log(this.unObj);
+        haveTraces.map((t:any) => {
+          let params = {
+            query: {
+              gdbVersion:'sde.DEFAULT',
+              sessionId:this.appToken,
+              moment:'',
+              traceType: t.traceType,
+              traceLocations: this.flags,
+              traceConfigurationGlobalId:t.globalId,
+              traceConfiguration:'',
+              token:this.appToken
+            }
+          };
+          this.unHandler.executeTrace(t, this.unObj.networkServiceUrl, params.query, params).then((results:any) => {
+            this.traceResults = results;
+          });
+        });
       }
 
 

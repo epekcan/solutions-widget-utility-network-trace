@@ -85,13 +85,46 @@ export class UnTraceHandler {
         }
       });
     })
-
   }
+
+  executeTrace(traceItem:any, url:any, params:any, reqObj:any) {
+    return new Promise((resolve: any) => {
+      loadModules([
+        "esri/rest/networks/functions/trace",
+        "esri/rest/networks/functions/TraceParameters",
+        "esri/rest/networks/functions/TraceLocation",
+      ], options)
+      .then(([trace, TraceParameters, TraceLocation]) => {
+        let flagLoc = [];
+        params.traceLocations.map((tl:any) => {
+          let tLocs = new TraceLocation.default({
+            globalId: tl.globalId,
+            percentAlong: tl.percentAlong,
+            terminalId: null,
+            type: tl.traceLocationType
+          });
+          flagLoc.push(tLocs);
+        });
+        params.traceLocations = flagLoc;
+        let reqParams = {query:params};
+        reqParams.query.traceLocations = JSON.stringify(reqParams.query.traceLocations);
+
+        let tparams = new TraceParameters.default({...params});
+        trace.trace(url, tparams, reqParams).then((result:any) => {
+          resolve([{
+            trace: traceItem,
+            results: result
+          }]);
+        })
+      });
+    });
+  }
+
 
 
   /************ END JS API UN */
 
-  executeTrace(traceType:string, flags:Array<any>, traceConfig?:any, traceId?:string): Promise<any> {
+  executeTrace2(traceType:string, flags:Array<any>, traceConfig?:any, traceId?:string): Promise<any> {
     //traceConfigurationGlobalId:'{80DDAE15-2720-49CA-971F-FBA76AEBC075}'
     //with barriers
     //'[{'traceLocationType':'startingPoint','globalId':'{DB331F49-422D-4067-992E-8091D11E479C}','percentAlong':0.5},{'traceLocationType':'barrier','globalId':'{24787450-40BE-44A3-BF1A-2F90630C5DD1}','percentAlong':0.5},{'traceLocationType':'barrier','globalId':'{309C3A4B-CC00-4393-8724-6DA5075BCB16}','percentAlong':0.5},{'traceLocationType':'barrier','globalId':'{074001AE-6A01-4440-A234-9A85C1F93740}','percentAlong':0.5},{'traceLocationType':'barrier','globalId':'{29A7D702-FBB2-46DF-A0FA-99F4D9615BEE}','percentAlong':0.5}]'
